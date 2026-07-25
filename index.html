@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hacelo Ya — Encontrá al profesional que necesitás</title>
+<meta name="description" content="Hacelo Ya conecta a personas que necesitan un servicio con profesionales verificados: electricidad, plomería, construcción y más de 50 oficios en Argentina.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2314140F'/%3E%3Ctext x='50' y='68' font-size='60' font-family='Arial Black' font-weight='900' fill='%23FFC800' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF;
+    --ink:#14140F;
+    --yellow:#FFC800;
+    --yellow-deep:#E0AC00;
+    --blue:#2F80ED;
+    --muted:#5B5B52;
+    --line:#14140F;
+    --card:#FBFAF5;
+    --stripe-w: 34px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    padding-left:var(--stripe-w);
+    padding-right:var(--stripe-w);
+  }
+  h1,h2,h3,.display{
+    font-family:'Archivo Black','Manrope',sans-serif;
+    line-height:1.05;
+    letter-spacing:-0.01em;
+    text-wrap:balance;
+    margin:0;
+  }
+  a{color:inherit;}
+  img{max-width:100%;display:block;}
+  .container{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- cintas decorativas laterales ---------- */
+  .hazard-rail{
+    position:fixed;
+    top:0; bottom:0;
+    width:var(--stripe-w);
+    z-index:40;
+    background:repeating-linear-gradient(
+      -45deg,
+      var(--ink) 0 18px,
+      var(--yellow) 18px 36px
+    );
+    box-shadow: 0 0 0 2px var(--ink) inset;
+  }
+  .hazard-rail.left{left:0;}
+  .hazard-rail.right{right:0;}
+  @media (max-width: 860px){
+    :root{--stripe-w: 14px;}
+  }
+  @media (max-width: 520px){
+    :root{--stripe-w: 9px;}
+  }
+
+  .hazard-divider{
+    height:16px;
+    background:repeating-linear-gradient(
+      -45deg,
+      var(--ink) 0 14px,
+      var(--yellow) 14px 28px
+    );
+    box-shadow: 0 0 0 2px var(--ink) inset;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:30;
+    background:rgba(255,255,255,.92);
+    backdrop-filter:blur(8px);
+    border-bottom:2px solid var(--ink);
+  }
+  .nav-wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0;
+  }
+  .brand{display:flex; align-items:center; gap:10px; text-decoration:none;}
+  .brand-word{font-family:'Archivo Black'; font-size:20px; letter-spacing:-0.02em;}
+  nav.links{display:flex; align-items:center; gap:28px;}
+  nav.links a{
+    text-decoration:none; font-weight:700; font-size:14.5px;
+    color:var(--ink); position:relative; padding:4px 0;
+  }
+  nav.links a:hover{color:var(--blue);}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font-weight:800; font-size:14.5px;
+    border-radius:10px; border:2px solid var(--ink);
+    padding:12px 20px; text-decoration:none;
+    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:4px 4px 0 var(--ink);
+  }
+  .btn:active{transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink);}
+  .btn-yellow{background:var(--yellow); color:var(--ink);}
+  .btn-yellow:hover{background:var(--yellow-deep);}
+  .btn-dark{background:var(--ink); color:#fff;}
+  .btn-dark:hover{background:#2b2b22;}
+  .btn-ghost{background:#fff; color:var(--ink);}
+  .nav-cta{display:flex; gap:12px;}
+  .menu-toggle{display:none; background:none; border:2px solid var(--ink); border-radius:8px; padding:8px 10px; cursor:pointer;}
+  @media (max-width: 880px){
+    nav.links, .nav-cta{display:none;}
+    .menu-toggle{display:inline-flex;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:64px 0 40px;
+    display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--ink); color:var(--yellow);
+    font-weight:800; font-size:12.5px; letter-spacing:.06em; text-transform:uppercase;
+    padding:8px 14px; border-radius:999px; margin-bottom:20px;
+  }
+  .hero h1{font-size:clamp(34px,5vw,58px);}
+  .hero h1 mark{background:var(--yellow); padding:0 8px; box-decoration-break:clone; -webkit-box-decoration-break:clone;}
+  .hero p.lead{font-size:18px; color:var(--muted); max-width:46ch; margin:22px 0 30px;}
+  .hero-ctas{display:flex; gap:14px; flex-wrap:wrap;}
+  .hero-art{position:relative;}
+  .hero-art .frame{
+    border:3px solid var(--ink); border-radius:18px; overflow:hidden;
+    box-shadow:10px 10px 0 var(--yellow);
+  }
+  .hero-art img{width:100%; height:100%; object-fit:cover; aspect-ratio:1/1;}
+  .badge-float{
+    position:absolute; bottom:-18px; left:-18px;
+    background:#fff; border:2.5px solid var(--ink); border-radius:14px;
+    padding:12px 16px; box-shadow:5px 5px 0 var(--ink);
+    font-weight:800; font-size:14px; display:flex; align-items:center; gap:10px;
+  }
+  .badge-float .dot{width:10px; height:10px; border-radius:50%; background:#2CB56B; box-shadow:0 0 0 3px rgba(44,181,107,.25);}
+  @media (max-width: 900px){
+    .hero{grid-template-columns:1fr; padding-top:40px;}
+    .hero-art{order:-1;}
+    .badge-float{left:12px;}
+  }
+
+  /* ---------- trust strip ---------- */
+  .trust{
+    border-top:2px solid var(--ink); border-bottom:2px solid var(--ink);
+    background:var(--card);
+  }
+  .trust-wrap{
+    display:grid; grid-template-columns:repeat(4,1fr);
+    text-align:center;
+  }
+  .trust-wrap > div{
+    padding:22px 12px; border-left:2px solid var(--ink);
+  }
+  .trust-wrap > div:first-child{border-left:none;}
+  .trust-wrap strong{display:block; font-family:'Archivo Black'; font-size:26px;}
+  .trust-wrap span{font-size:13px; color:var(--muted); font-weight:600;}
+  @media (max-width: 700px){
+    .trust-wrap{grid-template-columns:repeat(2,1fr);}
+    .trust-wrap > div:nth-child(3){border-left:none;}
+  }
+
+  /* ---------- sections generic ---------- */
+  section{padding:84px 0;}
+  .section-head{max-width:640px; margin:0 auto 48px; text-align:center;}
+  .kicker{
+    color:var(--blue); font-weight:800; font-size:13px; letter-spacing:.08em;
+    text-transform:uppercase; margin-bottom:10px; display:block;
+  }
+  .section-head h2{font-size:clamp(28px,4vw,42px);}
+  .section-head p{color:var(--muted); font-size:16.5px; margin-top:14px;}
+
+  /* ---------- como funciona ---------- */
+  .tabs{
+    display:flex; justify-content:center; gap:0; margin-bottom:44px;
+    border:2.5px solid var(--ink); border-radius:12px; overflow:hidden; max-width:460px; margin-left:auto; margin-right:auto;
+  }
+  .tab-btn{
+    flex:1; padding:14px 18px; font-weight:800; font-size:14.5px; text-align:center;
+    background:#fff; cursor:pointer; border:none; font-family:'Manrope';
+    border-right:2.5px solid var(--ink);
+  }
+  .tab-btn:last-child{border-right:none;}
+  .tab-btn.active{background:var(--ink); color:var(--yellow);}
+  .how-panel{display:none; grid-template-columns:.9fr 1.1fr; gap:52px; align-items:center;}
+  .how-panel.active{display:grid;}
+  .how-panel img{border:3px solid var(--ink); border-radius:16px; box-shadow:8px 8px 0 var(--blue); aspect-ratio:4/5; object-fit:cover; width:100%;}
+  .steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:26px;}
+  .steps li{display:flex; gap:18px;}
+  .step-num{
+    flex:none; width:40px; height:40px; border-radius:50%;
+    background:var(--yellow); border:2.5px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Archivo Black'; font-size:16px;
+  }
+  .step-body h3{font-size:17px; margin-bottom:4px;}
+  .step-body p{margin:0; color:var(--muted); font-size:15px;}
+  @media (max-width: 780px){
+    .how-panel, .how-panel.active{grid-template-columns:1fr;}
+    .how-panel img{order:-1; aspect-ratio:16/10;}
+  }
+
+  /* ---------- oficios ---------- */
+  .oficios-grid{
+    display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:900px; margin:0 auto;
+  }
+  .chip{
+    border:2px solid var(--ink); border-radius:999px; padding:11px 18px;
+    font-weight:700; font-size:14.5px; background:#fff;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .chip:hover{background:var(--yellow); transform:translateY(-2px);}
+  .oficios-more{
+    text-align:center; margin-top:28px; color:var(--muted); font-size:14.5px; font-weight:600;
+  }
+
+  /* ---------- seguridad ---------- */
+  .safety{background:var(--ink); color:#fff;}
+  .safety .section-head p{color:#c9c9bd;}
+  .safety .kicker{color:var(--yellow);}
+  .safety-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:26px;}
+  .safety-card{
+    background:#1f1f16; border:2px solid #3a3a2c; border-radius:16px; padding:26px;
+  }
+  .safety-card .ic{
+    width:46px; height:46px; border-radius:12px; background:var(--yellow);
+    display:flex; align-items:center; justify-content:center; margin-bottom:16px;
+    font-family:'Archivo Black'; color:var(--ink); font-size:20px;
+  }
+  .safety-card h3{font-size:17px; margin-bottom:8px; font-family:'Manrope'; font-weight:800;}
+  .safety-card p{margin:0; color:#c9c9bd; font-size:14.5px;}
+  @media (max-width: 780px){ .safety-grid{grid-template-columns:1fr;} }
+
+  /* ---------- proximamente ---------- */
+  .soon{
+    text-align:center; border:3px solid var(--ink); border-radius:22px;
+    padding:56px 32px; background:
+      radial-gradient(circle at top left, rgba(255,200,0,.15), transparent 55%),
+      var(--card);
+    box-shadow:10px 10px 0 var(--ink);
+  }
+  .soon h2{font-size:clamp(26px,4vw,38px); margin-bottom:14px;}
+  .soon p{color:var(--muted); max-width:52ch; margin:0 auto 28px; font-size:16.5px;}
+  .store-row{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:8px;}
+  .store-pill{
+    display:flex; align-items:center; gap:10px; border:2px solid var(--ink);
+    border-radius:12px; padding:10px 18px; font-weight:700; font-size:13.5px; color:var(--muted);
+    background:#fff;
+  }
+
+  /* ---------- contacto ---------- */
+  .contact-wrap{display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start;}
+  .contact-card{
+    border:2.5px solid var(--ink); border-radius:18px; padding:34px;
+    box-shadow:8px 8px 0 var(--yellow);
+  }
+  .contact-card h3{font-size:20px; margin-bottom:6px;}
+  .contact-card p{color:var(--muted); margin:0 0 22px; font-size:15px;}
+  .contact-row{
+    display:flex; align-items:center; gap:14px; padding:14px 0;
+    border-top:1px solid #e5e3d8;
+  }
+  .contact-row:first-of-type{border-top:none;}
+  .contact-row .ic{
+    width:38px; height:38px; border-radius:10px; background:var(--yellow);
+    display:flex; align-items:center; justify-content:center; flex:none; font-size:17px;
+  }
+  .contact-row a{text-decoration:none; font-weight:700;}
+  .contact-row a:hover{color:var(--blue);}
+  .faq-item{border-bottom:1px solid #e5e3d8; padding:18px 0;}
+  .faq-item h4{font-size:15.5px; margin:0 0 6px;}
+  .faq-item p{margin:0; color:var(--muted); font-size:14.5px;}
+  @media (max-width: 780px){ .contact-wrap{grid-template-columns:1fr;} }
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink); color:#c9c9bd; padding:48px 0 28px;}
+  .footer-top{display:flex; justify-content:space-between; align-items:flex-start; gap:32px; flex-wrap:wrap; padding-bottom:28px; border-bottom:1px solid #3a3a2c;}
+  .footer-brand{display:flex; align-items:center; gap:10px;}
+  .footer-brand span{font-family:'Archivo Black'; color:#fff; font-size:18px;}
+  footer nav{display:flex; gap:24px; flex-wrap:wrap;}
+  footer nav a{text-decoration:none; font-size:14px; font-weight:600; color:#c9c9bd;}
+  footer nav a:hover{color:var(--yellow);}
+  .footer-bottom{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    padding-top:22px; font-size:12.5px; color:#8a8a7c;
+  }
+
+  ::selection{background:var(--yellow); color:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="hazard-rail left" aria-hidden="true"></div>
+<div class="hazard-rail right" aria-hidden="true"></div>
+
+<header>
+  <div class="container nav-wrap">
+    <a href="#top" class="brand">
+      <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <pattern id="hz" width="14" height="14" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill="#14140F"/>
+            <rect width="7" height="14" fill="#FFC800"/>
+          </pattern>
+        </defs>
+        <g stroke="#14140F" stroke-width="4" stroke-linejoin="round">
+          <rect x="18" y="10" width="20" height="80" rx="6" fill="url(#hz)"/>
+          <rect x="62" y="10" width="20" height="80" rx="6" fill="url(#hz)"/>
+          <rect x="10" y="40" width="80" height="20" rx="6" fill="url(#hz)"/>
+        </g>
+      </svg>
+      <span class="brand-word">Hacelo Ya</span>
+    </a>
+    <nav class="links">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#oficios">Oficios</a>
+      <a href="#seguridad">Seguridad</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="mailto:haceloyaapp@gmail.com">Escribinos</a>
+      <a class="btn btn-yellow" href="#proximamente">Enterate del lanzamiento</a>
+    </div>
+    <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMobileMenu()">☰</button>
+  </div>
+  <nav id="mnav" class="container" style="display:none; flex-direction:column; gap:14px; padding-bottom:18px;">
+    <a href="#como-funciona">Cómo funciona</a>
+    <a href="#oficios">Oficios</a>
+    <a href="#seguridad">Seguridad</a>
+    <a href="#contacto">Contacto</a>
+    <a class="btn btn-yellow" style="width:fit-content" href="mailto:haceloyaapp@gmail.com">Escribinos</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <section class="hero container">
+    <div>
+      <span class="eyebrow">🚧 Hecho en Argentina</span>
+      <h1>¿Se rompió algo en casa? <mark>Hacelo Ya.</mark></h1>
+      <p class="lead">Conectamos a personas que necesitan un servicio con profesionales verificados: electricidad, plomería, construcción, jardinería y muchos oficios más — cerca tuyo, sin vueltas.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-dark" href="#proximamente">Quiero enterarme del lanzamiento</a>
+        <a class="btn btn-ghost" href="#como-funciona">Ver cómo funciona</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="frame">
+        <img src="assets/hero-construccion.webp" alt="Equipo de profesionales verificados de Hacelo Ya en una obra">
+      </div>
+      <div class="badge-float"><span class="dot"></span> Profesionales verificados con DNI</div>
+    </div>
+  </section>
+
+  <div class="hazard-divider"></div>
+
+  <section class="trust">
+    <div class="container trust-wrap">
+      <div><strong>+50</strong><span>oficios disponibles</span></div>
+      <div><strong>100%</strong><span>identidad verificada</span></div>
+      <div><strong>0%</strong><span>intermediarios ocultos</span></div>
+      <div><strong>🇦🇷</strong><span>hecho en Argentina</span></div>
+    </div>
+  </section>
+
+  <section id="como-funciona">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Cómo funciona</span>
+        <h2>Tres pasos. De cada lado.</h2>
+        <p>Hacelo Ya funciona igual de simple para quien necesita un servicio y para quien lo ofrece.</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab(this,'particular')">Soy Particular</button>
+        <button class="tab-btn" onclick="showTab(this,'profesional')">Soy Profesional</button>
+      </div>
+
+      <div class="how-panel active" id="panel-particular">
+        <img src="assets/particulares-plomeria.webp" alt="Profesional de plomería trabajando en una cocina">
+        <ol class="steps">
+          <li>
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Contá qué necesitás</h3>
+              <p>Publicá tu pedido con fotos, ubicación y cuándo lo necesitás resuelto.</p>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Recibí propuestas reales</h3>
+              <p>Profesionales verificados te envían presupuestos según tu pedido, no precios genéricos.</p>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Elegí, chateá y listo</h3>
+              <p>Comparás perfiles y calificaciones, coordinás todo desde el chat, y calificás al terminar.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="how-panel" id="panel-profesional">
+        <img src="assets/profesionales-electricista.webp" alt="Electricista profesional trabajando en un tablero eléctrico">
+        <ol class="steps">
+          <li>
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Verificá tu identidad</h3>
+              <p>DNI y comprobante de domicilio. Un proceso simple que da confianza a quien te contrata.</p>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Encontrá pedidos cerca tuyo</h3>
+              <p>Vas a ver los pedidos que coinciden con tu oficio y tu zona, en tiempo real.</p>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Presupuestá y construí reputación</h3>
+              <p>Enviá tu propuesta, coordiná el trabajo y sumá calificaciones que te den más pedidos.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <div class="hazard-divider"></div>
+
+  <section id="oficios">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Oficios</span>
+        <h2>Un solo lugar para más de 50 oficios</h2>
+        <p>Desde una canilla que gotea hasta una obra completa. Estos son algunos de los oficios que ya están en Hacelo Ya:</p>
+      </div>
+      <div class="oficios-grid">
+        <span class="chip">🔧 Plomería</span>
+        <span class="chip">⚡ Electricidad</span>
+        <span class="chip">🔨 Carpintería</span>
+        <span class="chip">🎨 Pintura</span>
+        <span class="chip">🌿 Jardinería</span>
+        <span class="chip">🧹 Limpieza general</span>
+        <span class="chip">🧱 Maestro mayor de obra</span>
+        <span class="chip">🔥 Herrería y soldadura</span>
+        <span class="chip">🏠 Techista</span>
+        <span class="chip">🚚 Mudanzas y fletes</span>
+        <span class="chip">❄️ Aire acondicionado</span>
+        <span class="chip">🚗 Mecánica</span>
+        <span class="chip">🪟 Vidriería</span>
+        <span class="chip">💻 Soporte técnico</span>
+        <span class="chip">📚 Clases particulares</span>
+        <span class="chip">🐛 Control de plagas</span>
+      </div>
+      <p class="oficios-more">Y muchos más — el catálogo sigue creciendo con cada nueva solicitud.</p>
+    </div>
+  </section>
+
+  <section id="seguridad" class="safety">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Seguridad</span>
+        <h2>Confianza real, no solo una promesa</h2>
+        <p>Construimos Hacelo Ya pensando primero en la seguridad de ambos lados del pedido.</p>
+      </div>
+      <div class="safety-grid">
+        <div class="safety-card">
+          <div class="ic">ID</div>
+          <h3>Verificación de identidad</h3>
+          <p>Todo profesional confirma su identidad con DNI y comprobante de domicilio antes de poder ofrecer servicios.</p>
+        </div>
+        <div class="safety-card">
+          <div class="ic">★</div>
+          <h3>Calificaciones reales</h3>
+          <p>Cada trabajo termina con una calificación mutua, visible en el perfil de cada usuario.</p>
+        </div>
+        <div class="safety-card">
+          <div class="ic">🔒</div>
+          <h3>Datos protegidos</h3>
+          <p>Tu contacto solo se comparte con la contraparte real de un pedido, nunca de forma pública.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hazard-divider"></div>
+
+  <section id="proximamente">
+    <div class="container">
+      <div class="soon">
+        <span class="eyebrow" style="background:var(--yellow); color:var(--ink);">🚀 Muy pronto</span>
+        <h2>Hacelo Ya está terminando los últimos detalles</h2>
+        <p>Estamos preparando el lanzamiento en Android e iOS. Escribinos y te avisamos apenas esté disponible para descargar.</p>
+        <a class="btn btn-dark" href="mailto:haceloyaapp@gmail.com?subject=Quiero%20enterarme%20del%20lanzamiento%20de%20Hacelo%20Ya">Avisenme cuando esté lista</a>
+        <div class="store-row">
+          <span class="store-pill"> Google Play — próximamente</span>
+          <span class="store-pill"> App Store — próximamente</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacto">
+    <div class="container contact-wrap">
+      <div class="contact-card">
+        <h3>Hablemos</h3>
+        <p>¿Tenés una consulta, una idea o querés sumar tu oficio al catálogo? Escribinos.</p>
+        <div class="contact-row">
+          <div class="ic">✉️</div>
+          <a href="mailto:haceloyaapp@gmail.com">haceloyaapp@gmail.com</a>
+        </div>
+        <div class="contact-row">
+          <div class="ic">📍</div>
+          <span style="font-weight:700;">Argentina</span>
+        </div>
+        <div class="contact-row">
+          <div class="ic">🌐</div>
+          <span style="font-weight:700;">haceloya.com</span>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:18px;">Preguntas frecuentes</h3>
+        <div class="faq-item">
+          <h4>¿Hacelo Ya ya está disponible?</h4>
+          <p>Está en preparación para su lanzamiento. Dejanos tu email y te avisamos apenas se pueda descargar.</p>
+        </div>
+        <div class="faq-item">
+          <h4>¿Cómo se verifica a los profesionales?</h4>
+          <p>Cada profesional debe validar su identidad con DNI y comprobante de domicilio antes de poder enviar presupuestos.</p>
+        </div>
+        <div class="faq-item">
+          <h4>¿Hacelo Ya cobra comisión?</h4>
+          <p>El foco está en conectar de forma simple y transparente. Los detalles de precios se comunican dentro de la app.</p>
+        </div>
+        <div class="faq-item">
+          <h4>¿En qué ciudades va a estar disponible?</h4>
+          <p>Arrancamos en Argentina, con planes de expandirnos a más ciudades a medida que crece la red de profesionales.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="hazard-divider"></div>
+
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true">
+          <g stroke="#FFC800" stroke-width="4" stroke-linejoin="round" fill="#14140F">
+            <rect x="18" y="10" width="20" height="80" rx="6"/>
+            <rect x="62" y="10" width="20" height="80" rx="6"/>
+            <rect x="10" y="40" width="80" height="20" rx="6"/>
+          </g>
+        </svg>
+        <span>Hacelo Ya</span>
+      </div>
+      <nav>
+        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#oficios">Oficios</a>
+        <a href="#seguridad">Seguridad</a>
+        <a href="https://haceloyaapp-88e3d.web.app/privacidad.html">Política de privacidad</a>
+        <a href="mailto:haceloyaapp@gmail.com">Contacto</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Hacelo Ya. Todos los derechos reservados.</span>
+      <span>Hacelo Ya® — marca en trámite ante INPI, Argentina.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleMobileMenu(){
+    var nav = document.getElementById('mnav');
+    nav.style.display = (nav.style.display === 'none' || !nav.style.display) ? 'flex' : 'none';
+  }
+  function showTab(btn, which){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.how-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+which).classList.add('active');
+  }
+</script>
+
+</body>
+</html>
