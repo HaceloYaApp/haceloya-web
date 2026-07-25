@@ -153,26 +153,6 @@
     .badge-float{left:12px;}
   }
 
-  /* ---------- trust strip ---------- */
-  .trust{
-    border-top:2px solid var(--ink); border-bottom:2px solid var(--ink);
-    background:var(--card);
-  }
-  .trust-wrap{
-    display:grid; grid-template-columns:repeat(4,1fr);
-    text-align:center;
-  }
-  .trust-wrap > div{
-    padding:22px 12px; border-left:2px solid var(--ink);
-  }
-  .trust-wrap > div:first-child{border-left:none;}
-  .trust-wrap strong{display:block; font-family:'Archivo Black'; font-size:26px;}
-  .trust-wrap span{font-size:13px; color:var(--muted); font-weight:600;}
-  @media (max-width: 700px){
-    .trust-wrap{grid-template-columns:repeat(2,1fr);}
-    .trust-wrap > div:nth-child(3){border-left:none;}
-  }
-
   /* ---------- sections generic ---------- */
   section{padding:84px 0;}
   .section-head{max-width:640px; margin:0 auto 48px; text-align:center;}
@@ -214,12 +194,6 @@
   }
 
   /* ---------- oficios ---------- */
-  .oficios-group-title{
-    text-align:center; font-family:'Manrope'; font-weight:800; font-size:14px;
-    color:var(--blue); text-transform:uppercase; letter-spacing:.05em;
-    margin:36px 0 16px;
-  }
-  .oficios-group-title:first-of-type{margin-top:8px;}
   .oficios-grid{
     display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:900px; margin:0 auto;
   }
@@ -269,7 +243,6 @@
   }
 
   /* ---------- contacto ---------- */
-  .contact-wrap{display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start;}
   .contact-card{
     border:2.5px solid var(--ink); border-radius:18px; padding:34px;
     box-shadow:8px 8px 0 var(--yellow);
@@ -287,10 +260,6 @@
   }
   .contact-row a{text-decoration:none; font-weight:700;}
   .contact-row a:hover{color:var(--blue);}
-  .faq-item{border-bottom:1px solid #e5e3d8; padding:18px 0;}
-  .faq-item h4{font-size:15.5px; margin:0 0 6px;}
-  .faq-item p{margin:0; color:var(--muted); font-size:14.5px;}
-  @media (max-width: 780px){ .contact-wrap{grid-template-columns:1fr;} }
 
   /* ---------- footer ---------- */
   footer{background:var(--ink); color:#c9c9bd; padding:48px 0 28px;}
@@ -375,15 +344,6 @@
 
   <div class="hazard-divider"></div>
 
-  <section class="trust">
-    <div class="container trust-wrap">
-      <div><strong>100%</strong><span>de confianza, particulares y profesionales verificados</span></div>
-      <div><strong>DNI</strong><span>verificado en cada trabajador</span></div>
-      <div><strong>0</strong><span>intermediarios — vos elegís el presupuesto</span></div>
-      <div><strong>🇦🇷</strong><span>hecho en Argentina</span></div>
-    </div>
-  </section>
-
   <section id="como-funciona">
     <div class="container">
       <div class="section-head">
@@ -460,40 +420,13 @@
       <div class="section-head">
         <span class="kicker">Oficios</span>
         <h2>Oficios disponibles</h2>
-        <p>Ofrecemos todos los servicios, actividades y turnos — y si no está en la lista, ¡agregalo! ¿Una canilla que gotea? ¿Buscás turno con un masajista? ¿Querés empezar a boxear? Lo que quieras.</p>
+        <p>Ofrecemos todos los servicios, actividades y turnos — y si no está en la lista, ¡agregalo! ¿Una canilla que gotea? ¿Buscás turno con un masajista? ¿Querés empezar a actuar? Lo que quieras.</p>
       </div>
 
-      <h3 class="oficios-group-title">Ejemplos de servicios</h3>
       <div class="oficios-grid">
-        <span class="chip">🔧 Plomería</span>
-        <span class="chip">⚡ Electricidad</span>
-        <span class="chip">🔨 Carpintería</span>
-        <span class="chip">🎨 Pintura</span>
-        <span class="chip">🌿 Jardinería</span>
-        <span class="chip">🧹 Limpieza general</span>
-        <span class="chip">🔥 Herrería y soldadura</span>
-        <span class="chip">❄️ Aire acondicionado</span>
-        <span class="chip">🚚 Mudanzas y fletes</span>
-      </div>
-
-      <h3 class="oficios-group-title">Ejemplos de turnos</h3>
-      <div class="oficios-grid">
-        <span class="chip">💆 Masajes</span>
-        <span class="chip">💅 Manicura y pedicura</span>
-        <span class="chip">🦴 Kinesiología</span>
-        <span class="chip">🪒 Barbería</span>
-        <span class="chip">🦷 Odontología</span>
-        <span class="chip">🧖 Spa</span>
-      </div>
-
-      <h3 class="oficios-group-title">Ejemplos de actividades</h3>
-      <div class="oficios-grid">
-        <span class="chip">🧘 Yoga</span>
-        <span class="chip">🏋️ Musculación</span>
-        <span class="chip">🏊 Natación</span>
-        <span class="chip">🏃 Running</span>
-        <span class="chip">⚽ Fútbol</span>
-        <span class="chip">🤸 Crossfit</span>
+        <span class="chip">🔧 Servicios</span>
+        <span class="chip">📅 Turnos</span>
+        <span class="chip">🏃 Actividades</span>
       </div>
 
       <p class="oficios-more">Y muchos más — el catálogo sigue creciendo con cada nueva solicitud.</p>
@@ -531,7 +464,7 @@
         <div class="safety-card">
           <div class="ic">♀</div>
           <h3>Modalidad solo chicas</h3>
-          <p>Elegí recibir presupuestos únicamente de profesionales mujeres, para mayor comodidad y confianza.</p>
+          <p>Elegí recibir presupuestos únicamente de profesionales mujeres, para mayor comodidad y confianza. Disponible tanto para particulares como para profesionales mujeres.</p>
         </div>
       </div>
     </div>
@@ -555,8 +488,8 @@
   </section>
 
   <section id="contacto">
-    <div class="container contact-wrap">
-      <div class="contact-card">
+    <div class="container" style="display:flex; justify-content:center;">
+      <div class="contact-card" style="max-width:480px; width:100%;">
         <h3>Hablemos</h3>
         <p>¿Tenés una consulta, una idea o querés sumar tu oficio al catálogo? Escribinos.</p>
         <div class="contact-row">
@@ -570,25 +503,6 @@
         <div class="contact-row">
           <div class="ic">🌐</div>
           <span style="font-weight:700;">haceloya.com</span>
-        </div>
-      </div>
-      <div>
-        <h3 style="margin-bottom:18px;">Preguntas frecuentes</h3>
-        <div class="faq-item">
-          <h4>¿Hacelo Ya ya está disponible?</h4>
-          <p>Está en preparación para su lanzamiento. Dejanos tu email y te avisamos apenas se pueda descargar.</p>
-        </div>
-        <div class="faq-item">
-          <h4>¿Cómo se verifica a los profesionales?</h4>
-          <p>Cada profesional debe validar su identidad con DNI y comprobante de domicilio antes de poder enviar presupuestos.</p>
-        </div>
-        <div class="faq-item">
-          <h4>¿Hacelo Ya cobra comisión?</h4>
-          <p>El foco está en conectar de forma simple y transparente. Los detalles de precios se comunican dentro de la app.</p>
-        </div>
-        <div class="faq-item">
-          <h4>¿En qué ciudades va a estar disponible?</h4>
-          <p>Arrancamos en Argentina, con planes de expandirnos a más ciudades a medida que crece la red de profesionales.</p>
         </div>
       </div>
     </div>
