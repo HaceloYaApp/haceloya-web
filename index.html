@@ -177,7 +177,7 @@
   .tab-btn.active{background:var(--ink); color:var(--yellow);}
   .how-panel{display:none; grid-template-columns:.9fr 1.1fr; gap:52px; align-items:center;}
   .how-panel.active{display:grid;}
-  .how-panel img{border:3px solid var(--ink); border-radius:16px; box-shadow:8px 8px 0 var(--blue); aspect-ratio:4/5; object-fit:cover; width:100%;}
+  .how-panel img{border:3px solid var(--ink); border-radius:16px; box-shadow:8px 8px 0 var(--blue); aspect-ratio:4/5; object-fit:cover; width:100%; height:auto; display:block;}
   .steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:26px;}
   .steps li{display:flex; gap:18px;}
   .step-num{
@@ -189,8 +189,9 @@
   .step-body h3{font-size:17px; margin-bottom:4px;}
   .step-body p{margin:0; color:var(--muted); font-size:15px;}
   @media (max-width: 780px){
-    .how-panel, .how-panel.active{grid-template-columns:1fr;}
-    .how-panel img{order:-1; aspect-ratio:16/10;}
+    .how-panel{display:none;}
+    .how-panel.active{display:flex; flex-direction:column; gap:24px;}
+    .how-panel img{order:-1; width:100%; height:auto; aspect-ratio:16/10;}
   }
 
   /* ---------- oficios ---------- */
