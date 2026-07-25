@@ -194,6 +194,8 @@
   }
 
   /* ---------- oficios ---------- */
+  .oficios-category{margin-bottom:36px;}
+  .oficios-category:last-of-type{margin-bottom:0;}
   .oficios-grid{
     display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:900px; margin:0 auto;
   }
@@ -203,6 +205,11 @@
     transition:background .15s ease, transform .15s ease;
   }
   .chip:hover{background:var(--yellow); transform:translateY(-2px);}
+  .chip-title{
+    display:block; width:fit-content; margin:0 auto 18px; background:var(--ink); color:var(--yellow);
+    font-size:16px; padding:12px 24px; cursor:default;
+  }
+  .chip-title:hover{background:var(--ink); transform:none;}
   .oficios-more{
     text-align:center; margin-top:28px; color:var(--muted); font-size:14.5px; font-weight:600;
   }
@@ -285,6 +292,29 @@
   }
 
   ::selection{background:var(--yellow); color:var(--ink);}
+
+  /* ---------- modal ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; z-index:100;
+    background:rgba(20,20,15,.6); align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-box{
+    position:relative; background:#fff; border:3px solid var(--ink); border-radius:18px;
+    padding:32px; max-width:420px; width:100%; box-shadow:8px 8px 0 var(--yellow);
+  }
+  .modal-box h3{font-size:20px; margin-bottom:8px;}
+  .modal-box p{color:var(--muted); font-size:14.5px; margin:0 0 4px;}
+  .modal-box input{
+    width:100%; font-family:'Manrope'; font-size:14.5px; color:var(--ink);
+    border:2px solid var(--ink); border-radius:10px; padding:11px 12px; margin-top:14px;
+  }
+  .modal-box input:focus{outline:2px solid var(--blue); outline-offset:1px;}
+  .modal-close{
+    position:absolute; top:14px; right:14px; width:30px; height:30px;
+    border:2px solid var(--ink); border-radius:8px; background:#fff; cursor:pointer;
+    font-size:14px; line-height:1;
+  }
+  .modal-close:hover{background:var(--yellow);}
 </style>
 </head>
 <body>
@@ -318,7 +348,7 @@
     </nav>
     <div class="nav-cta">
       <a class="btn btn-ghost" href="mailto:haceloyaapp@gmail.com">Escribinos</a>
-      <a class="btn btn-yellow" href="#proximamente">Enterate del lanzamiento</a>
+      <a class="btn btn-yellow" href="#" onclick="openLaunchModal(event)">Enterate del lanzamiento</a>
     </div>
     <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMobileMenu()">☰</button>
   </div>
@@ -336,11 +366,11 @@
   <section class="hero container">
     <div>
       <span class="eyebrow">🚧 Hecho en Argentina</span>
-      <h1>¿Se te rompió algo? <mark>Hacelo Ya.</mark></h1>
+      <h1>¿Se te rompió algo? <mark>¡Hacelo Ya!</mark></h1>
       <p class="lead">Conectamos a personas que necesitan un servicio, una actividad o un turno con profesionales, personas calificadas o simplemente con ganas de trabajar. Elegí el presupuesto que más se adapte a vos: filtrá por cercanía, precio, nivel de conocimiento, reputación, cantidad de trabajos realizados, certificados y más.</p>
       <p class="lead" style="margin-top:-14px; font-weight:700; color:var(--ink);">¿No necesitás una reparación? También podés pedir una consulta o una recomendación.</p>
       <div class="hero-ctas">
-        <a class="btn btn-dark" href="#proximamente">Quiero enterarme del lanzamiento</a>
+        <a class="btn btn-dark" href="#" onclick="openLaunchModal(event)">Quiero enterarme del lanzamiento</a>
         <a class="btn btn-ghost" href="#como-funciona">Ver cómo funciona</a>
       </div>
     </div>
@@ -433,10 +463,49 @@
         <p>Ofrecemos todos los servicios, actividades y turnos — y si no está en la lista, ¡agregalo! ¿Una canilla que gotea? ¿Buscás turno con un masajista? ¿Querés empezar a actuar? Lo que quieras.</p>
       </div>
 
-      <div class="oficios-grid">
-        <span class="chip">🔧 Servicios</span>
-        <span class="chip">📅 Turnos</span>
-        <span class="chip">🏃 Actividades</span>
+      <div class="oficios-category">
+        <span class="chip chip-title">🔧 Servicios</span>
+        <div class="oficios-grid">
+          <span class="chip">Plomería</span>
+          <span class="chip">Carpintería</span>
+          <span class="chip">Jardinería</span>
+          <span class="chip">Limpieza general</span>
+          <span class="chip">Aire acondicionado</span>
+          <span class="chip">Herrería y soldadura</span>
+          <span class="chip">Pintura</span>
+          <span class="chip">Mudanzas y fletes</span>
+          <span class="chip">Techista</span>
+        </div>
+      </div>
+
+      <div class="oficios-category">
+        <span class="chip chip-title">📅 Turnos</span>
+        <div class="oficios-grid">
+          <span class="chip">Masajes</span>
+          <span class="chip">Manicura</span>
+          <span class="chip">Pedicura</span>
+          <span class="chip">Kinesiología</span>
+          <span class="chip">Barbería</span>
+          <span class="chip">Odontología</span>
+          <span class="chip">Spa</span>
+          <span class="chip">Dermatología</span>
+          <span class="chip">Estética</span>
+        </div>
+      </div>
+
+      <div class="oficios-category">
+        <span class="chip chip-title">🏃 Actividades</span>
+        <div class="oficios-grid">
+          <span class="chip">Yoga</span>
+          <span class="chip">Musculación</span>
+          <span class="chip">Natación</span>
+          <span class="chip">Running</span>
+          <span class="chip">Fútbol</span>
+          <span class="chip">Crossfit</span>
+          <span class="chip">Pilates</span>
+          <span class="chip">Spinning</span>
+          <span class="chip">Básquet</span>
+        </div>
       </div>
 
       <p class="oficios-more">Y muchos más — el catálogo sigue creciendo con cada nueva solicitud.</p>
@@ -454,7 +523,7 @@
         <div class="safety-card">
           <div class="ic">ID</div>
           <h3>Verificación de identidad</h3>
-          <p>Todo profesional confirma su identidad con DNI y comprobante de domicilio antes de poder ofrecer servicios.</p>
+          <p>Todo profesional confirma su identidad con DNI y comprobante de domicilio antes de poder ofrecer servicios. Los particulares también verifican su identidad, para dar seguridad de los dos lados.</p>
         </div>
         <div class="safety-card">
           <div class="ic">★</div>
@@ -467,14 +536,20 @@
           <p>Tu contacto solo se comparte con la contraparte real de un pedido, nunca de forma pública.</p>
         </div>
         <div class="safety-card">
-          <div class="ic">⚡</div>
+          <div class="ic" style="background:none;">
+            <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true">
+              <polygon points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" fill="#E5342A" stroke="#14140F" stroke-width="4" stroke-linejoin="round"/>
+              <rect x="44" y="24" width="12" height="38" rx="5" fill="#14140F"/>
+              <circle cx="50" cy="74" r="7" fill="#14140F"/>
+            </svg>
+          </div>
           <h3>Hacelo Ya mismo</h3>
           <p>¿Es urgente? Activá la opción para que los profesionales sepan que necesitás una solución hoy mismo.</p>
         </div>
         <div class="safety-card">
           <div class="ic">♀</div>
           <h3>Modalidad solo chicas</h3>
-          <p>Elegí recibir presupuestos únicamente de profesionales mujeres, para mayor comodidad y confianza. Disponible tanto para particulares como para profesionales mujeres.</p>
+          <p>Si sos mujer, podés elegir que solo le llegue tu postulación a una profesional mujer. Y si sos profesional mujer, podés decidir si querés que te lleguen postulaciones solo de otras chicas.</p>
         </div>
       </div>
     </div>
@@ -488,7 +563,7 @@
         <span class="eyebrow" style="background:var(--yellow); color:var(--ink);">🚀 Muy pronto</span>
         <h2>Hacelo Ya está terminando los últimos detalles</h2>
         <p>Estamos preparando el lanzamiento en Android e iOS. Escribinos y te avisamos apenas esté disponible para descargar.</p>
-        <a class="btn btn-dark" href="mailto:haceloyaapp@gmail.com?subject=Quiero%20enterarme%20del%20lanzamiento%20de%20Hacelo%20Ya">Avisenme cuando esté lista</a>
+        <a class="btn btn-dark" href="#" onclick="openLaunchModal(event)">Avisenme cuando esté lista</a>
         <div class="store-row">
           <span class="store-pill"> Google Play — próximamente</span>
           <span class="store-pill"> App Store — próximamente</span>
@@ -508,7 +583,7 @@
         </div>
         <div class="contact-row">
           <div class="ic">📍</div>
-          <span style="font-weight:700;">Argentina</span>
+          <span style="font-weight:700;">Argentina 🇦🇷</span>
         </div>
         <div class="contact-row">
           <div class="ic">🌐</div>
@@ -567,6 +642,18 @@
   </div>
 </footer>
 
+<div id="launchModal" class="modal-overlay" onclick="if(event.target===this) closeLaunchModal()">
+  <div class="modal-box">
+    <button type="button" class="modal-close" onclick="closeLaunchModal()" aria-label="Cerrar">✕</button>
+    <h3>Te avisamos ni bien lancemos</h3>
+    <p>Dejanos tu mail y te escribimos apenas Hacelo Ya esté disponible para descargar.</p>
+    <form id="launchForm">
+      <input type="email" name="email" placeholder="tu@email.com" required>
+      <button type="submit" class="btn btn-dark" style="width:100%; margin-top:14px;">Avisarme</button>
+    </form>
+  </div>
+</div>
+
 <script>
   function toggleMobileMenu(){
     var nav = document.getElementById('mnav');
@@ -589,6 +676,22 @@
       + '?subject=' + encodeURIComponent(subject)
       + '&body=' + encodeURIComponent(body);
     window.location.href = mailtoUrl;
+  });
+  function openLaunchModal(e){
+    if (e) e.preventDefault();
+    document.getElementById('launchModal').style.display = 'flex';
+  }
+  function closeLaunchModal(){
+    document.getElementById('launchModal').style.display = 'none';
+  }
+  document.getElementById('launchForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = this.email.value.trim();
+    var mailtoUrl = 'mailto:haceloyaapp@gmail.com'
+      + '?subject=' + encodeURIComponent('Quiero que me avisen del lanzamiento')
+      + '&body=' + encodeURIComponent('Mi email es: ' + email);
+    window.location.href = mailtoUrl;
+    closeLaunchModal();
   });
 </script>
 
