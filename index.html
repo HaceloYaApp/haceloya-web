@@ -30,7 +30,6 @@
     font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     line-height:1.55;
     -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
     padding-left:var(--stripe-w);
     padding-right:var(--stripe-w);
   }
@@ -57,6 +56,8 @@
       var(--yellow) 18px 36px
     );
     box-shadow: 0 0 0 2px var(--ink) inset;
+    transform:translateZ(0);
+    will-change:transform;
   }
   .hazard-rail.left{left:0;}
   .hazard-rail.right{right:0;}
@@ -130,7 +131,8 @@
   }
   .hero h1{font-size:clamp(34px,5vw,58px);}
   .hero h1 mark{background:var(--yellow); padding:0 8px; box-decoration-break:clone; -webkit-box-decoration-break:clone;}
-  .hero p.lead{font-size:18px; color:var(--muted); max-width:46ch; margin:22px 0 30px;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:56ch; margin:18px 0;}
+  .hero .hero-ctas{margin-top:28px;}
   .hero-ctas{display:flex; gap:14px; flex-wrap:wrap;}
   .hero-art{position:relative;}
   .hero-art .frame{
@@ -212,6 +214,12 @@
   }
 
   /* ---------- oficios ---------- */
+  .oficios-group-title{
+    text-align:center; font-family:'Manrope'; font-weight:800; font-size:14px;
+    color:var(--blue); text-transform:uppercase; letter-spacing:.05em;
+    margin:36px 0 16px;
+  }
+  .oficios-group-title:first-of-type{margin-top:8px;}
   .oficios-grid{
     display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:900px; margin:0 auto;
   }
@@ -229,9 +237,10 @@
   .safety{background:var(--ink); color:#fff;}
   .safety .section-head p{color:#c9c9bd;}
   .safety .kicker{color:var(--yellow);}
-  .safety-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:26px;}
+  .safety-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:26px;}
   .safety-card{
     background:#1f1f16; border:2px solid #3a3a2c; border-radius:16px; padding:26px;
+    flex:1 1 300px; max-width:340px;
   }
   .safety-card .ic{
     width:46px; height:46px; border-radius:12px; background:var(--yellow);
@@ -240,7 +249,7 @@
   }
   .safety-card h3{font-size:17px; margin-bottom:8px; font-family:'Manrope'; font-weight:800;}
   .safety-card p{margin:0; color:#c9c9bd; font-size:14.5px;}
-  @media (max-width: 780px){ .safety-grid{grid-template-columns:1fr;} }
+  @media (max-width: 780px){ .safety-card{flex-basis:100%; max-width:420px;} }
 
   /* ---------- proximamente ---------- */
   .soon{
@@ -348,8 +357,9 @@
   <section class="hero container">
     <div>
       <span class="eyebrow">🚧 Hecho en Argentina</span>
-      <h1>¿Se rompió algo en casa? <mark>Hacelo Ya.</mark></h1>
-      <p class="lead">Conectamos a personas que necesitan un servicio con profesionales verificados: electricidad, plomería, construcción, jardinería y muchos oficios más — cerca tuyo, sin vueltas.</p>
+      <h1>¿Se te rompió algo? <mark>Hacelo Ya.</mark></h1>
+      <p class="lead">Conectamos a personas que necesitan un servicio, una actividad o un turno con profesionales, personas calificadas o simplemente con ganas de trabajar. Elegí el presupuesto que más se adapte a vos: filtrá por cercanía, precio, nivel de conocimiento, reputación, cantidad de trabajos realizados, certificados y más.</p>
+      <p class="lead" style="margin-top:-14px; font-weight:700; color:var(--ink);">¿No necesitás una reparación? También podés pedir una consulta o una recomendación.</p>
       <div class="hero-ctas">
         <a class="btn btn-dark" href="#proximamente">Quiero enterarme del lanzamiento</a>
         <a class="btn btn-ghost" href="#como-funciona">Ver cómo funciona</a>
@@ -357,7 +367,7 @@
     </div>
     <div class="hero-art">
       <div class="frame">
-        <img src="assets/hero-construccion.webp" alt="Equipo de profesionales verificados de Hacelo Ya en una obra">
+        <img src="assets/hero-construccion.webp" alt="Persona mirando preocupada una canilla que gotea en su cocina">
       </div>
       <div class="badge-float"><span class="dot"></span> Profesionales verificados con DNI</div>
     </div>
@@ -367,9 +377,9 @@
 
   <section class="trust">
     <div class="container trust-wrap">
-      <div><strong>+50</strong><span>oficios disponibles</span></div>
-      <div><strong>100%</strong><span>identidad verificada</span></div>
-      <div><strong>0%</strong><span>intermediarios ocultos</span></div>
+      <div><strong>100%</strong><span>de confianza, particulares y profesionales verificados</span></div>
+      <div><strong>DNI</strong><span>verificado en cada trabajador</span></div>
+      <div><strong>0</strong><span>intermediarios — vos elegís el presupuesto</span></div>
       <div><strong>🇦🇷</strong><span>hecho en Argentina</span></div>
     </div>
   </section>
@@ -388,27 +398,27 @@
       </div>
 
       <div class="how-panel active" id="panel-particular">
-        <img src="assets/particulares-plomeria.webp" alt="Profesional de plomería trabajando en una cocina">
+        <img src="assets/particulares-plomeria.webp" alt="Persona mostrando el logo H de Hacelo Ya en el celular, con una canilla goteando de fondo">
         <ol class="steps">
           <li>
             <div class="step-num">1</div>
             <div class="step-body">
-              <h3>Contá qué necesitás</h3>
-              <p>Publicá tu pedido con fotos, ubicación y cuándo lo necesitás resuelto.</p>
+              <h3>¿Qué necesitás?</h3>
+              <p>Creá una postulación con imágenes, descripción y rangos horarios.</p>
             </div>
           </li>
           <li>
             <div class="step-num">2</div>
             <div class="step-body">
-              <h3>Recibí propuestas reales</h3>
-              <p>Profesionales verificados te envían presupuestos según tu pedido, no precios genéricos.</p>
+              <h3>Elegí entre todos los presupuestos recibidos</h3>
+              <p>Compará precio, explicación, materiales, mano de obra, nivel de profesionalismo y cualidades como limpieza, orden y prolijidad, entre otras.</p>
             </div>
           </li>
           <li>
             <div class="step-num">3</div>
             <div class="step-body">
-              <h3>Elegí, chateá y listo</h3>
-              <p>Comparás perfiles y calificaciones, coordinás todo desde el chat, y calificás al terminar.</p>
+              <h3>Aceptá y coordiná la visita</h3>
+              <p>Cuando te decidas por el presupuesto que más se adapta a vos, aceptalo y coordiná la visita. No te preocupes por recordarlo: aparece en el almanaque y te avisa los días anteriores a la obra.</p>
             </div>
           </li>
         </ol>
@@ -421,21 +431,21 @@
             <div class="step-num">1</div>
             <div class="step-body">
               <h3>Verificá tu identidad</h3>
-              <p>DNI y comprobante de domicilio. Un proceso simple que da confianza a quien te contrata.</p>
+              <p>Creá tu cuenta verificando tu identidad y domicilio con tu DNI y una factura. Un proceso simple para dar seguridad a quien te contrata.</p>
             </div>
           </li>
           <li>
             <div class="step-num">2</div>
             <div class="step-body">
-              <h3>Encontrá pedidos cerca tuyo</h3>
-              <p>Vas a ver los pedidos que coinciden con tu oficio y tu zona, en tiempo real.</p>
+              <h3>Elegí tus oficios y recibí pedidos</h3>
+              <p>Recibí todas las postulaciones de empleo relacionadas con tus conocimientos, en tu zona.</p>
             </div>
           </li>
           <li>
             <div class="step-num">3</div>
             <div class="step-body">
               <h3>Presupuestá y construí reputación</h3>
-              <p>Enviá tu propuesta, coordiná el trabajo y sumá calificaciones que te den más pedidos.</p>
+              <p>Enviá tu presupuesto. Si es aceptado, coordiná el trabajo y sumá calificaciones que te den más pedidos.</p>
             </div>
           </li>
         </ol>
@@ -449,9 +459,11 @@
     <div class="container">
       <div class="section-head">
         <span class="kicker">Oficios</span>
-        <h2>Un solo lugar para más de 50 oficios</h2>
-        <p>Desde una canilla que gotea hasta una obra completa. Estos son algunos de los oficios que ya están en Hacelo Ya:</p>
+        <h2>Oficios disponibles</h2>
+        <p>Ofrecemos todos los servicios, actividades y turnos — y si no está en la lista, ¡agregalo! ¿Una canilla que gotea? ¿Buscás turno con un masajista? ¿Querés empezar a boxear? Lo que quieras.</p>
       </div>
+
+      <h3 class="oficios-group-title">Ejemplos de servicios</h3>
       <div class="oficios-grid">
         <span class="chip">🔧 Plomería</span>
         <span class="chip">⚡ Electricidad</span>
@@ -459,17 +471,31 @@
         <span class="chip">🎨 Pintura</span>
         <span class="chip">🌿 Jardinería</span>
         <span class="chip">🧹 Limpieza general</span>
-        <span class="chip">🧱 Maestro mayor de obra</span>
         <span class="chip">🔥 Herrería y soldadura</span>
-        <span class="chip">🏠 Techista</span>
-        <span class="chip">🚚 Mudanzas y fletes</span>
         <span class="chip">❄️ Aire acondicionado</span>
-        <span class="chip">🚗 Mecánica</span>
-        <span class="chip">🪟 Vidriería</span>
-        <span class="chip">💻 Soporte técnico</span>
-        <span class="chip">📚 Clases particulares</span>
-        <span class="chip">🐛 Control de plagas</span>
+        <span class="chip">🚚 Mudanzas y fletes</span>
       </div>
+
+      <h3 class="oficios-group-title">Ejemplos de turnos</h3>
+      <div class="oficios-grid">
+        <span class="chip">💆 Masajes</span>
+        <span class="chip">💅 Manicura y pedicura</span>
+        <span class="chip">🦴 Kinesiología</span>
+        <span class="chip">🪒 Barbería</span>
+        <span class="chip">🦷 Odontología</span>
+        <span class="chip">🧖 Spa</span>
+      </div>
+
+      <h3 class="oficios-group-title">Ejemplos de actividades</h3>
+      <div class="oficios-grid">
+        <span class="chip">🧘 Yoga</span>
+        <span class="chip">🏋️ Musculación</span>
+        <span class="chip">🏊 Natación</span>
+        <span class="chip">🏃 Running</span>
+        <span class="chip">⚽ Fútbol</span>
+        <span class="chip">🤸 Crossfit</span>
+      </div>
+
       <p class="oficios-more">Y muchos más — el catálogo sigue creciendo con cada nueva solicitud.</p>
     </div>
   </section>
@@ -496,6 +522,16 @@
           <div class="ic">🔒</div>
           <h3>Datos protegidos</h3>
           <p>Tu contacto solo se comparte con la contraparte real de un pedido, nunca de forma pública.</p>
+        </div>
+        <div class="safety-card">
+          <div class="ic">⚡</div>
+          <h3>Hacelo Ya mismo</h3>
+          <p>¿Es urgente? Activá la opción para que los profesionales sepan que necesitás una solución hoy mismo.</p>
+        </div>
+        <div class="safety-card">
+          <div class="ic">♀</div>
+          <h3>Modalidad solo chicas</h3>
+          <p>Elegí recibir presupuestos únicamente de profesionales mujeres, para mayor comodidad y confianza.</p>
         </div>
       </div>
     </div>
