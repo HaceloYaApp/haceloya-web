@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Página no encontrada — Hacelo Ya</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; text-align:center; padding:40px 24px;
+    font-family:'Manrope',sans-serif; background:#FFFFFF; color:#14140F;
+  }
+  .rail{position:fixed; top:0; bottom:0; width:34px; background:repeating-linear-gradient(-45deg,#14140F 0 18px,#FFC800 18px 36px); box-shadow:0 0 0 2px #14140F inset;}
+  .rail.l{left:0;} .rail.r{right:0;}
+  h1{font-family:'Archivo Black'; font-size:clamp(64px,14vw,120px); margin:0 0 8px; letter-spacing:-0.02em;}
+  h1 mark{background:#FFC800; padding:0 12px;}
+  p{font-size:17px; color:#3D3D35; max-width:44ch; margin:0 0 28px;}
+  a.btn{
+    display:inline-flex; align-items:center; gap:8px; background:#14140F; color:#fff;
+    font-weight:800; padding:12px 22px; border-radius:10px; border:2px solid #14140F;
+    text-decoration:none; box-shadow:4px 4px 0 #FFC800;
+  }
+</style>
+</head>
+<body>
+  <div class="rail l" aria-hidden="true"></div>
+  <div class="rail r" aria-hidden="true"></div>
+  <h1><mark>404</mark></h1>
+  <p>Esta página no existe o se movió de lugar. Volvé al inicio para seguir viendo Hacelo Ya.</p>
+  <a class="btn" href="/">← Volver al inicio</a>
+</body>
+</html>

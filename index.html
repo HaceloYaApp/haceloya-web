@@ -6,6 +6,7 @@
 <title>Hacelo Ya — Encontrá al profesional que necesitás</title>
 <meta name="description" content="Hacelo Ya conecta a personas que necesitan un servicio con profesionales verificados: electricidad, plomería, construcción y más de 50 oficios en Argentina.">
 <meta name="theme-color" content="#14140F">
+<link rel="canonical" href="https://haceloya.com/">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://haceloya.com/">
@@ -311,6 +312,16 @@
 
   ::selection{background:var(--yellow); color:var(--ink);}
 
+  .skip-link{
+    position:absolute; left:-999px; top:auto;
+    background:var(--ink); color:#fff; font-weight:800;
+    padding:14px 20px; border-radius:0 0 10px 0; z-index:200;
+    text-decoration:none;
+  }
+  .skip-link:focus{left:0; top:0;}
+
+  :focus-visible{outline:3px solid var(--blue); outline-offset:2px;}
+
   /* ---------- modal ---------- */
   .modal-overlay{
     display:none; position:fixed; inset:0; z-index:100;
@@ -334,8 +345,23 @@
   }
   .modal-close:hover{background:var(--yellow);}
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Hacelo Ya",
+  "url": "https://haceloya.com/",
+  "logo": "https://haceloya.com/assets/apple-touch-icon.png",
+  "description": "Hacelo Ya conecta a personas que necesitan un servicio, una actividad o un turno con profesionales verificados en Argentina.",
+  "email": "haceloyaapp@gmail.com",
+  "sameAs": ["https://www.instagram.com/haceloyaapp"],
+  "areaServed": "AR"
+}
+</script>
 </head>
 <body>
+
+<a href="#top" class="skip-link">Saltar al contenido</a>
 
 <div class="hazard-rail left" aria-hidden="true"></div>
 <div class="hazard-rail right" aria-hidden="true"></div>
@@ -665,7 +691,8 @@
     <h3>Te avisamos ni bien lancemos</h3>
     <p>Dejanos tu mail y te escribimos apenas Hacelo Ya esté disponible para descargar.</p>
     <form id="launchForm">
-      <input type="email" name="email" placeholder="tu@email.com" required>
+      <label for="launchEmail" style="display:block; font-size:13.5px; font-weight:700; color:var(--muted); margin-bottom:6px;">Tu email</label>
+      <input id="launchEmail" type="email" name="email" placeholder="tu@email.com" required>
       <button type="submit" class="btn btn-dark" style="width:100%; margin-top:14px;">Avisarme</button>
     </form>
   </div>
