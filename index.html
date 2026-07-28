@@ -10,7 +10,7 @@
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://haceloya.com/">
-<meta property="og:title" content="Hacelo Ya — ¿Se te rompió algo? Hacelo Ya.">
+<meta property="og:title" content="Hacelo Ya — ¿Qué querés hacer hoy? Lo que necesites, Hacelo Ya!">
 <meta property="og:description" content="Conectamos a personas que necesitan un servicio, una actividad o un turno con profesionales verificados, cerca tuyo.">
 <meta property="og:image" content="https://haceloya.com/assets/og-image.jpg">
 <meta property="og:image:width" content="1200">
@@ -18,7 +18,7 @@
 <meta property="og:locale" content="es_AR">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Hacelo Ya — ¿Se te rompió algo? Hacelo Ya.">
+<meta name="twitter:title" content="Hacelo Ya — ¿Qué querés hacer hoy? Lo que necesites, Hacelo Ya!">
 <meta name="twitter:description" content="Conectamos a personas que necesitan un servicio, una actividad o un turno con profesionales verificados, cerca tuyo.">
 <meta name="twitter:image" content="https://haceloya.com/assets/og-image.jpg">
 
@@ -216,22 +216,16 @@
   }
 
   /* ---------- oficios ---------- */
-  .oficios-category{margin-bottom:36px;}
-  .oficios-category:last-of-type{margin-bottom:0;}
-  .oficios-grid{
-    display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:900px; margin:0 auto;
+  .oficios-stats{display:flex; flex-wrap:wrap; justify-content:center; gap:20px;}
+  .stat-card{
+    border:2.5px solid var(--ink); border-radius:16px; padding:28px 34px; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    min-width:170px; flex:1 1 200px; max-width:240px;
+    box-shadow:6px 6px 0 var(--ink); background:#fff;
   }
-  .chip{
-    border:2px solid var(--ink); border-radius:999px; padding:11px 18px;
-    font-weight:700; font-size:14.5px; background:#fff;
-    transition:background .15s ease, transform .15s ease;
-  }
-  .chip:hover{background:var(--yellow); transform:translateY(-2px);}
-  .chip-title{
-    display:block; width:fit-content; margin:0 auto 18px; background:var(--ink); color:var(--yellow);
-    font-size:16px; padding:12px 24px; cursor:default;
-  }
-  .chip-title:hover{background:var(--ink); transform:none;}
+  .stat-emoji{font-size:26px;}
+  .stat-num{font-family:'Archivo Black'; font-size:34px; color:var(--blue);}
+  .stat-label{font-weight:800; font-size:15px;}
   .oficios-more{
     text-align:center; margin-top:28px; color:var(--muted); font-size:14.5px; font-weight:600;
   }
@@ -413,7 +407,7 @@
   <section class="hero container">
     <div>
       <span class="eyebrow">🚧 Hecho en Argentina</span>
-      <h1>¿Se te rompió algo? <mark>¡Hacelo Ya!</mark></h1>
+      <h1>¿Qué querés hacer hoy?<br>Lo que necesites, <mark>Hacelo Ya!</mark></h1>
       <p class="lead">Conectamos a personas que necesitan un servicio, una actividad o un turno con profesionales, personas calificadas o arreglos o servicios menores con personas que simplemente sepan y quieran trabajar. Elegí el presupuesto que más se adapte a vos: filtrá por cercanía, precio, nivel de conocimiento, reputación, cantidad de trabajos realizados, certificaciones y más.</p>
       <p class="lead" style="margin-top:-14px; font-weight:700; color:var(--ink);">¿No necesitás una reparación? También podés pedir una consulta o una recomendación.</p>
       <div class="hero-ctas">
@@ -432,12 +426,6 @@
 
   <section id="como-funciona">
     <div class="container">
-      <div class="section-head">
-        <span class="kicker">Cómo funciona</span>
-        <h2>Tres pasos. De cada lado.</h2>
-        <p>Hacelo Ya funciona igual de simple para quien necesita un servicio y para quien lo ofrece.</p>
-      </div>
-
       <div class="tabs tabs-desktop">
         <button class="tab-btn active" data-tab="particular" onclick="showTab('particular')">Soy Particular</button>
         <button class="tab-btn" data-tab="profesional" onclick="showTab('profesional')">Soy Profesional</button>
@@ -517,48 +505,21 @@
         <p>Ofrecemos todos los servicios, actividades y turnos — y si no está en la lista, ¡agregalo! ¿Una canilla que gotea? ¿Buscás turno con un masajista? ¿Querés empezar a actuar? Lo que quieras, lo que necesites.</p>
       </div>
 
-      <div class="oficios-category">
-        <span class="chip chip-title">🔧 Servicios</span>
-        <div class="oficios-grid">
-          <span class="chip">Plomería</span>
-          <span class="chip">Carpintería</span>
-          <span class="chip">Jardinería</span>
-          <span class="chip">Limpieza general</span>
-          <span class="chip">Aire acondicionado</span>
-          <span class="chip">Herrería y soldadura</span>
-          <span class="chip">Pintura</span>
-          <span class="chip">Mudanzas y fletes</span>
-          <span class="chip">Techista</span>
+      <div class="oficios-stats">
+        <div class="stat-card">
+          <span class="stat-emoji">🔧</span>
+          <span class="stat-num">+50</span>
+          <span class="stat-label">Servicios</span>
         </div>
-      </div>
-
-      <div class="oficios-category">
-        <span class="chip chip-title">📅 Turnos</span>
-        <div class="oficios-grid">
-          <span class="chip">Masajes</span>
-          <span class="chip">Manicura</span>
-          <span class="chip">Pedicura</span>
-          <span class="chip">Kinesiología</span>
-          <span class="chip">Barbería</span>
-          <span class="chip">Odontología</span>
-          <span class="chip">Spa</span>
-          <span class="chip">Dermatología</span>
-          <span class="chip">Estética</span>
+        <div class="stat-card">
+          <span class="stat-emoji">📅</span>
+          <span class="stat-num">+20</span>
+          <span class="stat-label">Turnos</span>
         </div>
-      </div>
-
-      <div class="oficios-category">
-        <span class="chip chip-title">🏃 Actividades</span>
-        <div class="oficios-grid">
-          <span class="chip">Yoga</span>
-          <span class="chip">Musculación</span>
-          <span class="chip">Natación</span>
-          <span class="chip">Running</span>
-          <span class="chip">Fútbol</span>
-          <span class="chip">Crossfit</span>
-          <span class="chip">Pilates</span>
-          <span class="chip">Spinning</span>
-          <span class="chip">Básquet</span>
+        <div class="stat-card">
+          <span class="stat-emoji">🏃</span>
+          <span class="stat-num">+15</span>
+          <span class="stat-label">Actividades</span>
         </div>
       </div>
 
@@ -570,8 +531,7 @@
     <div class="container">
       <div class="section-head">
         <span class="kicker">Seguridad</span>
-        <h2>Confianza real, no solo una promesa</h2>
-        <p>Construimos Hacelo Ya pensando primero en la seguridad de ambos lados del pedido.</p>
+        <p>Construimos Hacelo Ya pensando en la seguridad de ambas partes.</p>
       </div>
       <div class="safety-grid">
         <div class="safety-card">
