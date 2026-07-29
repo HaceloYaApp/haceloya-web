@@ -1,0 +1,49 @@
+.cal {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cal-header button {
+  border: 2px solid var(--ink);
+  background: #fff;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.cal-title { font-weight: 800; text-transform: capitalize; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-weekdays { margin-bottom: 4px; }
+.cal-weekday { text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; }
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.cal-cell:hover { background: rgba(0,0,0,0.05); }
+.cal-cell-empty { pointer-events: none; }
+.cal-cell-today { font-weight: 800; color: var(--blue); }
+.cal-cell-selected { background: var(--yellow); font-weight: 800; }
+.cal-dots { display: flex; gap: 2px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 3px; }

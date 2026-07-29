@@ -1,0 +1,69 @@
+import { useState } from 'react';
+import { toLocalISODate } from '../utils/dateUtils';
+import './MonthCalendar.css';
+
+interface Props {
+  markedDates: Record<string, string[]>; // date -> dot colors
+  selectedDate: string | null;
+  onSelectDate: (d: string) => void;
+}
+
+const WEEKDAY_LABELS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+export default function MonthCalendar({ markedDates, selectedDate, onSelectDate }: Props) {
+  const [cursor, setCursor] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = toLocalISODate(new Date());
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div className="cal">
+      <div className="cal-header">
+        <button type="button" onClick={() => setCursor(new Date(year, month - 1, 1))} aria-label="Mes anterior">‹</button>
+        <span className="cal-title">{MONTH_NAMES[month]} {year}</span>
+        <button type="button" onClick={() => setCursor(new Date(year, month + 1, 1))} aria-label="Mes siguiente">›</button>
+      </div>
+      <div className="cal-grid cal-weekdays">
+        {WEEKDAY_LABELS.map((w, i) => <div key={i} className="cal-weekday">{w}</div>)}
+      </div>
+      <div className="cal-grid">
+        {cells.map((d, i) => {
+          if (d == null) return <div key={i} className="cal-cell cal-cell-empty" />;
+          const dateStr = toLocalISODate(new Date(year, month, d));
+          const dots = markedDates[dateStr] || [];
+          const isSelected = selectedDate === dateStr;
+          const isToday = dateStr === todayStr;
+          return (
+            <button
+              type="button"
+              key={i}
+              className={`cal-cell${isSelected ? ' cal-cell-selected' : ''}${isToday ? ' cal-cell-today' : ''}`}
+              onClick={() => onSelectDate(dateStr)}
+            >
+              <span>{d}</span>
+              {dots.length > 0 && (
+                <div className="cal-dots">
+                  {dots.slice(0, 4).map((c, j) => <span key={j} className="cal-dot" style={{ background: c }} />)}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
