@@ -8,41 +8,6 @@
 <meta name="theme-color" content="#14140F">
 <link rel="canonical" href="https://haceloya.com/">
 
-<script type="module">
-  // Si ya hay una sesión iniciada (misma cuenta que la app), no tiene sentido
-  // mostrarle de nuevo la landing de marketing en cada visita: se lo manda
-  // directo a su agenda. Se oculta la página hasta resolver esto (con un
-  // timeout de seguridad) para evitar el flash de la landing antes de
-  // redirigir.
-  document.documentElement.style.visibility = 'hidden';
-  var revealed = false;
-  function reveal() {
-    if (revealed) return;
-    revealed = true;
-    document.documentElement.style.visibility = 'visible';
-  }
-  setTimeout(reveal, 1200);
-  try {
-    var appMod = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js');
-    var authMod = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js');
-    var app = appMod.initializeApp({
-      apiKey: 'AIzaSyDpcOcD9ivZ_KojBg2NJBY475z4X447_MI',
-      authDomain: 'haceloyaapp-88e3d.firebaseapp.com',
-      projectId: 'haceloyaapp-88e3d',
-    });
-    var auth = authMod.getAuth(app);
-    authMod.onAuthStateChanged(auth, function (user) {
-      if (user) {
-        location.replace('/agenda/');
-      } else {
-        reveal();
-      }
-    });
-  } catch (e) {
-    reveal();
-  }
-</script>
-
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://haceloya.com/">
 <meta property="og:title" content="Hacelo Ya — ¿Qué querés hacer hoy? Lo que necesites, Hacelo Ya!">
