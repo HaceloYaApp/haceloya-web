@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { toLocalISODate } from '../utils/dateUtils';
 import './MonthCalendar.css';
 
+interface DayMark { dots: string[]; hasProJob: boolean }
+
 interface Props {
-  markedDates: Record<string, string[]>; // date -> dot colors
+  markedDates: Record<string, DayMark>;
   selectedDate: string | null;
   onSelectDate: (d: string) => void;
 }
@@ -44,7 +46,9 @@ export default function MonthCalendar({ markedDates, selectedDate, onSelectDate 
         {cells.map((d, i) => {
           if (d == null) return <div key={i} className="cal-cell cal-cell-empty" />;
           const dateStr = toLocalISODate(new Date(year, month, d));
-          const dots = markedDates[dateStr] || [];
+          const mark = markedDates[dateStr];
+          const dots = mark?.dots || [];
+          const hasProJob = !!mark?.hasProJob;
           const isSelected = selectedDate === dateStr;
           const isToday = dateStr === todayStr;
           return (
@@ -54,7 +58,11 @@ export default function MonthCalendar({ markedDates, selectedDate, onSelectDate 
               className={`cal-cell${isSelected ? ' cal-cell-selected' : ''}${isToday ? ' cal-cell-today' : ''}`}
               onClick={() => onSelectDate(dateStr)}
             >
-              <span>{d}</span>
+              {hasProJob ? (
+                <span className={`cal-day-pro${isSelected ? ' cal-day-pro-selected' : ''}`}>{d}</span>
+              ) : (
+                <span>{d}</span>
+              )}
               {dots.length > 0 && (
                 <div className="cal-dots">
                   {dots.slice(0, 4).map((c, j) => <span key={j} className="cal-dot" style={{ background: c }} />)}

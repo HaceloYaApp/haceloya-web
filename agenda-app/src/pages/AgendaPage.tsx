@@ -16,47 +16,47 @@ import { computeProposalTotal, formatARS } from '../utils/money';
 import { uploadAgendaPhoto } from '../utils/imageUpload';
 import './AgendaPage.css';
 
-type AppRole = 'Profesional' | 'Particular';
-
 export default function AgendaPage() {
   const { user } = useAuth();
   const uid = user!.uid;
-
-  const [role, setRole] = useState<AppRole>(() => {
-    const saved = localStorage.getItem('appRole');
-    return saved === 'Profesional' ? 'Profesional' : 'Particular';
-  });
-  useEffect(() => { localStorage.setItem('appRole', role); }, [role]);
 
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<JobEntry[]>([]);
   const [customEntries, setCustomEntries] = useState<CustomEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
+  // Agenda unificada: antes esto traía sólo el lado activo (Particular O
+  // Profesional, según un toggle) — acá se traen SIEMPRE los dos lados y
+  // cada trabajo queda etiquetado con viewerRole según qué consulta lo trajo.
   const loadAgenda = useCallback(async () => {
     setLoading(true);
     try {
       const coll = collection(db, 'posts');
-      const statusGroups: Array<[string, string[]]> = [
-        ['iniciado', ['iniciado']],
-        ['notificacion', ['notificacion']],
-        ['finalizado', ['finalizada', 'finalizado']],
-        ['cancelado', ['cancelado']],
-      ];
-      const queries = statusGroups.map(([, statuses]) => {
+      const statusGroups: string[][] = [['iniciado'], ['notificacion'], ['finalizada', 'finalizado'], ['cancelado']];
+      const queryDefs: Array<{ statuses: string[]; viewerRole: 'particular' | 'profesional' }> = [];
+      for (const statuses of statusGroups) {
+        queryDefs.push({ statuses, viewerRole: 'particular' });
+        queryDefs.push({ statuses, viewerRole: 'profesional' });
+      }
+      const snaps = await Promise.all(queryDefs.map(({ statuses, viewerRole }) => {
         const statusFilter = statuses.length > 1 ? fsWhere('status', 'in', statuses) : fsWhere('status', '==', statuses[0]);
-        return role === 'Profesional'
-          ? fsQuery(coll, statusFilter, fsWhere('acceptedProposal.proposerUid', '==', uid))
-          : fsQuery(coll, statusFilter, fsWhere('authorUid', '==', uid));
+        const roleFilter = viewerRole === 'profesional'
+          ? fsWhere('acceptedProposal.proposerUid', '==', uid)
+          : fsWhere('authorUid', '==', uid);
+        return getDocs(fsQuery(coll, statusFilter, roleFilter));
+      }));
+
+      const taggedDocs: Array<{ docSnap: any; viewerRole: 'particular' | 'profesional' }> = [];
+      snaps.forEach((snap, i) => {
+        const { viewerRole } = queryDefs[i];
+        snap.docs.forEach((docSnap) => taggedDocs.push({ docSnap, viewerRole }));
       });
-      const snaps = await Promise.all(queries.map((q) => getDocs(q)));
-      const allDocs = snaps.flatMap((s) => s.docs);
 
       const jobList: JobEntry[] = [];
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      await Promise.all(allDocs.map(async (docSnap) => {
+      await Promise.all(taggedDocs.map(async ({ docSnap, viewerRole }) => {
         const data: any = docSnap.data() || {};
         const id = docSnap.id;
         const title = data.title || 'Pedido';
@@ -74,14 +74,14 @@ export default function AgendaPage() {
 
         let otherUserName = '';
         try {
-          const otherUid = role === 'Profesional' ? data.authorUid : acceptedProposal.proposerUid;
+          const otherUid = viewerRole === 'profesional' ? data.authorUid : acceptedProposal.proposerUid;
           if (otherUid) {
             const userDoc = await getDoc(doc(db, 'users', otherUid));
             const userData: any = userDoc.data();
             if (userData) {
               otherUserName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
                 || userData.username
-                || (role === 'Profesional' ? 'Particular' : 'Profesional');
+                || (viewerRole === 'profesional' ? 'Particular' : 'Profesional');
             }
           }
         } catch { /* noop */ }
@@ -102,6 +102,7 @@ export default function AgendaPage() {
                   category, mode, dayOfWeek: dayNm, otherUserName,
                   estimatedTime: estimatedTime || undefined,
                   totalCost, serviceFee, warrantyCost, grandTotal, status,
+                  viewerRole,
                 });
               }
             }
@@ -115,6 +116,7 @@ export default function AgendaPage() {
               id, title, date: dateStr, timeFrom, timeTo, category, mode, otherUserName,
               estimatedTime: estimatedTime || undefined,
               totalCost, serviceFee, warrantyCost, grandTotal, status,
+              viewerRole,
             });
           });
         }
@@ -128,7 +130,7 @@ export default function AgendaPage() {
     } finally {
       setLoading(false);
     }
-  }, [uid, role]);
+  }, [uid]);
 
   useEffect(() => { loadAgenda(); }, [loadAgenda]);
 
@@ -179,12 +181,22 @@ export default function AgendaPage() {
 
   const jobDotColor = (status?: string) => (String(status || '').toLowerCase() === 'cancelado' ? '#EB5757' : '#27AE60');
 
+  // Un trabajo donde el usuario es el profesional (no quien lo pidió) se
+  // destaca en el calendario con el recuadrito de cinta negra/amarilla.
   const markedDates = useMemo(() => {
-    const md: Record<string, string[]> = {};
+    const md: Record<string, { dots: string[]; hasProJob: boolean }> = {};
     Object.keys(itemsByDate).forEach((date) => {
       const colorSet = new Set<string>();
-      itemsByDate[date].forEach((it) => colorSet.add(it.kind === 'job' ? jobDotColor(it.job.status) : CATEGORY_META[it.entry.category].color));
-      md[date] = Array.from(colorSet);
+      let hasProJob = false;
+      itemsByDate[date].forEach((it) => {
+        if (it.kind === 'job') {
+          colorSet.add(jobDotColor(it.job.status));
+          if (it.job.viewerRole === 'profesional') hasProJob = true;
+        } else {
+          colorSet.add(CATEGORY_META[it.entry.category].color);
+        }
+      });
+      md[date] = { dots: Array.from(colorSet), hasProJob };
     });
     return md;
   }, [itemsByDate]);
@@ -290,10 +302,6 @@ export default function AgendaPage() {
           </p>
         </div>
         <div className="agenda-header-actions">
-          <div className="role-toggle">
-            <button type="button" className={role === 'Particular' ? 'active' : ''} onClick={() => setRole('Particular')}>Particular</button>
-            <button type="button" className={role === 'Profesional' ? 'active' : ''} onClick={() => setRole('Profesional')}>Profesional</button>
-          </div>
           <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
         </div>
       </header>
@@ -335,7 +343,7 @@ export default function AgendaPage() {
                       {job.status === 'cancelado' && <span className="badge badge-danger">✕ Cancelado</span>}
                     </div>
                     <div className="job-card-body">
-                      {job.otherUserName && <div className="job-info-row"><span>👤 {role === 'Profesional' ? 'Particular:' : 'Profesional:'}</span><span>{job.otherUserName}</span></div>}
+                      {job.otherUserName && <div className="job-info-row"><span>👤 {job.viewerRole === 'profesional' ? 'Particular:' : 'Profesional:'}</span><span>{job.otherUserName}</span></div>}
                       <div className="job-info-row"><span>📅 Fecha:</span><span>{formatDate(job.date)}</span></div>
                       <div className="job-info-row"><span>🕐 Horario:</span><span>{job.timeFrom} — {job.timeTo}</span></div>
                       {job.estimatedTime && <div className="job-info-row"><span>⏱️ Tiempo est.:</span><span>{job.estimatedTime}</span></div>}

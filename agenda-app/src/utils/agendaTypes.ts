@@ -14,6 +14,7 @@ export type JobEntry = {
   warrantyCost?: number;
   grandTotal?: number;
   status?: string;
+  viewerRole: 'particular' | 'profesional';
 };
 
 export type ChecklistItem = { id: string; text: string; checked: boolean };
