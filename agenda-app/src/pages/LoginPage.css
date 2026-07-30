@@ -29,6 +29,16 @@
   font-size: 15px;
   font-family: inherit;
 }
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+.login-remember input { margin: 0; width: auto; }
 .login-error { color: var(--danger); font-size: 13px; margin: -6px 0 12px; }
 .login-notice { color: var(--success); font-size: 13px; margin: -6px 0 12px; }
 .login-card button[type="submit"] {

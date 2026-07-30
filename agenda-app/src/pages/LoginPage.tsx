@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth } from '../firebase';
 import './LoginPage.css';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -16,6 +17,11 @@ export default function LoginPage() {
     setNotice('');
     setLoading(true);
     try {
+      // Con "mantener sesión iniciada" la sesión sobrevive a cerrar el
+      // navegador (browserLocalPersistence); sin marcar, se pierde al cerrar
+      // la pestaña/navegador (browserSessionPersistence) — se define justo
+      // antes de loguear, como recomienda la documentación de Firebase Auth.
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email.trim(), password);
     } catch (err: any) {
       setError(err?.message || 'Revisá tus datos e intentá de nuevo.');
@@ -50,6 +56,11 @@ export default function LoginPage() {
 
         <label htmlFor="password">Contraseña</label>
         <input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+
+        <label className="login-remember">
+          <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+          <span>Mantener sesión iniciada</span>
+        </label>
 
         {error && <p className="login-error">{error}</p>}
         {notice && <p className="login-notice">{notice}</p>}

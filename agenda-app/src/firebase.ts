@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -20,6 +20,5 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// La sesión debe persistir entre visitas (no solo mientras la pestaña está
-// abierta) para que un usuario logueado siempre caiga directo en /agenda/.
-setPersistence(auth, browserLocalPersistence).catch(() => {});
+// La persistencia real (local vs. solo la pestaña) se define en el login
+// según el checkbox "Mantener sesión iniciada" — ver LoginPage.tsx.
