@@ -40,6 +40,18 @@
   padding: 14px;
 }
 .custom-card { border-left-width: 5px; cursor: pointer; }
+.note-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1.5px dashed var(--ink);
+  border-radius: 12px;
+  background: #FFF8E1;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+.note-card-icon { font-size: 15px; line-height: 1.4; }
+.note-card-text { flex: 1; margin: 0; font-size: 14.5px; line-height: 1.4; white-space: pre-wrap; }
 .job-card-header, .custom-card-header {
   display: flex;
   align-items: flex-start;

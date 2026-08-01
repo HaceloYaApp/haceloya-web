@@ -159,6 +159,7 @@ export default function AgendaPage() {
           category: (['personal', 'compras', 'trabajo', 'salud', 'otro'].includes(v.category) ? v.category : 'personal') as AgendaCategory,
           checklist: Array.isArray(v.checklist) ? v.checklist : [],
           photos: Array.isArray(v.photos) ? v.photos.filter((p: any) => typeof p === 'string') : [],
+          isNote: v.isNote === true,
         });
       });
       setCustomEntries(arr);
@@ -370,6 +371,16 @@ export default function AgendaPage() {
                 );
               }
               const entry = item.entry;
+
+              if (entry.isNote) {
+                return (
+                  <div key={`custom-${entry.id}`} className="note-card" onClick={() => openEditEntry(entry)}>
+                    <span className="note-card-icon">📝</span>
+                    <p className="note-card-text">{entry.notes}</p>
+                  </div>
+                );
+              }
+
               const meta = CATEGORY_META[entry.category];
               const checkedCount = entry.checklist.filter((c) => c.checked).length;
               return (

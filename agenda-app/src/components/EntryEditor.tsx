@@ -32,6 +32,7 @@ export default function EntryEditor({
   const [category, setCategory] = useState<AgendaCategory>(entry?.category || 'personal');
   const [checklist, setChecklist] = useState<ChecklistItem[]>(entry?.checklist || []);
   const [newItemText, setNewItemText] = useState('');
+  const [isNote, setIsNote] = useState(entry?.isNote === true);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -64,11 +65,20 @@ export default function EntryEditor({
 
   const handleSave = () => {
     const trimmed = title.trim();
+    const trimmedNotes = notes.trim();
+    if (isNote) {
+      if (!trimmedNotes) { alert('Escribí la nota.'); return; }
+      onSave({
+        title: '', notes: trimmedNotes, date, allDay: true, timeFrom: '', timeTo: '',
+        category, checklist: [], photos: [], isNote: true,
+      });
+      return;
+    }
     if (!trimmed) { alert('Escribí un título para la entrada.'); return; }
     if (!allDay && timeFrom && !/^\d{2}:\d{2}$/.test(timeFrom)) { alert('Completá la hora en formato HH:MM.'); return; }
     onSave({
       title: trimmed,
-      notes: notes.trim(),
+      notes: trimmedNotes,
       date,
       allDay,
       timeFrom: allDay ? '' : timeFrom,
@@ -76,6 +86,7 @@ export default function EntryEditor({
       category,
       checklist,
       photos: photosDraft,
+      isNote: false,
     });
   };
 
@@ -89,11 +100,28 @@ export default function EntryEditor({
         </div>
 
         <div className="editor-body">
-          <label>Título</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej: Comprar materiales, Turno médico..." />
+          {!entry && (
+            <div className="pill-row">
+              <button type="button" className={`cat-pill${!isNote ? ' cat-pill-active' : ''}`} onClick={() => setIsNote(false)}>Evento completo</button>
+              <button type="button" className={`cat-pill${isNote ? ' cat-pill-active' : ''}`} onClick={() => setIsNote(true)}>Solo nota</button>
+            </div>
+          )}
 
-          <label>Notas (opcional)</label>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Detalles adicionales..." rows={3} />
+          {!isNote && (
+            <>
+              <label>Título</label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej: Comprar materiales, Turno médico..." />
+            </>
+          )}
+
+          <label>{isNote ? 'Nota' : 'Notas (opcional)'}</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={isNote ? 'Escribí lo que necesites anotar...' : 'Detalles adicionales...'}
+            rows={isNote ? 5 : 3}
+            autoFocus={isNote}
+          />
 
           <label>Fecha</label>
           <div className="date-stepper">
@@ -103,90 +131,94 @@ export default function EntryEditor({
             <button type="button" className="today-btn" onClick={() => setDate(toLocalISODate(new Date()))}>Hoy</button>
           </div>
 
-          <label className="row-between">
-            <span>Todo el día</span>
-            <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
-          </label>
-
-          {!allDay && (
-            <div className="time-row">
-              <div>
-                <label className="small">Desde</label>
-                <input value={timeFrom} onChange={(e) => handleTimeInput(setTimeFrom)(e.target.value)} placeholder="HH:MM" maxLength={5} />
-              </div>
-              <div>
-                <label className="small">Hasta (opcional)</label>
-                <input value={timeTo} onChange={(e) => handleTimeInput(setTimeTo)(e.target.value)} placeholder="HH:MM" maxLength={5} />
-              </div>
-            </div>
-          )}
-
-          {conflicts.length > 0 && (
-            <div className="conflict-banner">
-              ⚠ Ya tenés {conflicts.length === 1 ? 'un trabajo agendado' : `${conflicts.length} trabajos agendados`} ese día: {conflicts.map((j) => `${j.title} (${j.timeFrom}–${j.timeTo})`).join(', ')}. Se puede guardar igual.
-            </div>
-          )}
-
-          <label>Categoría</label>
-          <div className="pill-row">
-            {CATEGORY_ORDER.map((cat) => {
-              const meta = CATEGORY_META[cat];
-              const active = category === cat;
-              return (
-                <button
-                  type="button"
-                  key={cat}
-                  className={`cat-pill${active ? ' cat-pill-active' : ''}`}
-                  style={{ borderColor: meta.color, background: active ? meta.color : undefined }}
-                  onClick={() => setCategory(cat)}
-                >
-                  <span className="cat-dot" style={{ background: active ? '#fff' : meta.color }} />
-                  {meta.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <label>Lista (materiales, tareas, lo que necesites)</label>
-          {checklist.map((ci) => (
-            <div key={ci.id} className="checklist-row">
-              <input type="checkbox" checked={ci.checked} onChange={() => toggleChecklistItem(ci.id)} />
-              <span className={ci.checked ? 'checked' : ''}>{ci.text}</span>
-              <button type="button" className="checklist-remove" onClick={() => removeChecklistItem(ci.id)} aria-label="Quitar">✕</button>
-            </div>
-          ))}
-          <div className="checklist-add-row">
-            <input
-              value={newItemText}
-              onChange={(e) => setNewItemText(e.target.value)}
-              placeholder="Agregar ítem..."
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addChecklistItem(); } }}
-            />
-            <button type="button" onClick={addChecklistItem}>+</button>
-          </div>
-
-          <label>Fotos (opcional)</label>
-          <div className="photo-row">
-            {photosDraft.map((url) => (
-              <div key={url} className="photo-thumb-wrap">
-                <img src={url} className="photo-thumb" alt="" />
-                <button type="button" className="photo-remove" onClick={() => onRemovePhoto(url)} aria-label="Quitar foto">✕</button>
-              </div>
-            ))}
-            {photosDraft.length < 6 && (
-              <label className="photo-add-btn">
-                {uploadingPhoto ? '...' : '+'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  hidden
-                  disabled={uploadingPhoto}
-                  onChange={(e) => { if (e.target.files?.length) onAddPhotos(e.target.files); e.target.value = ''; }}
-                />
+          {!isNote && (
+            <>
+              <label className="row-between">
+                <span>Todo el día</span>
+                <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
               </label>
-            )}
-          </div>
+
+              {!allDay && (
+                <div className="time-row">
+                  <div>
+                    <label className="small">Desde</label>
+                    <input value={timeFrom} onChange={(e) => handleTimeInput(setTimeFrom)(e.target.value)} placeholder="HH:MM" maxLength={5} />
+                  </div>
+                  <div>
+                    <label className="small">Hasta (opcional)</label>
+                    <input value={timeTo} onChange={(e) => handleTimeInput(setTimeTo)(e.target.value)} placeholder="HH:MM" maxLength={5} />
+                  </div>
+                </div>
+              )}
+
+              {conflicts.length > 0 && (
+                <div className="conflict-banner">
+                  ⚠ Ya tenés {conflicts.length === 1 ? 'un trabajo agendado' : `${conflicts.length} trabajos agendados`} ese día: {conflicts.map((j) => `${j.title} (${j.timeFrom}–${j.timeTo})`).join(', ')}. Se puede guardar igual.
+                </div>
+              )}
+
+              <label>Categoría</label>
+              <div className="pill-row">
+                {CATEGORY_ORDER.map((cat) => {
+                  const meta = CATEGORY_META[cat];
+                  const active = category === cat;
+                  return (
+                    <button
+                      type="button"
+                      key={cat}
+                      className={`cat-pill${active ? ' cat-pill-active' : ''}`}
+                      style={{ borderColor: meta.color, background: active ? meta.color : undefined }}
+                      onClick={() => setCategory(cat)}
+                    >
+                      <span className="cat-dot" style={{ background: active ? '#fff' : meta.color }} />
+                      {meta.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <label>Lista (materiales, tareas, lo que necesites)</label>
+              {checklist.map((ci) => (
+                <div key={ci.id} className="checklist-row">
+                  <input type="checkbox" checked={ci.checked} onChange={() => toggleChecklistItem(ci.id)} />
+                  <span className={ci.checked ? 'checked' : ''}>{ci.text}</span>
+                  <button type="button" className="checklist-remove" onClick={() => removeChecklistItem(ci.id)} aria-label="Quitar">✕</button>
+                </div>
+              ))}
+              <div className="checklist-add-row">
+                <input
+                  value={newItemText}
+                  onChange={(e) => setNewItemText(e.target.value)}
+                  placeholder="Agregar ítem..."
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addChecklistItem(); } }}
+                />
+                <button type="button" onClick={addChecklistItem}>+</button>
+              </div>
+
+              <label>Fotos (opcional)</label>
+              <div className="photo-row">
+                {photosDraft.map((url) => (
+                  <div key={url} className="photo-thumb-wrap">
+                    <img src={url} className="photo-thumb" alt="" />
+                    <button type="button" className="photo-remove" onClick={() => onRemovePhoto(url)} aria-label="Quitar foto">✕</button>
+                  </div>
+                ))}
+                {photosDraft.length < 6 && (
+                  <label className="photo-add-btn">
+                    {uploadingPhoto ? '...' : '+'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      hidden
+                      disabled={uploadingPhoto}
+                      onChange={(e) => { if (e.target.files?.length) onAddPhotos(e.target.files); e.target.value = ''; }}
+                    />
+                  </label>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="editor-footer">

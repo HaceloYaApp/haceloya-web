@@ -31,6 +31,10 @@ export type CustomEntry = {
   category: AgendaCategory;
   checklist: ChecklistItem[];
   photos: string[];
+  // Nota rápida: sólo texto + fecha, sin el resto del formulario. undefined/
+  // false en entradas viejas = evento completo de siempre. Mismo campo que
+  // en la app mobile (src/screens/MyAgendaScreen.tsx).
+  isNote?: boolean;
 };
 
 export const CATEGORY_META: Record<AgendaCategory, { label: string; color: string }> = {
