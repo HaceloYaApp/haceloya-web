@@ -14,21 +14,21 @@ import { formatDate, toLocalISODate } from '../utils/dateUtils';
 import { getJobEmoji, getJobTypeLabel } from '../utils/postLabel';
 import { computeProposalTotal, formatARS } from '../utils/money';
 import { uploadAgendaPhoto } from '../utils/imageUpload';
-import { LEDGER_ADMIN_EMAILS } from '../utils/ledgerAdmins';
+import { LEDGER_ADMIN_UIDS } from '../utils/ledgerAdmins';
 import LedgerPage from './LedgerPage';
 import './AgendaPage.css';
 
 export default function AgendaPage() {
   const { user } = useAuth();
   const uid = user!.uid;
-  const isLedgerAdmin = LEDGER_ADMIN_EMAILS.includes((user?.email || '').toLowerCase());
+  const isLedgerAdmin = LEDGER_ADMIN_UIDS.includes(uid);
 
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<JobEntry[]>([]);
   const [customEntries, setCustomEntries] = useState<CustomEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   // Resumen de transacciones: sólo entra quien loguea con una cuenta de
-  // LEDGER_ADMIN_EMAILS — el botón para abrirlo ni siquiera aparece para el
+  // LEDGER_ADMIN_UIDS — el botón para abrirlo ni siquiera aparece para el
   // resto (ver agenda-header-actions más abajo). La seguridad real vive en
   // el backend (assertLedgerAdmin), esto sólo evita mostrar la opción.
   const [showLedger, setShowLedger] = useState(false);
