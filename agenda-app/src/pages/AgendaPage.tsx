@@ -14,16 +14,24 @@ import { formatDate, toLocalISODate } from '../utils/dateUtils';
 import { getJobEmoji, getJobTypeLabel } from '../utils/postLabel';
 import { computeProposalTotal, formatARS } from '../utils/money';
 import { uploadAgendaPhoto } from '../utils/imageUpload';
+import { LEDGER_ADMIN_EMAILS } from '../utils/ledgerAdmins';
+import LedgerPage from './LedgerPage';
 import './AgendaPage.css';
 
 export default function AgendaPage() {
   const { user } = useAuth();
   const uid = user!.uid;
+  const isLedgerAdmin = LEDGER_ADMIN_EMAILS.includes((user?.email || '').toLowerCase());
 
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<JobEntry[]>([]);
   const [customEntries, setCustomEntries] = useState<CustomEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // Resumen de transacciones: sólo entra quien loguea con una cuenta de
+  // LEDGER_ADMIN_EMAILS — el botón para abrirlo ni siquiera aparece para el
+  // resto (ver agenda-header-actions más abajo). La seguridad real vive en
+  // el backend (assertLedgerAdmin), esto sólo evita mostrar la opción.
+  const [showLedger, setShowLedger] = useState(false);
 
   // Agenda unificada: antes esto traía sólo el lado activo (Particular O
   // Profesional, según un toggle) — acá se traen SIEMPRE los dos lados y
@@ -292,6 +300,10 @@ export default function AgendaPage() {
 
   const totalCount = displayedItems.length;
 
+  if (showLedger) {
+    return <LedgerPage onBack={() => setShowLedger(false)} />;
+  }
+
   return (
     <div className="agenda-page">
       <header className="agenda-header">
@@ -302,6 +314,9 @@ export default function AgendaPage() {
           </p>
         </div>
         <div className="agenda-header-actions">
+          {isLedgerAdmin && (
+            <button type="button" className="btn btn-outline" onClick={() => setShowLedger(true)}>Resumen</button>
+          )}
           <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
         </div>
       </header>

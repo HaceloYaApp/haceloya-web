@@ -248,22 +248,20 @@
   .safety-card p{margin:0; color:#c9c9bd; font-size:14.5px;}
   @media (max-width: 780px){ .safety-card{flex-basis:100%; max-width:420px;} }
 
-  /* ---------- proximamente ---------- */
-  .soon{
-    text-align:center; border:3px solid var(--ink); border-radius:22px;
-    padding:56px 32px; background:
-      radial-gradient(circle at top left, rgba(255,200,0,.15), transparent 55%),
-      var(--card);
-    box-shadow:10px 10px 0 var(--ink);
+  /* ---------- mas que una app ---------- */
+  .showcase-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:26px; margin-top:8px;}
+  .showcase-card{
+    background:var(--card); border:2.5px solid var(--ink); border-radius:18px; padding:28px;
+    flex:1 1 320px; max-width:360px; box-shadow:8px 8px 0 var(--ink);
   }
-  .soon h2{font-size:clamp(26px,4vw,38px); margin-bottom:14px;}
-  .soon p{color:var(--muted); max-width:52ch; margin:0 auto 28px; font-size:16.5px;}
-  .store-row{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:8px;}
-  .store-pill{
-    display:flex; align-items:center; gap:10px; border:2px solid var(--ink);
-    border-radius:12px; padding:10px 18px; font-weight:700; font-size:13.5px; color:var(--muted);
-    background:#fff;
+  .showcase-card .ic{
+    width:46px; height:46px; border-radius:12px; background:var(--yellow);
+    display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:22px;
   }
+  .showcase-card h3{font-size:18px; margin-bottom:8px; font-weight:800;}
+  .showcase-card p{margin:0; color:var(--muted); font-size:14.5px;}
+  .showcase-card .link{display:inline-block; margin-top:14px; font-weight:700; font-size:14px; color:var(--blue); text-decoration:none;}
+  @media (max-width: 780px){ .showcase-card{flex-basis:100%; max-width:420px;} }
 
   /* ---------- contacto ---------- */
   .contact-card{
@@ -562,16 +560,24 @@
 
   <div class="hazard-divider"></div>
 
-  <section id="proximamente">
+  <section id="mas-que-una-app">
     <div class="container">
-      <div class="soon">
-        <span class="eyebrow" style="background:var(--yellow); color:var(--ink);">🚀 Muy pronto</span>
-        <h2>Hacelo Ya está terminando los últimos detalles</h2>
-        <p>Estamos preparando el lanzamiento en Android e iOS. Escribinos y te avisamos apenas esté disponible para descargar.</p>
-        <a class="btn btn-dark" href="#" onclick="openLaunchModal(event)">Avisenme cuando esté lista</a>
-        <div class="store-row">
-          <span class="store-pill"> Google Play — próximamente</span>
-          <span class="store-pill"> App Store — próximamente</span>
+      <div class="section-head">
+        <span class="kicker">Más que una app</span>
+        <h2>Hacelo Ya ya tiene Marketplace y Agenda</h2>
+        <p>No es solo una promesa de lanzamiento: esto ya está funcionando.</p>
+      </div>
+      <div class="showcase-grid">
+        <div class="showcase-card">
+          <div class="ic">🛠️</div>
+          <h3>Marketplace</h3>
+          <p>Comprá y vendé entre usuarios lo que necesites. Está pensado para cualquier cosa, pero con foco en artesanías, materiales de construcción, sobras de obra y herramientas.</p>
+        </div>
+        <div class="showcase-card">
+          <div class="ic">📅</div>
+          <h3>Agenda</h3>
+          <p>Una agenda personal dentro de la app que junta tus turnos, actividades y trabajos en un solo calendario, con recordatorios automáticos antes de cada uno.</p>
+          <a class="link" href="/agenda/">Probar la agenda →</a>
         </div>
       </div>
     </div>

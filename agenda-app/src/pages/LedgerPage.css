@@ -1,0 +1,88 @@
+.ledger-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+.ledger-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ledger-tab {
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.ledger-tab-active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+.ledger-empty {
+  color: var(--muted);
+  text-align: center;
+  margin-top: 24px;
+}
+
+.ledger-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ledger-card {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 14px;
+}
+
+.ledger-card-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ledger-detalle {
+  font-weight: 800;
+  font-size: 14.5px;
+  flex: 1;
+}
+
+.ledger-precio {
+  font-weight: 900;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.ledger-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.ledger-date {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ledger-outcome {
+  color: var(--success);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.ledger-outcome-canceled {
+  color: var(--danger);
+}

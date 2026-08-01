@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 
 // Mismo proyecto Firebase que la app mobile (haceloyaapp-88e3d) — comparte
 // usuarios, reglas y datos. El apiKey de un web app de Firebase no es
@@ -19,6 +20,9 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+// Misma región que functions/src/globalOptions.ts en el repo de la app —
+// si no coincide, las llamadas a httpsCallable fallan con "not-found".
+export const functions = getFunctions(app, 'southamerica-east1');
 
 // La persistencia real (local vs. solo la pestaña) se define en el login
 // según el checkbox "Mantener sesión iniciada" — ver LoginPage.tsx.
