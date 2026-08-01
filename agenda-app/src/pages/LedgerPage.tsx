@@ -28,6 +28,25 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  // TEMPORAL — botón para correr una sola vez la migración que rellena
+  // isTargeted en los posts viejos (ver functions/src/migrations.ts, repo
+  // de la app). Borrar este botón + handler apenas se confirme que corrió.
+  const [backfillRunning, setBackfillRunning] = useState(false);
+  const [backfillResult, setBackfillResult] = useState<string | null>(null);
+  const runBackfill = async () => {
+    setBackfillRunning(true);
+    setBackfillResult(null);
+    try {
+      const call = httpsCallable(functions, 'backfillPostIsTargeted');
+      const resp: any = await call({});
+      const data = resp?.data as any;
+      setBackfillResult(`Listo: ${data?.scanned || 0} revisados, ${data?.updated || 0} actualizados.`);
+    } catch (e: any) {
+      setBackfillResult(`Error: ${e?.message || String(e)}`);
+    } finally {
+      setBackfillRunning(false);
+    }
+  };
 
   const load = useCallback(async (targetBucket: Bucket, cursorMillis?: number) => {
     const call = httpsCallable(functions, 'listLedgerEntries');
@@ -74,6 +93,14 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
       </header>
 
       <div className="hazard-stripe" style={{ marginBottom: 16 }} />
+
+      {/* TEMPORAL — ver comentario en el estado backfillRunning arriba */}
+      <div style={{ marginBottom: 16 }}>
+        <button type="button" className="ledger-tab" disabled={backfillRunning} onClick={runBackfill}>
+          {backfillRunning ? 'Ejecutando...' : 'Ejecutar migración isTargeted (una vez)'}
+        </button>
+        {!!backfillResult && <p style={{ color: 'var(--muted)', fontSize: 12.5, marginTop: 6 }}>{backfillResult}</p>}
+      </div>
 
       <div className="ledger-tabs">
         {TABS.map((t) => (
