@@ -27,6 +27,11 @@ export default function AgendaPage() {
   const [jobs, setJobs] = useState<JobEntry[]>([]);
   const [customEntries, setCustomEntries] = useState<CustomEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // Antes un error de red/permission-denied acá dejaba jobs/customEntries en
+  // [] sin avisar nada — la UI mostraba "No tenés nada agendado", indistinguible
+  // de que en verdad no hay nada. Con este banner al menos queda claro que
+  // falló la carga, no que la agenda está vacía.
+  const [loadError, setLoadError] = useState('');
   // Resumen de transacciones: sólo entra quien loguea con una cuenta de
   // LEDGER_ADMIN_UIDS — el botón para abrirlo ni siquiera aparece para el
   // resto (ver agenda-header-actions más abajo). La seguridad real vive en
@@ -132,9 +137,11 @@ export default function AgendaPage() {
 
       jobList.sort((a, b) => (a.date === b.date ? a.timeFrom.localeCompare(b.timeFrom) : a.date.localeCompare(b.date)));
       setJobs(jobList);
+      setLoadError('');
     } catch (e) {
       console.error('[Agenda] Error cargando trabajos', e);
       setJobs([]);
+      setLoadError('No pudimos cargar tus trabajos. Revisá tu conexión y volvé a intentar.');
     } finally {
       setLoading(false);
     }
@@ -163,7 +170,11 @@ export default function AgendaPage() {
         });
       });
       setCustomEntries(arr);
-    }, (err) => console.error('[Agenda] Error entradas propias', err));
+      setLoadError('');
+    }, (err) => {
+      console.error('[Agenda] Error entradas propias', err);
+      setLoadError('No pudimos cargar tu agenda. Revisá tu conexión y volvé a intentar.');
+    });
     return () => unsub();
   }, [uid]);
 
@@ -323,6 +334,8 @@ export default function AgendaPage() {
       </header>
 
       <div className="hazard-stripe" style={{ marginBottom: 16 }} />
+
+      {loadError && <div className="agenda-error">{loadError}</div>}
 
       {loading ? (
         <div className="agenda-loading">Cargando...</div>

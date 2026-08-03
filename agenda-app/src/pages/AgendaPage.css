@@ -17,6 +17,17 @@
 
 .agenda-loading { text-align: center; color: var(--muted); padding: 40px 0; }
 
+.agenda-error {
+  color: var(--danger);
+  background: #fff0f0;
+  border: 2px solid var(--danger);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
 .filter-badge {
   display: block;
   width: 100%;

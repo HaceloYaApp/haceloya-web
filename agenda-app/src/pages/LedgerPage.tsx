@@ -28,6 +28,10 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  // Mismo hallazgo que en AgendaPage: sin esto, un error del callable dejaba
+  // items en [] y la UI mostraba "No hay registros", indistinguible de que en
+  // verdad no hay nada.
+  const [loadError, setLoadError] = useState('');
 
   const load = useCallback(async (targetBucket: Bucket, cursorMillis?: number) => {
     const call = httpsCallable(functions, 'listLedgerEntries');
@@ -40,8 +44,11 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    load(bucket).then((newItems) => { if (!cancelled) setItems(newItems); })
-      .catch((e) => { console.error('[Ledger] error cargando:', e); if (!cancelled) setItems([]); })
+    load(bucket).then((newItems) => { if (!cancelled) { setItems(newItems); setLoadError(''); } })
+      .catch((e) => {
+        console.error('[Ledger] error cargando:', e);
+        if (!cancelled) { setItems([]); setLoadError('No pudimos cargar el registro. Revisá tu conexión y volvé a intentar.'); }
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [bucket, load]);
@@ -53,8 +60,10 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
       const last = items[items.length - 1];
       const newItems = await load(bucket, last.createdAtMillis || undefined);
       setItems((prev) => [...prev, ...newItems]);
+      setLoadError('');
     } catch (e) {
       console.error('[Ledger] error cargando más:', e);
+      setLoadError('No pudimos cargar más registros. Volvé a intentar.');
     } finally {
       setLoadingMore(false);
     }
@@ -74,6 +83,8 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
       </header>
 
       <div className="hazard-stripe" style={{ marginBottom: 16 }} />
+
+      {loadError && <div className="agenda-error">{loadError}</div>}
 
       <div className="ledger-tabs">
         {TABS.map((t) => (
