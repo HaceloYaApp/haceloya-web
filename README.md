@@ -26,7 +26,3 @@ npm run build   # genera ../agenda (outDir configurado en vite.config.ts)
 
 Después hay que hacer `git add agenda agenda-app` y push a `main` como
 cualquier otro cambio.
-
-La landing (`index.html`) tiene un script que redirige automáticamente a
-`/agenda/` a los usuarios que ya tienen sesión iniciada, para que no vuelvan
-a ver la landing de marketing en cada visita.
