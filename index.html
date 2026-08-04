@@ -64,7 +64,7 @@
 
   /* ---------- cintas decorativas laterales ---------- */
   .hazard-rail{
-    position:fixed;
+    position:absolute;
     top:0; bottom:0;
     width:var(--stripe-w);
     z-index:40;
@@ -74,8 +74,6 @@
       var(--yellow) 18px 36px
     );
     box-shadow: 0 0 0 2px var(--ink) inset;
-    transform:translateZ(0);
-    will-change:transform;
   }
   .hazard-rail.left{left:0;}
   .hazard-rail.right{right:0;}
