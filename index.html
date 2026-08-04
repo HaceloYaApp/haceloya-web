@@ -262,6 +262,16 @@
   .showcase-card p{margin:0; color:var(--muted); font-size:14.5px;}
   .showcase-card .link{display:inline-block; margin-top:14px; font-weight:700; font-size:14px; color:var(--blue); text-decoration:none;}
   @media (max-width: 780px){ .showcase-card{flex-basis:100%; max-width:420px;} }
+  .showcase-card.hazard{position:relative; padding-top:36px; padding-bottom:36px; overflow:hidden;}
+  .showcase-card.hazard::before,
+  .showcase-card.hazard::after{
+    content:""; position:absolute; left:-3px; right:-3px; height:12px;
+    background:repeating-linear-gradient(-45deg, var(--ink) 0 12px, var(--yellow) 12px 24px);
+    box-shadow:0 0 0 2px var(--ink) inset;
+  }
+  .showcase-card.hazard::before{top:0;}
+  .showcase-card.hazard::after{bottom:0;}
+  .showcase-card.hazard .ic{background:var(--ink); color:var(--yellow);}
 
   /* ---------- contacto ---------- */
   .contact-card{
@@ -571,23 +581,28 @@
         <div class="showcase-card">
           <div class="ic">🛠️</div>
           <h3>Marketplace</h3>
-          <p>Comprá y vendé entre usuarios lo que necesites. Está pensado para cualquier cosa, pero con foco en artesanías, materiales de construcción, sobras de obra y herramientas.</p>
-        </div>
-        <div class="showcase-card">
-          <div class="ic">📅</div>
-          <h3>Agenda</h3>
-          <p>Una agenda personal dentro de la app que junta tus turnos, actividades y trabajos en un solo calendario, con recordatorios automáticos antes de cada uno.</p>
-          <a class="link" href="/agenda/">Probar la agenda →</a>
-        </div>
-        <div class="showcase-card">
-          <div class="ic">🎓</div>
-          <h3>Aprendiz y Ayudante</h3>
-          <p>Un profesional se puede ofrecer como aprendiz o ayudante de otro: suma experiencia real y cobra por su trabajo, mientras el profesional que lo toma se compromete a enseñarle.</p>
+          <p>Comprá lo que necesites: desde decoración, artesanías, materiales de construcción, sobrantes de obra y herramientas hasta lo que se te ocurra. ¡También podés publicar y vender eso que ya no usás!</p>
         </div>
         <div class="showcase-card">
           <div class="ic">💼</div>
           <h3>Oferta laboral</h3>
-          <p>Publicá ofertas de trabajo para otros profesionales o marcate como disponible para que te contraten a vos: para cubrir a un colega, sumar un colaborador o encontrar tu próximo trabajo.</p>
+          <p>Publicá ofertas de trabajo para otros profesionales, o marcá las áreas en las que mejor te desenvolvés para que te lleguen ofertas a vos: para cubrir a un colega, sumar un colaborador o encontrar tu próximo trabajo.</p>
+        </div>
+        <div class="showcase-card">
+          <div class="ic">🎓</div>
+          <h3>Aprendiz y Ayudante</h3>
+          <p>Postulate como aprendiz o ayudante en los ámbitos donde te gustaría aprender un oficio y sumá experiencia real, o buscá entre las ofertas que publican los profesionales para entusiastas como vos.</p>
+        </div>
+        <div class="showcase-card">
+          <div class="ic">📅</div>
+          <h3>Agenda</h3>
+          <p>Organizá tu vida con la agenda incluida: se actualiza automáticamente cuando contratás un servicio, tenés un nuevo turno o actividad, o te preseleccionan para una entrevista laboral. Agregá los eventos y etiquetas que necesites, con notificaciones el mismo día o días antes.</p>
+          <a class="link" href="/agenda/">Probar la agenda →</a>
+        </div>
+        <div class="showcase-card hazard">
+          <div class="ic">🚨</div>
+          <h3>Área de emergencia</h3>
+          <p>En las pantallas principales vas a tener la sección de teléfonos útiles y de emergencia: a dos clics de llamar a cualquier servicio esencial, prestador o línea de asistencia social, entre muchas otras.</p>
         </div>
       </div>
     </div>
