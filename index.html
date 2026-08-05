@@ -272,6 +272,14 @@
   .showcase-card.hazard::after{bottom:0;}
   .showcase-card.hazard .ic{background:var(--ink); color:var(--yellow);}
 
+  /* ---------- lanzamiento ---------- */
+  .launch-banner{background:var(--ink); color:#fff; text-align:center;}
+  .launch-banner .kicker{color:var(--yellow);}
+  .launch-banner h2{color:#fff; font-size:clamp(28px,4vw,42px); margin-top:6px;}
+  .launch-banner p{color:#c9c9bd; font-size:16.5px; margin-top:12px;}
+  .store-badges{display:flex; justify-content:center; align-items:center; gap:18px; margin-top:28px; flex-wrap:wrap;}
+  .store-badge{height:54px; width:auto; display:block;}
+
   /* ---------- contacto ---------- */
   .contact-card{
     border:2.5px solid var(--ink); border-radius:18px; padding:34px;
@@ -601,6 +609,20 @@
       </div>
     </div>
   </section>
+
+  <section id="lanzamiento" class="launch-banner">
+    <div class="container">
+      <span class="kicker">Ya llega</span>
+      <h2>Disponible el 20 de agosto</h2>
+      <p>Descargala en Google Play y App Store.</p>
+      <div class="store-badges">
+        <img src="assets/google-play-badge.png" alt="Disponible en Google Play" class="store-badge">
+        <img src="assets/app-store-badge.svg" alt="Descargar en App Store" class="store-badge store-badge-apple">
+      </div>
+    </div>
+  </section>
+
+  <div class="hazard-divider"></div>
 
   <section id="contacto">
     <div class="container" style="display:flex; justify-content:center;">
