@@ -370,6 +370,11 @@
   "areaServed": "AR"
 }
 </script>
+  <!-- Cloudflare Web Analytics. Instalación MANUAL a propósito: el modo
+       automático inyecta el script sólo en el HTML que sirve Cloudflare, y
+       este sitio está en GitHub Pages con el DNS sin proxear, así que ese
+       camino nunca se dispararía. `defer` para que no frene el pintado. -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "005bccf9f08f44818ec7dd2b75470409"}'></script>
 </head>
 <body>
 

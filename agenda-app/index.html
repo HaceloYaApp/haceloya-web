@@ -6,7 +6,12 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mi agenda — Hacelo Ya</title>
-  </head>
+    <!-- Cloudflare Web Analytics. Instalación MANUAL a propósito: el modo
+       automático inyecta el script sólo en el HTML que sirve Cloudflare, y
+       este sitio está en GitHub Pages con el DNS sin proxear, así que ese
+       camino nunca se dispararía. `defer` para que no frene el pintado. -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "005bccf9f08f44818ec7dd2b75470409"}'></script>
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
