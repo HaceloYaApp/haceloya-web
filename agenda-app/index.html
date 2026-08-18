@@ -6,6 +6,15 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mi agenda — Hacelo Ya</title>
+    <!-- LAS TIPOGRAFÍAS DE LA MARCA.
+         `theme.css` las pedía (`font-family: 'Manrope'` y `'Archivo Black'`) y
+         nadie las cargaba nunca: toda la agenda caía al fallback del sistema,
+         mientras la landing —que las carga bien, tres archivos más allá— se
+         veía con la tipografía de la marca. Dos páginas del mismo sitio con
+         dos identidades distintas. Hallazgo H-W1-07. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Cloudflare Web Analytics. Instalación MANUAL a propósito: el modo
        automático inyecta el script sólo en el HTML que sirve Cloudflare, y
        este sitio está en GitHub Pages con el DNS sin proxear, así que ese

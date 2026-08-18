@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import {
   collection, getDocs, query as fsQuery, where as fsWhere, doc, getDoc,
   onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp,
@@ -14,14 +14,30 @@ import { formatDate, toLocalISODate } from '../utils/dateUtils';
 import { getJobEmoji, getJobTypeLabel } from '../utils/postLabel';
 import { computeProposalTotal, formatARS } from '../utils/money';
 import { uploadAgendaPhoto } from '../utils/imageUpload';
-import { LEDGER_ADMIN_UIDS } from '../utils/ledgerAdmins';
-import LedgerPage from './LedgerPage';
+import { puedeVerElRegistro } from '../utils/ledgerAdmins';
+// CARGA DIFERIDA.
+//
+// El bundle de la agenda es uno solo: 245 KB comprimidos que descarga
+// cualquiera que entre, incluso quien todavía está mirando el formulario de
+// login. `LedgerPage` —el registro contable, que ve UNA persona— viajaba
+// adentro de ese bundle para todos los demás.
+//
+// Con `lazy` se descarga recién cuando alguien lo abre. Hallazgo H-W1-16.
+const LedgerPage = lazy(() => import('./LedgerPage'));
 import './AgendaPage.css';
 
 export default function AgendaPage() {
   const { user } = useAuth();
   const uid = user!.uid;
-  const isLedgerAdmin = LEDGER_ADMIN_UIDS.includes(uid);
+  // Se le pregunta al backend en vez de llevar la lista acá: este repositorio
+  // es público y el archivo publicaba el uid y el email de la persona con
+  // acceso a los pagos. Hallazgos H-W1-08 / H-W1-09.
+  const [isLedgerAdmin, setIsLedgerAdmin] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    puedeVerElRegistro().then((r) => { if (vivo) setIsLedgerAdmin(r); });
+    return () => { vivo = false; };
+  }, [uid]);
 
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<JobEntry[]>([]);
@@ -313,7 +329,11 @@ export default function AgendaPage() {
   const totalCount = displayedItems.length;
 
   if (showLedger) {
-    return <LedgerPage onBack={() => setShowLedger(false)} />;
+    return (
+      <Suspense fallback={<div className="cargando-ledger">Abriendo el registro…</div>}>
+        <LedgerPage onBack={() => setShowLedger(false)} />
+      </Suspense>
+    );
   }
 
   return (

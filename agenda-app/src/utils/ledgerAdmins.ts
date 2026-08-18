@@ -1,14 +1,37 @@
-// uid fijo, no email — comparar por email dejaba que cualquiera se
-// registrara con haceloyapagos@gmail.com o haceloyaapp@gmail.com (ninguna de
-// las dos tenía cuenta creada, confirmado 2026-08) y se quedara con el
-// acceso. Misma lista que LEDGER_ADMIN_UIDS en el repo de la app (mobile:
-// src/screens/AdminLedgerScreen.tsx / functions/src/payments.ts). Son
-// codebases separadas, así que hay que mantener las tres listas iguales a
-// mano. La seguridad real vive en el backend (assertLedgerAdmin); esto sólo
-// evita mostrar el botón a quien no corresponde. Sólo bissicletta@icloud.com
-// tiene cuenta hoy; sumar el resto acá y en el backend cuando se registren.
-export const LEDGER_ADMIN_UIDS: string[] = [
-  'AdhAxVbpMXPsT3vtIG4dExFTt262', // bissicletta@icloud.com
-  // 'TODO', // haceloyapagos@gmail.com — agregar el uid cuando se registre
-  // 'TODO', // haceloyaapp@gmail.com — agregar el uid cuando se registre
-];
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app } from '../firebase';
+
+// ACÁ VIVÍA LA LISTA DE ADMINISTRADORES, EN UN REPOSITORIO PÚBLICO.
+//
+// El archivo publicaba, en texto plano, el uid de la única persona con acceso
+// al registro contable y —en un comentario— su email. Este repositorio es
+// público: cualquiera que mirara el código sabía exactamente a quién apuntarle
+// para llegar a los pagos de la plataforma. Un uid no es un secreto, pero el
+// par "este uid, este mail, esta función" sí es un blanco.
+//
+// Encima había que mantener tres listas iguales a mano (esta, la de la app y
+// la del backend) — y el propio archivo lo admitía. Con listas a mano lo que
+// pasa siempre es que se despegan.
+//
+// La seguridad real siempre estuvo en el backend (`assertLedgerAdmin`): esta
+// lista sólo servía para mostrar u ocultar un botón. Para eso no hace falta
+// publicar quién es: alcanza con preguntar.
+//
+// Hallazgos H-W1-08 y H-W1-09.
+
+/**
+ * ¿Puede esta persona ver el registro contable?
+ *
+ * Ante cualquier problema devuelve `false`: si no se puede confirmar que
+ * corresponde, el botón no se muestra. Esconderlo de más es un botón que
+ * falta; mostrarlo de más es una pantalla que rebota con un error feo.
+ */
+export async function puedeVerElRegistro(): Promise<boolean> {
+  try {
+    const fns = getFunctions(app, 'southamerica-east1');
+    const r = await httpsCallable(fns, 'puedeVerElRegistro')({});
+    return (r.data as { puede?: boolean })?.puede === true;
+  } catch {
+    return false;
+  }
+}

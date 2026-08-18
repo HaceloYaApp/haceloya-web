@@ -173,6 +173,16 @@
   /* ---------- sections generic ---------- */
   section{padding:84px 0;}
   .section-head{max-width:640px; margin:0 auto 48px; text-align:center;}
+  /* Visible sólo para lectores de pantalla: aporta estructura sin cambiar el
+     diseño. No se usa display:none ni visibility:hidden porque eso también lo
+     esconde del lector, que es justo lo contrario de lo que se busca. */
+  .solo-lectores{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
+  .form-aviso{
+    font-size:13px; line-height:1.5; margin:10px 0 0; color:var(--muted, #555);
+  }
   .kicker{
     color:var(--blue); font-weight:800; font-size:13px; letter-spacing:.08em;
     text-transform:uppercase; margin-bottom:10px; display:block;
@@ -433,6 +443,16 @@
 
   <section id="como-funciona">
     <div class="container">
+      <!-- EL ENCABEZADO DE NIVEL 2 QUE FALTABA.
+           El árbol de encabezados saltaba de nivel 1 a nivel 3: las dos
+           secciones de "Cómo funciona" arrancaban directo en el nivel 3, y lo
+           único que parecía un título era un span "kicker" — que para un lector
+           de pantalla es texto suelto, no un título. Quien navega por
+           encabezados (que es como se recorre una página larga sin ver) se
+           encontraba con tres pasos sin saber de qué.
+           Va oculto a la vista: el diseño no cambia, la estructura sí.
+           Hallazgo H-W1-14. -->
+      <h2 class="solo-lectores">Cómo funciona</h2>
       <div class="tabs tabs-desktop">
         <button class="tab-btn active" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
         <button class="tab-btn" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
@@ -625,9 +645,17 @@
       <span class="kicker">Ya llega</span>
       <h2>Disponible el 25 de agosto</h2>
       <p>Descargala en Google Play y App Store.</p>
+      <!-- LOS BADGES NO SON ENLACES, Y NO PUEDEN SERLO TODAVÍA.
+           Decían "Disponible en Google Play" y "Descargar en App Store" en su
+           texto alternativo —que es lo que lee un lector de pantalla— y tocarlos
+           no hacía nada, porque la app todavía no está publicada. Envolverlos en
+           un enlace hacia una ficha que no existe sería peor.
+           Mientras tanto: texto alternativo que no promete lo que no hay.
+           Cuando la app se publique, esto pasa a ser un enlace a cada ficha.
+           Hallazgo H-W1-13. -->
       <div class="store-badges">
-        <img src="assets/google-play-badge.png" alt="Disponible en Google Play" class="store-badge">
-        <img src="assets/app-store-badge.svg" alt="Descargar en App Store" class="store-badge store-badge-apple">
+        <img src="assets/google-play-badge.png" alt="Va a estar en Google Play" class="store-badge">
+        <img src="assets/app-store-badge.svg" alt="Va a estar en la App Store" class="store-badge store-badge-apple">
       </div>
     </div>
   </section>
@@ -671,6 +699,18 @@
             <textarea name="mensaje" rows="4" required placeholder="Contanos tu consulta, o qué oficio te gustaría sumar al catálogo..."></textarea>
           </label>
           <button type="submit" class="btn btn-dark" style="width:100%;">Enviar</button>
+          <!-- QUÉ PASA DESPUÉS DE TOCAR "ENVIAR".
+               El formulario no manda nada: abre el cliente de correo del
+               visitante con el texto precargado. Si esa persona no tiene uno
+               configurado —lo habitual en una computadora de escritorio— no
+               pasa absolutamente nada: el formulario parece roto y el mensaje
+               se pierde sin que nadie se entere de ninguno de los dos lados.
+               Hallazgo H-W1-12. -->
+          <p class="form-aviso" id="contactAviso" hidden>
+            Se tiene que haber abierto tu programa de correo con el mensaje listo para enviar.
+            Si no se abrió, escribinos directamente a
+            <a href="mailto:haceloyaapp@gmail.com">haceloyaapp@gmail.com</a>.
+          </p>
         </form>
       </div>
     </div>
@@ -741,6 +781,10 @@
       + '?subject=' + encodeURIComponent(subject)
       + '&body=' + encodeURIComponent(body);
     window.location.href = mailtoUrl;
+    // El mailto no avisa si falló: no hay evento, no hay error. Lo único que
+    // se puede hacer es contar qué tendría que haber pasado.
+    var aviso = document.getElementById('contactAviso');
+    if (aviso) aviso.hidden = false;
   });
   function openLaunchModal(e){
     if (e) e.preventDefault();

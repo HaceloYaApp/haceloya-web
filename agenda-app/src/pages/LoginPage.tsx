@@ -11,7 +11,18 @@ import './LoginPage.css';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  // ARRANCA DESTILDADO.
+  //
+  // Venía tildado, así que la sesión sobrevivía al cierre del navegador salvo
+  // que la persona lo destildara a propósito. En un celular propio eso es una
+  // comodidad; en la computadora de un locutorio o en la de un familiar, es
+  // dejar la sesión abierta.
+  //
+  // Y esta pantalla no da acceso sólo a la agenda: para quien administra los
+  // pagos, la misma sesión abre el registro contable con los nombres, montos y
+  // referencias de todas las operaciones de la plataforma. Que eso quede
+  // abierto tiene que ser una decisión, no el default. Hallazgo H-W1-15.
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
