@@ -221,6 +221,18 @@ export default function EntryEditor({
           )}
         </div>
 
+        {/* LOS RECORDATORIOS SE MANEJAN DESDE LA APP.
+            Son notificaciones locales del teléfono: esta web puede guardar el
+            cambio en la agenda, pero no puede reprogramar el aviso del celular
+            —es un navegador—. La app lo reconcilia sola la próxima vez que se
+            abre la agenda, y hasta entonces el aviso apunta al horario
+            anterior. Decirlo acá evita el "me avisó a destiempo" sin
+            explicación. Hallazgo H-W1-04. */}
+        <p className="editor-aviso">
+          Los recordatorios del celular se reprograman cuando abrís la agenda en la app.
+          Si cambiás la fecha o la hora desde acá, el aviso se acomoda ahí.
+        </p>
+
         <div className="editor-footer">
           {entry && (
             <button type="button" className="btn btn-outline editor-delete" onClick={onDelete} disabled={saving}>Eliminar</button>

@@ -61,3 +61,42 @@
   text-decoration: underline;
   padding: 0;
 }
+
+/* Google y Apple. Una cuenta creada con esos métodos no tiene contraseña, así
+   que sin estos botones no había forma de entrar a la agenda web — mientras la
+   pantalla decía "iniciá sesión con la misma cuenta de la app". H-W1-02. */
+.login-separador {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px;
+  color: var(--muted, #6b6b6b);
+  font-size: 12px;
+}
+.login-separador::before,
+.login-separador::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.35;
+}
+.login-proveedor {
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px;
+  font-weight: 800;
+  box-shadow: 4px 4px 0 var(--ink);
+  margin-bottom: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+.login-proveedor:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+.login-proveedor:disabled { opacity: 0.6; }
+.login-ayuda {
+  color: var(--muted, #6b6b6b);
+  font-size: 12.5px;
+  line-height: 1.45;
+  margin: 4px 0 0;
+}

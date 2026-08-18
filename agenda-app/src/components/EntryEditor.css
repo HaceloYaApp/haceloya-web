@@ -100,3 +100,13 @@
 }
 .editor-delete { color: var(--danger); border-color: var(--danger); box-shadow: none; }
 .editor-footer .btn:not(.editor-delete) { flex: 1; }
+
+/* Los recordatorios son notificaciones locales del teléfono: esta web no puede
+   reprogramarlas. Decirlo evita el "me avisó a destiempo" sin explicación.
+   Hallazgo H-W1-04. */
+.editor-aviso {
+  color: var(--muted, #6b6b6b);
+  font-size: 12.5px;
+  line-height: 1.45;
+  margin: 4px 0 12px;
+}

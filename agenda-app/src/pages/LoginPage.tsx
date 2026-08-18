@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword, sendPasswordResetEmail, setPersistence,
+  browserLocalPersistence, browserSessionPersistence,
+  GoogleAuthProvider, OAuthProvider, signInWithPopup,
+} from 'firebase/auth';
 import { auth } from '../firebase';
+import { mensajeDeError } from '../utils/erroresDeFirebase';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -23,8 +28,40 @@ export default function LoginPage() {
       // antes de loguear, como recomienda la documentación de Firebase Auth.
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email.trim(), password);
-    } catch (err: any) {
-      setError(err?.message || 'Revisá tus datos e intentá de nuevo.');
+    } catch (err: unknown) {
+      setError(mensajeDeError(err, 'Revisá tus datos e intentá de nuevo.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // GOOGLE Y APPLE.
+  //
+  // La agenda web sólo tenía email + contraseña. Una cuenta creada con Google
+  // o con Apple NO TIENE CONTRASEÑA: no hay nada que escribir en ese
+  // formulario, y "Olvidé mi contraseña" tampoco sirve porque no hay ninguna
+  // que restablecer.
+  //
+  // Mientras tanto la pantalla decía "Iniciá sesión con la misma cuenta de la
+  // app" — o sea que le prometía entrar a gente que no podía entrar de ninguna
+  // manera, y la dejaba probando contraseñas que no existen. Hallazgo H-W1-02.
+  const entrarCon = async (proveedor: 'google' | 'apple') => {
+    setError('');
+    setNotice('');
+    setLoading(true);
+    try {
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      const p = proveedor === 'google'
+        ? new GoogleAuthProvider()
+        : new OAuthProvider('apple.com');
+      if (proveedor === 'apple') {
+        // Apple no manda el email si no se lo pide explícitamente.
+        p.addScope('email');
+        p.addScope('name');
+      }
+      await signInWithPopup(auth, p);
+    } catch (err: unknown) {
+      setError(mensajeDeError(err, 'No se pudo iniciar sesión. Probá de nuevo.'));
     } finally {
       setLoading(false);
     }
@@ -40,8 +77,8 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email.trim());
       setNotice('Te enviamos un email con instrucciones. Revisá tu bandeja.');
-    } catch (err: any) {
-      setError(err?.message || 'No se pudo enviar el email. Intentá más tarde.');
+    } catch (err: unknown) {
+      setError(mensajeDeError(err, 'No se pudo enviar el email. Intentá más tarde.'));
     }
   };
 
@@ -67,6 +104,29 @@ export default function LoginPage() {
 
         <button type="submit" disabled={loading}>{loading ? 'Ingresando...' : 'Ingresar'}</button>
         <button type="button" className="login-link" onClick={handleReset}>Olvidé mi contraseña</button>
+
+        <div className="login-separador"><span>o</span></div>
+
+        <button
+          type="button"
+          className="login-proveedor"
+          disabled={loading}
+          onClick={() => entrarCon('google')}
+        >
+          Continuar con Google
+        </button>
+        <button
+          type="button"
+          className="login-proveedor"
+          disabled={loading}
+          onClick={() => entrarCon('apple')}
+        >
+          Continuar con Apple
+        </button>
+        <p className="login-ayuda">
+          Si te registraste con Google o con Apple, entrá por acá: esas cuentas no tienen
+          contraseña.
+        </p>
       </form>
     </div>
   );
