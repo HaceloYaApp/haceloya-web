@@ -1,7 +1,13 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-AR">
   <head>
     <meta charset="UTF-8" />
+    <!-- La agenda es una pantalla de login: indexarla da un resultado de
+         búsqueda "Mi agenda — Hacelo Ya" sin descripción, apuntando a un
+         formulario. El 404 ya tenía noindex y esto no. Hallazgo H-W1-18.
+         El `lang` decía "es" mientras el resto del sitio dice "es-AR"
+         (H-W1-20). -->
+    <meta name="robots" content="noindex" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

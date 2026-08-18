@@ -3,7 +3,7 @@
 Sitio informativo de [Hacelo Ya](https://github.com/HaceloYaApp/Hacelo-Ya-App), publicado con GitHub Pages.
 
 - Contacto: haceloyaapp@gmail.com
-- Dominio: haceloya.com (en configuración)
+- Dominio: haceloya.com (configurado y en línea desde julio de 2026, con HTTPS)
 
 Para editar la landing, modificá `index.html` y hacé push a `main` — GitHub Pages redeploya automáticamente.
 

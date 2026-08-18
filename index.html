@@ -345,27 +345,9 @@
   :focus-visible{outline:3px solid var(--blue); outline-offset:2px;}
 
   /* ---------- modal ---------- */
-  .modal-overlay{
-    display:none; position:fixed; inset:0; z-index:100;
-    background:rgba(20,20,15,.6); align-items:center; justify-content:center; padding:20px;
-  }
-  .modal-box{
-    position:relative; background:#fff; border:3px solid var(--ink); border-radius:18px;
-    padding:32px; max-width:420px; width:100%; box-shadow:8px 8px 0 var(--yellow);
-  }
-  .modal-box h3{font-size:20px; margin-bottom:8px;}
-  .modal-box p{color:var(--muted); font-size:14.5px; margin:0 0 4px;}
-  .modal-box input{
-    width:100%; font-family:'Manrope'; font-size:14.5px; color:var(--ink);
-    border:2px solid var(--ink); border-radius:10px; padding:11px 12px; margin-top:14px;
-  }
-  .modal-box input:focus{outline:2px solid var(--blue); outline-offset:1px;}
-  .modal-close{
-    position:absolute; top:14px; right:14px; width:30px; height:30px;
-    border:2px solid var(--ink); border-radius:8px; background:#fff; cursor:pointer;
-    font-size:14px; line-height:1;
-  }
-  .modal-close:hover{background:var(--yellow);}
+  /* El CSS del modal "Te avisamos ni bien lancemos" se fue con el modal: el
+     commit que sacó los botones del hero dejó el markup, el JS y estos estilos
+     sin nadie que los usara. Hallazgo H-W1-17. */
 </style>
 <script type="application/ld+json">
 {
@@ -415,7 +397,10 @@
       <a href="/agenda/">Iniciar sesión</a>
       <a href="/agenda/">Mi agenda</a>
     </nav>
-    <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMobileMenu()">☰</button>
+    <!-- aria-expanded/aria-controls: el botón abría el menú y no anunciaba
+         que lo había abierto, así que con lector de pantalla no había forma de
+         saber si estaba desplegado. Hallazgo H-W1-20. -->
+    <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mnav" onclick="toggleMobileMenu()">☰</button>
   </div>
   <nav id="mnav" class="container" style="display:none; flex-direction:column; gap:14px; padding-bottom:18px;">
     <a href="/agenda/">Iniciar sesión</a>
@@ -453,16 +438,18 @@
            Va oculto a la vista: el diseño no cambia, la estructura sí.
            Hallazgo H-W1-14. -->
       <h2 class="solo-lectores">Cómo funciona</h2>
-      <div class="tabs tabs-desktop">
-        <button class="tab-btn active" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
-        <button class="tab-btn" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
+      <!-- role/aria-selected: se veían como pestañas y se anunciaban como
+           botones sueltos, sin decir cuál estaba elegida. Hallazgo H-W1-20. -->
+      <div class="tabs tabs-desktop" role="tablist">
+        <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-particular" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-profesional" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
       </div>
 
       <div class="how-panel active" id="panel-particular">
         <img src="assets/particulares-plomeria.webp" alt="Persona mostrando el logo H de Hacelo Ya en el celular, con una canilla goteando de fondo">
-        <div class="tabs tabs-mobile">
-          <button class="tab-btn active" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
-          <button class="tab-btn" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
+        <div class="tabs tabs-mobile" role="tablist">
+          <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-particular" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-profesional" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
         </div>
         <ol class="steps">
           <li>
@@ -491,9 +478,9 @@
 
       <div class="how-panel" id="panel-profesional">
         <img src="assets/profesionales-plomero.webp" alt="Plomero profesional arreglando una canilla en una cocina">
-        <div class="tabs tabs-mobile">
-          <button class="tab-btn" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
-          <button class="tab-btn active" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
+        <div class="tabs tabs-mobile" role="tablist">
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-particular" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
+          <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-profesional" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
         </div>
         <ol class="steps">
           <li>
@@ -545,7 +532,11 @@
         </div>
         <div class="stat-card">
           <span class="stat-emoji">🏃</span>
-          <span class="stat-num">+50</span>
+          <!-- "+50" con exactamente 50 en el catálogo (contadas en
+               src/data/rubros.ts). Los otros dos contadores son conservadores
+               de verdad —"+120" contra 157 servicios, "+50" contra 53 turnos—;
+               éste prometía más de lo que hay. Hallazgo H-W1-20. -->
+          <span class="stat-num">50</span>
           <span class="stat-label">Actividades</span>
         </div>
       </div>
@@ -746,28 +737,28 @@
   </div>
 </footer>
 
-<div id="launchModal" class="modal-overlay" onclick="if(event.target===this) closeLaunchModal()">
-  <div class="modal-box">
-    <button type="button" class="modal-close" onclick="closeLaunchModal()" aria-label="Cerrar">✕</button>
-    <h3>Te avisamos ni bien lancemos</h3>
-    <p>Dejanos tu mail y te escribimos apenas Hacelo Ya esté disponible para descargar.</p>
-    <form id="launchForm">
-      <label for="launchEmail" style="display:block; font-size:13.5px; font-weight:700; color:var(--muted); margin-bottom:6px;">Tu email</label>
-      <input id="launchEmail" type="email" name="email" placeholder="tu@email.com" required>
-      <button type="submit" class="btn btn-dark" style="width:100%; margin-top:14px;">Avisarme</button>
-    </form>
-  </div>
-</div>
 
 <script>
   function toggleMobileMenu(){
     var nav = document.getElementById('mnav');
-    nav.style.display = (nav.style.display === 'none' || !nav.style.display) ? 'flex' : 'none';
+    var abierto = (nav.style.display === 'none' || !nav.style.display);
+    nav.style.display = abierto ? 'flex' : 'none';
+    // El estado anunciado tiene que seguir al estado real: si sólo se pone en
+    // el HTML, queda mintiendo desde el primer toque. Hallazgo H-W1-20.
+    document.querySelectorAll('.menu-toggle').forEach(function(b){
+      b.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    });
   }
   function showTab(which){
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(function(b){
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.how-panel').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn[data-tab="'+which+'"]').forEach(b=>b.classList.add('active'));
+    document.querySelectorAll('.tab-btn[data-tab="'+which+'"]').forEach(function(b){
+      b.classList.add('active');
+      b.setAttribute('aria-selected', 'true');
+    });
     document.getElementById('panel-'+which).classList.add('active');
   }
   document.getElementById('contactForm').addEventListener('submit', function(e){
@@ -785,22 +776,6 @@
     // se puede hacer es contar qué tendría que haber pasado.
     var aviso = document.getElementById('contactAviso');
     if (aviso) aviso.hidden = false;
-  });
-  function openLaunchModal(e){
-    if (e) e.preventDefault();
-    document.getElementById('launchModal').style.display = 'flex';
-  }
-  function closeLaunchModal(){
-    document.getElementById('launchModal').style.display = 'none';
-  }
-  document.getElementById('launchForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    var email = this.email.value.trim();
-    var mailtoUrl = 'mailto:haceloyaapp@gmail.com'
-      + '?subject=' + encodeURIComponent('Quiero que me avisen del lanzamiento')
-      + '&body=' + encodeURIComponent('Mi email es: ' + email);
-    window.location.href = mailtoUrl;
-    closeLaunchModal();
   });
 </script>
 
