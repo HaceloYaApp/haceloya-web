@@ -4,21 +4,43 @@ import { signOut } from 'firebase/auth';
 import { auth, functions } from '../firebase';
 import './LedgerPage.css';
 
-type Bucket = 'servicio' | 'servicio_mujer' | 'actividad' | 'turno' | 'marketplace';
+// ESTA PÁGINA LLAMABA A UN CALLABLE QUE SE BORRÓ.
+//
+// Usaba `listLedgerEntries`, que aceptaba cuatro de las once secciones que
+// escribe el ledger y para "marketplace" ni siquiera leía el ledger: leía
+// `marketplaceSales` y sacaba el precio de otro campo. Se dio de baja el
+// 19/08/2026 junto con la vista vieja del panel de la app, que era su otro
+// llamador. Hallazgo H-T12-10.
+//
+// Ahora usa `listarRegistro`, que es el que usa el panel de la app: conoce las
+// once secciones, devuelve la comisión y distingue "no cobramos" de "no lo
+// sabemos". Con eso, además, esta pantalla puede mostrar las siete secciones
+// que antes no podía pedir.
+type Bucket =
+  | 'todos' | 'servicio' | 'servicio_mujer' | 'actividad' | 'turno'
+  | 'curso' | 'oficio' | 'marketplace' | 'oferta_laboral'
+  | 'usuario_nuevo' | 'baja_usuario' | 'reclamo';
 
 const TABS: Array<{ key: Bucket; label: string }> = [
+  { key: 'todos', label: 'Todos' },
   { key: 'servicio', label: 'Servicios' },
   { key: 'servicio_mujer', label: 'Solo mujeres' },
   { key: 'actividad', label: 'Actividades' },
   { key: 'turno', label: 'Turnos' },
+  { key: 'curso', label: 'Cursos' },
+  { key: 'oficio', label: 'Oficios' },
   { key: 'marketplace', label: 'Marketplace' },
+  { key: 'oferta_laboral', label: 'Oferta laboral' },
+  { key: 'usuario_nuevo', label: 'Nuevos usuarios' },
+  { key: 'baja_usuario', label: 'Bajas' },
+  { key: 'reclamo', label: 'Reclamos' },
 ];
 
 type LedgerItem = {
   id: string;
   detalle: string;
   precio: number;
-  outcome: 'finalizado' | 'cancelado' | null;
+  outcome: string | null;
   createdAtMillis: number | null;
 };
 
@@ -34,10 +56,21 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
   const [loadError, setLoadError] = useState('');
 
   const load = useCallback(async (targetBucket: Bucket, cursorMillis?: number) => {
-    const call = httpsCallable(functions, 'listLedgerEntries');
-    const resp: any = await call({ bucket: targetBucket, cursorMillis });
-    const newItems: LedgerItem[] = resp?.data?.items || [];
-    setHasMore(newItems.length >= 50);
+    const call = httpsCallable(functions, 'listarRegistro');
+    const resp: any = await call({ seccion: targetBucket, cursorMillis });
+    // `listarRegistro` devuelve más campos que los que esta pantalla muestra
+    // (comisión, quién ofrece, quién busca): se mapea a lo que se usa acá y el
+    // resto queda disponible para cuando haga falta.
+    const crudos: any[] = resp?.data?.items || [];
+    const newItems: LedgerItem[] = crudos.map((v) => ({
+      id: String(v.id || ''),
+      detalle: String(v.detalle || ''),
+      precio: Number(v.precio || 0),
+      outcome: v.resultado || null,
+      createdAtMillis: v.createdAtMillis ?? null,
+    }));
+    // 40 por página, que es POR_PAGINA en panelRegistro.ts.
+    setHasMore(newItems.length >= 40);
     return newItems;
   }, []);
 
