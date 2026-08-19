@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -23,6 +24,56 @@ export const storage = getStorage(app);
 // Misma región que functions/src/globalOptions.ts en el repo de la app —
 // si no coincide, las llamadas a httpsCallable fallan con "not-found".
 export const functions = getFunctions(app, 'southamerica-east1');
+
+// ---------------------------------------------------------------------------
+// APP CHECK, IGUAL QUE LA APP.
+//
+// Esta web llama Cloud Functions (la agenda y el registro contable), y esos
+// callables son los MISMOS que usa la app. El backend ya mira el token de App
+// Check en 54 de ellos — hoy en modo aviso, pero el día que se prenda el
+// enforcement, una web sin App Check deja de funcionar entera.
+//
+// En la app el proveedor es Play Integrity / App Attest; en la web es
+// reCAPTCHA. La clave del sitio NO es secreta (viaja en el HTML igual que el
+// apiKey de arriba): lo que la hace servir es que está atada a este dominio en
+// la consola de Google.
+//
+// MIENTRAS NO ESTÉ CONFIGURADA, ESTO NO HACE NADA, A PROPÓSITO.
+// Sin la variable, no se inicializa y la web sigue andando como hasta ahora.
+// Poner una clave inventada sería peor que no tener ninguna: el token saldría
+// inválido y, con el enforcement prendido, dejaría a todos afuera.
+//
+// PARA PRENDERLO:
+//   1. Firebase Console → App Check → registrar la app WEB con reCAPTCHA
+//      Enterprise, y agregar haceloya.com a los dominios permitidos.
+//   2. Poner la clave del sitio en VITE_RECAPTCHA_SITE_KEY (archivo .env o
+//      variable del build de GitHub Pages).
+//   3. Para desarrollo local, Firebase Console → App Check → esta app →
+//      "Administrar tokens de depuración", y pegar el token que imprime la
+//      consola del navegador.
+// ---------------------------------------------------------------------------
+const claveDeRecaptcha = (import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim();
+
+if (claveDeRecaptcha) {
+  try {
+    // En desarrollo, el SDK imprime un token de depuración en la consola del
+    // navegador para dar de alta en Firebase; sin esto, en local no hay forma
+    // de conseguir uno válido.
+    if (import.meta.env.DEV) {
+      (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    }
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(claveDeRecaptcha),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch (e) {
+    // Mismo criterio que en la app: App Check es una defensa de fondo. Que no
+    // se pueda inicializar tiene que costar protección, no el sitio entero.
+    console.warn('[appCheck] no se pudo inicializar', (e as Error)?.message);
+  }
+} else {
+  console.warn('[appCheck] sin VITE_RECAPTCHA_SITE_KEY: el sitio llama a las funciones sin token de App Check.');
+}
 
 // La persistencia real (local vs. solo la pestaña) se define en el login
 // según el checkbox "Mantener sesión iniciada" — ver LoginPage.tsx.
