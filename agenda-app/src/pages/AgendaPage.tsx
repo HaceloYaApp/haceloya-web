@@ -24,6 +24,9 @@ import { puedeVerElRegistro } from '../utils/ledgerAdmins';
 //
 // Con `lazy` se descarga recién cuando alguien lo abre. Hallazgo H-W1-16.
 const LedgerPage = lazy(() => import('./LedgerPage'));
+// Mismo criterio que el registro: la sección Administradores la ve una sola
+// persona y no tiene por qué viajar en el bundle de todos.
+const AdminPage = lazy(() => import('./AdminPage'));
 import './AgendaPage.css';
 
 export default function AgendaPage() {
@@ -53,6 +56,7 @@ export default function AgendaPage() {
   // resto (ver agenda-header-actions más abajo). La seguridad real vive en
   // el backend (assertLedgerAdmin), esto sólo evita mostrar la opción.
   const [showLedger, setShowLedger] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   // Agenda unificada: antes esto traía sólo el lado activo (Particular O
   // Profesional, según un toggle) — acá se traen SIEMPRE los dos lados y
@@ -336,6 +340,14 @@ export default function AgendaPage() {
     );
   }
 
+  if (showAdmin) {
+    return (
+      <Suspense fallback={<div className="cargando-ledger">Abriendo administradores…</div>}>
+        <AdminPage onBack={() => setShowAdmin(false)} />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="agenda-page">
       <header className="agenda-header">
@@ -347,7 +359,10 @@ export default function AgendaPage() {
         </div>
         <div className="agenda-header-actions">
           {isLedgerAdmin && (
-            <button type="button" className="btn btn-outline" onClick={() => setShowLedger(true)}>Resumen</button>
+            <>
+              <button type="button" className="btn btn-outline" onClick={() => setShowLedger(true)}>Resumen</button>
+              <button type="button" className="btn btn-outline" onClick={() => setShowAdmin(true)}>Administradores</button>
+            </>
           )}
           <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
         </div>
