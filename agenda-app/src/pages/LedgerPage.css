@@ -86,3 +86,76 @@
 .ledger-outcome-canceled {
   color: var(--danger);
 }
+
+/* PARIDAD CON EL PANEL DE LA APP (19/08/2026).
+   Esta pantalla mostraba cuatro de los doce datos que el backend ya mandaba:
+   faltaban la comisión, si estaba cobrada, quiénes son las dos partes y todos
+   los totales. Mirar el mismo registro desde la compu y desde el teléfono daba
+   dos fotos distintas de la misma plata. */
+
+.ledger-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ledger-chip {
+  border: 1px solid var(--borde, #d8d8d8);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.ledger-chip-activo {
+  background: #14140F;
+  color: #FFC800;
+  border-color: #14140F;
+}
+
+.ledger-totales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 26px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--borde, #d8d8d8);
+  border-radius: 12px;
+}
+
+.ledger-total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ledger-total-num { font-size: 19px; font-weight: 800; line-height: 1.1; }
+.ledger-total-lbl { font-size: 12px; opacity: 0.7; }
+.ledger-cobrado { color: #1E7E45; }
+.ledger-adeudado { color: #C62828; }
+
+.ledger-partes {
+  font-size: 12.5px;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+/* La píldora de la comisión. Verde cobrada, ámbar impaga, gris cuando no hubo
+   comisión o cuando el asiento es anterior a que se guardara. */
+.ledger-pill {
+  border: 1px solid var(--borde, #d8d8d8);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.ledger-pill-cobrada { color: #1E7E45; border-color: #1E7E45; opacity: 1; }
+.ledger-pill-impaga { color: #8A6100; border-color: #8A6100; opacity: 1; }
