@@ -27,6 +27,7 @@ const LedgerPage = lazy(() => import('./LedgerPage'));
 // Mismo criterio que el registro: la sección Administradores la ve una sola
 // persona y no tiene por qué viajar en el bundle de todos.
 const AdminPage = lazy(() => import('./AdminPage'));
+const ModeracionPage = lazy(() => import('./ModeracionPage'));
 import './AgendaPage.css';
 
 export default function AgendaPage() {
@@ -57,6 +58,7 @@ export default function AgendaPage() {
   // el backend (assertLedgerAdmin), esto sólo evita mostrar la opción.
   const [showLedger, setShowLedger] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showModeracion, setShowModeracion] = useState(false);
 
   // Agenda unificada: antes esto traía sólo el lado activo (Particular O
   // Profesional, según un toggle) — acá se traen SIEMPRE los dos lados y
@@ -348,6 +350,14 @@ export default function AgendaPage() {
     );
   }
 
+  if (showModeracion) {
+    return (
+      <Suspense fallback={<div className="cargando-ledger">Abriendo moderación…</div>}>
+        <ModeracionPage onBack={() => setShowModeracion(false)} />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="agenda-page">
       <header className="agenda-header">
@@ -361,6 +371,7 @@ export default function AgendaPage() {
           {isLedgerAdmin && (
             <>
               <button type="button" className="btn btn-outline" onClick={() => setShowLedger(true)}>Resumen</button>
+              <button type="button" className="btn btn-outline" onClick={() => setShowModeracion(true)}>Moderación</button>
               <button type="button" className="btn btn-outline" onClick={() => setShowAdmin(true)}>Administradores</button>
             </>
           )}

@@ -81,3 +81,29 @@
 }
 
 .admin-numero-fila strong { font-size: 17px; font-weight: 900; }
+
+/* Moderación: pagos, denuncias y bloqueados. */
+
+.admin-caso {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde, #eee);
+}
+
+.admin-caso:last-of-type { border-bottom: none; }
+
+.admin-detalle {
+  font-size: 13.5px;
+  line-height: 19px;
+  margin: 6px 0 0;
+  font-style: italic;
+}
+
+.admin-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1565C0;
+  width: fit-content;
+}
