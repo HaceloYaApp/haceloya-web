@@ -38,21 +38,28 @@ export const functions = getFunctions(app, 'southamerica-east1');
 // apiKey de arriba): lo que la hace servir es que está atada a este dominio en
 // la consola de Google.
 //
-// MIENTRAS NO ESTÉ CONFIGURADA, ESTO NO HACE NADA, A PROPÓSITO.
-// Sin la variable, no se inicializa y la web sigue andando como hasta ahora.
-// Poner una clave inventada sería peor que no tener ninguna: el token saldría
-// inválido y, con el enforcement prendido, dejaría a todos afuera.
+// LA CLAVE VA ESCRITA ACÁ, IGUAL QUE EL apiKey DE ARRIBA.
 //
-// PARA PRENDERLO:
-//   1. Firebase Console → App Check → registrar la app WEB con reCAPTCHA
-//      Enterprise, y agregar haceloya.com a los dominios permitidos.
-//   2. Poner la clave del sitio en VITE_RECAPTCHA_SITE_KEY (archivo .env o
-//      variable del build de GitHub Pages).
-//   3. Para desarrollo local, Firebase Console → App Check → esta app →
-//      "Administrar tokens de depuración", y pegar el token que imprime la
-//      consola del navegador.
+// No es un descuido: una clave de sitio de reCAPTCHA es pública por diseño —
+// viaja en el HTML de cualquier página que la use, y tiene que hacerlo para que
+// el navegador pueda ejecutar el chequeo. Lo que la hace servir no es que sea
+// secreta, es que está atada a una lista de dominios en la consola de Google:
+// desde cualquier otro dominio, el token sale rechazado.
+//
+// Y va escrita en vez de en un `.env` porque el build de este sitio se hace a
+// mano en la máquina de quien publica: con la clave en un archivo ignorado por
+// git, el primero que clonara el repo generaría un build sin App Check sin
+// enterarse. La variable de entorno queda como forma de pisarla (por ejemplo,
+// una clave distinta para probar), no como el lugar donde vive.
+//
+// PARA DESARROLLO LOCAL: en `localhost` reCAPTCHA no emite token válido. La
+// consola del navegador imprime un token de depuración; se pega en Firebase
+// Console → App Check → esta app → los tres puntos → "Administrar tokens de
+// depuración". Es una vez por navegador.
 // ---------------------------------------------------------------------------
-const claveDeRecaptcha = (import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim();
+const CLAVE_DE_RECAPTCHA = '6Lc6z4wtAAAAAHXIplAlp9qWrd5B785yn1K7b8D0';
+
+const claveDeRecaptcha = (import.meta.env.VITE_RECAPTCHA_SITE_KEY || CLAVE_DE_RECAPTCHA).trim();
 
 if (claveDeRecaptcha) {
   try {
