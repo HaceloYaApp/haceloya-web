@@ -107,3 +107,29 @@
   color: #1565C0;
   width: fit-content;
 }
+
+/* La conversación de un reclamo, leída desde el panel.
+   Alto acotado y scroll propio: un chat largo, suelto, empuja los botones de
+   resolver fuera de la pantalla justo cuando hay que usarlos. */
+.reclamo-chat {
+  max-height: 340px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--borde, #d8d8d8);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--card, #FBFAF5);
+  margin-bottom: 4px;
+}
+
+.reclamo-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Los mensajes se muestran tal como se escribieron: quien modera está
+     leyendo prueba, y reflowear saltos de línea puede cambiar el sentido. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}

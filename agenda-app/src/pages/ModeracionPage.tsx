@@ -3,6 +3,11 @@ import { httpsCallable } from 'firebase/functions';
 import { signOut } from 'firebase/auth';
 import { auth, functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
+import ReclamosPanel from './ReclamosPanel';
+// Las solapas usan los mismos chips que el registro contable. Hay que pedir su
+// hoja de estilos acá: `LedgerPage` se carga en diferido, así que su CSS viaja
+// en otro pedazo y sólo llegaba si alguien había entrado antes al registro.
+import './LedgerPage.css';
 import './AdminPage.css';
 
 // PAGOS, DENUNCIAS Y BLOQUEADOS, LAS TRES QUE FALTABAN.
@@ -16,10 +21,14 @@ import './AdminPage.css';
 // misma que en el teléfono, pero una sesión de navegador abierta en una compu
 // compartida es más fácil de dejar olvidada que un teléfono en el bolsillo.
 
-type Solapa = 'pagos' | 'denuncias' | 'bloqueados';
+type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'bloqueados';
 
 const SOLAPAS: Array<{ key: Solapa; label: string }> = [
   { key: 'pagos', label: 'Pagos por aprobar' },
+  // Los reclamos entre dos partes de una operación. Son otra cosa que las
+  // denuncias: acá hay plata o una entrega de por medio y alguien tiene que
+  // fallar a favor de uno de los dos.
+  { key: 'reclamos', label: 'Reclamos' },
   { key: 'denuncias', label: 'Denuncias' },
   { key: 'bloqueados', label: 'Bloqueados' },
 ];
@@ -59,6 +68,7 @@ export default function ModeracionPage({ onBack }: { onBack: () => void }) {
       </div>
 
       {solapa === 'pagos' && <PagosPorAprobar />}
+      {solapa === 'reclamos' && <ReclamosPanel />}
       {solapa === 'denuncias' && <Denuncias />}
       {solapa === 'bloqueados' && <Bloqueados />}
     </div>
