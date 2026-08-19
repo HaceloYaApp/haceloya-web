@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { signOut } from 'firebase/auth';
-import { auth, functions } from '../firebase';
+import { functions } from '../firebase';
 import './LedgerPage.css';
 
 // ESTA PÁGINA LLAMABA A UN CALLABLE QUE SE BORRÓ.
@@ -86,7 +85,7 @@ const ETIQUETA_RESULTADO: Record<string, string> = {
 
 const plata = (n: number) => `$${Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
-export default function LedgerPage({ onBack }: { onBack: () => void }) {
+export default function LedgerPage() {
   const [bucket, setBucket] = useState<Bucket>('servicio');
   const [items, setItems] = useState<LedgerItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,20 +165,9 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="ledger-page">
-      <header className="agenda-header">
-        <div>
-          <h1>Registro de transacciones</h1>
-          <p className="agenda-sub">{items.length} {items.length === 1 ? 'entrada' : 'entradas'} en esta categoría</p>
-        </div>
-        <div className="agenda-header-actions">
-          <button type="button" className="btn btn-outline" onClick={onBack}>← Volver a la agenda</button>
-          <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
-        </div>
-      </header>
-
-      <div className="hazard-stripe" style={{ marginBottom: 16 }} />
-
+    <>
+      {/* Sin encabezado propio: esto es una pestaña de Administración, y el
+          título y los botones de Volver y Salir los pone esa pantalla. */}
       {loadError && <div className="agenda-error">{loadError}</div>}
 
       <div className="ledger-tabs">
@@ -299,6 +287,6 @@ export default function LedgerPage({ onBack }: { onBack: () => void }) {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }

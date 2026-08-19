@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { signOut } from 'firebase/auth';
-import { auth, functions } from '../firebase';
+import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import ReclamosPanel from './ReclamosPanel';
 // Las solapas usan los mismos chips que el registro contable. Hay que pedir su
@@ -36,24 +35,13 @@ const SOLAPAS: Array<{ key: Solapa; label: string }> = [
 const fecha = (ms: number | null) => (ms ? new Date(ms).toLocaleString('es-AR') : '—');
 const plata = (n: number) => `$${Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
-export default function ModeracionPage({ onBack }: { onBack: () => void }) {
+export default function ModeracionPage() {
   const [solapa, setSolapa] = useState<Solapa>('pagos');
 
   return (
-    <div className="admin-page">
-      <header className="agenda-header">
-        <div>
-          <h1>Moderación</h1>
-          <p className="agenda-sub">Pagos por aprobar, denuncias y cuentas bloqueadas.</p>
-        </div>
-        <div className="agenda-header-actions">
-          <button type="button" className="btn btn-outline" onClick={onBack}>← Volver</button>
-          <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
-        </div>
-      </header>
-
-      <div className="hazard-stripe" style={{ marginBottom: 16 }} />
-
+    // Sin encabezado propio: esto es una pestaña de Administración. Estas
+    // solapas son de segundo nivel, adentro de Moderación.
+    <>
       <div className="ledger-filtros">
         {SOLAPAS.map((s) => (
           <button
@@ -71,7 +59,7 @@ export default function ModeracionPage({ onBack }: { onBack: () => void }) {
       {solapa === 'reclamos' && <ReclamosPanel />}
       {solapa === 'denuncias' && <Denuncias />}
       {solapa === 'bloqueados' && <Bloqueados />}
-    </div>
+    </>
   );
 }
 

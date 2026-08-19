@@ -133,3 +133,37 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* Las pestañas de primer nivel de Administración.
+   Deliberadamente distintas de los chips redondeados que se usan adentro de
+   cada sección: son dos niveles de navegación, uno arriba del otro, y si se
+   vieran iguales no se entendería cuál manda sobre cuál. */
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 18px;
+  border-bottom: 2px solid var(--ink, #14140F);
+}
+
+.admin-tab {
+  appearance: none;
+  background: transparent;
+  border: 2px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 10px 16px;
+  margin-bottom: -2px;
+  font: inherit;
+  font-weight: 800;
+  color: var(--muted, #3D3D35);
+  cursor: pointer;
+}
+
+.admin-tab:hover { color: var(--ink, #14140F); }
+
+.admin-tab-activa {
+  background: var(--yellow, #FFC800);
+  border-color: var(--ink, #14140F);
+  color: var(--ink, #14140F);
+}

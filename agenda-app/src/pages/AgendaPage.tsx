@@ -23,11 +23,11 @@ import { puedeVerElRegistro } from '../utils/ledgerAdmins';
 // adentro de ese bundle para todos los demás.
 //
 // Con `lazy` se descarga recién cuando alguien lo abre. Hallazgo H-W1-16.
-const LedgerPage = lazy(() => import('./LedgerPage'));
-// Mismo criterio que el registro: la sección Administradores la ve una sola
-// persona y no tiene por qué viajar en el bundle de todos.
-const AdminPage = lazy(() => import('./AdminPage'));
-const ModeracionPage = lazy(() => import('./ModeracionPage'));
+//
+// Son las tres secciones de Administración —Moderación, Resumen y
+// Administradores— y viajan juntas en un solo pedazo: quien abre una casi
+// siempre pasa por las otras, y son la misma persona.
+const AdministracionPage = lazy(() => import('./AdministracionPage'));
 import './AgendaPage.css';
 
 export default function AgendaPage() {
@@ -56,9 +56,7 @@ export default function AgendaPage() {
   // LEDGER_ADMIN_UIDS — el botón para abrirlo ni siquiera aparece para el
   // resto (ver agenda-header-actions más abajo). La seguridad real vive en
   // el backend (assertLedgerAdmin), esto sólo evita mostrar la opción.
-  const [showLedger, setShowLedger] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
-  const [showModeracion, setShowModeracion] = useState(false);
+  const [showAdministracion, setShowAdministracion] = useState(false);
 
   // Agenda unificada: antes esto traía sólo el lado activo (Particular O
   // Profesional, según un toggle) — acá se traen SIEMPRE los dos lados y
@@ -334,26 +332,10 @@ export default function AgendaPage() {
 
   const totalCount = displayedItems.length;
 
-  if (showLedger) {
+  if (showAdministracion) {
     return (
-      <Suspense fallback={<div className="cargando-ledger">Abriendo el registro…</div>}>
-        <LedgerPage onBack={() => setShowLedger(false)} />
-      </Suspense>
-    );
-  }
-
-  if (showAdmin) {
-    return (
-      <Suspense fallback={<div className="cargando-ledger">Abriendo administradores…</div>}>
-        <AdminPage onBack={() => setShowAdmin(false)} />
-      </Suspense>
-    );
-  }
-
-  if (showModeracion) {
-    return (
-      <Suspense fallback={<div className="cargando-ledger">Abriendo moderación…</div>}>
-        <ModeracionPage onBack={() => setShowModeracion(false)} />
+      <Suspense fallback={<div className="cargando-ledger">Abriendo administración…</div>}>
+        <AdministracionPage onBack={() => setShowAdministracion(false)} />
       </Suspense>
     );
   }
@@ -369,11 +351,10 @@ export default function AgendaPage() {
         </div>
         <div className="agenda-header-actions">
           {isLedgerAdmin && (
-            <>
-              <button type="button" className="btn btn-outline" onClick={() => setShowLedger(true)}>Resumen</button>
-              <button type="button" className="btn btn-outline" onClick={() => setShowModeracion(true)}>Moderación</button>
-              <button type="button" className="btn btn-outline" onClick={() => setShowAdmin(true)}>Administradores</button>
-            </>
+            // Un solo botón: adentro están Moderación, Resumen y
+            // Administradores como pestañas. Antes eran tres puertas separadas
+            // y había que volver a la agenda para pasar de una a otra.
+            <button type="button" className="btn btn-outline" onClick={() => setShowAdministracion(true)}>Administración</button>
           )}
           <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
         </div>

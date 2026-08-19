@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { signOut } from 'firebase/auth';
-import { auth, functions } from '../firebase';
+import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import './AdminPage.css';
 
@@ -36,28 +35,18 @@ type Proceso = {
 const fecha = (ms: number | null) => (ms ? new Date(ms).toLocaleString('es-AR') : 'nunca');
 const numero = (v: number | null | undefined) => (typeof v === 'number' ? v.toLocaleString('es-AR') : '—');
 
-export default function AdminPage({ onBack }: { onBack: () => void }) {
+export default function AdminPage() {
   return (
-    <div className="admin-page">
-      <header className="agenda-header">
-        <div>
-          <h1>Administradores</h1>
-          <p className="agenda-sub">
-            Un administrador puede aprobar los pagos por transferencia y ver el registro de transacciones.
-          </p>
-        </div>
-        <div className="agenda-header-actions">
-          <button type="button" className="btn btn-outline" onClick={onBack}>← Volver</button>
-          <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
-        </div>
-      </header>
-
-      <div className="hazard-stripe" style={{ marginBottom: 16 }} />
-
+    // Sin encabezado propio: esto es una pestaña de Administración.
+    <>
+      <p className="admin-sub" style={{ marginBottom: 12 }}>
+        Un administrador puede aprobar los pagos por transferencia, resolver reclamos y ver el
+        registro de transacciones.
+      </p>
       <QuienesTienenAcceso />
       <CuantaGenteHay />
       <SaludDeLosProcesos />
-    </div>
+    </>
   );
 }
 
