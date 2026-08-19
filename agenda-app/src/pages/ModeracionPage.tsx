@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import ReclamosPanel from './ReclamosPanel';
+import AuditoriaPanel from './AuditoriaPanel';
 // Las solapas usan los mismos chips que el registro contable. Hay que pedir su
 // hoja de estilos acá: `LedgerPage` se carga en diferido, así que su CSS viaja
 // en otro pedazo y sólo llegaba si alguien había entrado antes al registro.
@@ -20,7 +21,7 @@ import './AdminPage.css';
 // misma que en el teléfono, pero una sesión de navegador abierta en una compu
 // compartida es más fácil de dejar olvidada que un teléfono en el bolsillo.
 
-type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'bloqueados';
+type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'bloqueados' | 'auditoria';
 
 const SOLAPAS: Array<{ key: Solapa; label: string }> = [
   { key: 'pagos', label: 'Pagos por aprobar' },
@@ -30,6 +31,9 @@ const SOLAPAS: Array<{ key: Solapa; label: string }> = [
   { key: 'reclamos', label: 'Reclamos' },
   { key: 'denuncias', label: 'Denuncias' },
   { key: 'bloqueados', label: 'Bloqueados' },
+  // Quién miró los datos de quién. Se anotaba desde el 17/08 y no la podía
+  // leer nadie: un registro que nadie consulta no es un control.
+  { key: 'auditoria', label: 'Quién miró qué' },
 ];
 
 const fecha = (ms: number | null) => (ms ? new Date(ms).toLocaleString('es-AR') : '—');
@@ -59,6 +63,7 @@ export default function ModeracionPage() {
       {solapa === 'reclamos' && <ReclamosPanel />}
       {solapa === 'denuncias' && <Denuncias />}
       {solapa === 'bloqueados' && <Bloqueados />}
+      {solapa === 'auditoria' && <AuditoriaPanel />}
     </>
   );
 }
