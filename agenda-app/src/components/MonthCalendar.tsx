@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { toLocalISODate } from '../utils/dateUtils';
 import './MonthCalendar.css';
 
-interface DayMark { dots: string[]; hasProJob: boolean }
+interface DayMark { dots: string[]; hasProJob: boolean; hayChoque?: boolean }
 
 interface Props {
   markedDates: Record<string, DayMark>;
@@ -49,13 +49,17 @@ export default function MonthCalendar({ markedDates, selectedDate, onSelectDate 
           const mark = markedDates[dateStr];
           const dots = mark?.dots || [];
           const hasProJob = !!mark?.hasProJob;
+          // Un día con dos cosas al mismo horario se enmarca en naranja, para
+          // que se vea sin abrirlo. Mismo criterio que la app.
+          const hayChoque = !!mark?.hayChoque;
           const isSelected = selectedDate === dateStr;
           const isToday = dateStr === todayStr;
           return (
             <button
               type="button"
               key={i}
-              className={`cal-cell${isSelected ? ' cal-cell-selected' : ''}${isToday ? ' cal-cell-today' : ''}`}
+              className={`cal-cell${isSelected ? ' cal-cell-selected' : ''}${isToday ? ' cal-cell-today' : ''}${hayChoque ? ' hay-choque' : ''}`}
+              aria-label={hayChoque ? `${d}, tenés cosas al mismo horario` : undefined}
               onClick={() => onSelectDate(dateStr)}
             >
               {hasProJob ? (

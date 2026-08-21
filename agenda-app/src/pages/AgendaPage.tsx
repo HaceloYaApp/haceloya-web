@@ -30,6 +30,7 @@ import { puedeVerElRegistro } from '../utils/ledgerAdmins';
 const AdministracionPage = lazy(() => import('./AdministracionPage'));
 import './AgendaPage.css';
 
+import { choquesDelDia, leyendaDeChoque, type ItemDeAgenda } from '../utils/choquesDeAgenda';
 export default function AgendaPage() {
   const { user } = useAuth();
   const uid = user!.uid;
@@ -187,6 +188,9 @@ export default function AgendaPage() {
           checklist: Array.isArray(v.checklist) ? v.checklist : [],
           photos: Array.isArray(v.photos) ? v.photos.filter((p: any) => typeof p === 'string') : [],
           isNote: v.isNote === true,
+          isReminder: v.isReminder === true,
+          alarmCount: Number(v.alarmCount) || 0,
+          reminderEnabled: v.reminderEnabled === true,
         });
       });
       setCustomEntries(arr);
@@ -219,12 +223,50 @@ export default function AgendaPage() {
     return grouped;
   }, [allItems]);
 
+  // QUÉ SE PISA CON QUÉ (21/08/2026).
+  //
+  // Mismo cálculo que la app, con el mismo archivo copiado: si acá dijera que
+  // dos cosas no se superponen y en el teléfono que sí, no habría forma de
+  // saber cuál tiene razón. Ver `utils/choquesDeAgenda.ts`.
+  const choquesPorDia = useMemo(() => {
+    const porDia: Record<string, ReturnType<typeof choquesDelDia>> = {};
+    for (const [date, items] of Object.entries(itemsByDate)) {
+      porDia[date] = choquesDelDia(items.map((it): ItemDeAgenda => (
+        it.kind === 'job'
+          ? {
+            id: `job:${it.job.id}`,
+            titulo: it.job.title,
+            desde: it.job.timeFrom === '—' ? '' : it.job.timeFrom,
+            hasta: it.job.timeTo === '—' ? '' : it.job.timeTo,
+            todoElDia: !it.job.timeFrom || it.job.timeFrom === '—',
+            esNota: false,
+          }
+          : {
+            id: `custom:${it.entry.id}`,
+            titulo: it.entry.title || it.entry.notes,
+            desde: it.entry.timeFrom,
+            hasta: it.entry.timeTo,
+            todoElDia: it.entry.allDay,
+            // Una nota no ocupa el horario: avisa, no choca.
+            esNota: it.entry.isNote === true,
+          }
+      )));
+    }
+    return porDia;
+  }, [itemsByDate]);
+
+  const idDeItem = (it: DisplayItem) => (it.kind === 'job' ? `job:${it.job.id}` : `custom:${it.entry.id}`);
+  const enChoque = (it: DisplayItem) => choquesPorDia[it.date]?.idsEnChoque.has(idDeItem(it)) === true;
+  const notaOcupada = (it: DisplayItem) => choquesPorDia[it.date]?.notasEnHorarioOcupado.includes(idDeItem(it)) === true;
+
+
+
   const jobDotColor = (status?: string) => (String(status || '').toLowerCase() === 'cancelado' ? '#EB5757' : '#27AE60');
 
   // Un trabajo donde el usuario es el profesional (no quien lo pidió) se
   // destaca en el calendario con el recuadrito de cinta negra/amarilla.
   const markedDates = useMemo(() => {
-    const md: Record<string, { dots: string[]; hasProJob: boolean }> = {};
+    const md: Record<string, { dots: string[]; hasProJob: boolean; hayChoque?: boolean }> = {};
     Object.keys(itemsByDate).forEach((date) => {
       const colorSet = new Set<string>();
       let hasProJob = false;
@@ -236,10 +278,10 @@ export default function AgendaPage() {
           colorSet.add(CATEGORY_META[it.entry.category].color);
         }
       });
-      md[date] = { dots: Array.from(colorSet), hasProJob };
+      md[date] = { dots: Array.from(colorSet), hasProJob, hayChoque: (choquesPorDia[date]?.choques.length || 0) > 0 };
     });
     return md;
-  }, [itemsByDate]);
+  }, [itemsByDate, choquesPorDia]);
 
   const displayedItems = useMemo(() => {
     if (selectedDate) return itemsByDate[selectedDate] || [];
@@ -248,6 +290,31 @@ export default function AgendaPage() {
       .filter((it) => it.date >= todayStr)
       .sort((a, b) => (a.date === b.date ? a.sortTime.localeCompare(b.sortTime) : a.date.localeCompare(b.date)));
   }, [selectedDate, itemsByDate, allItems]);
+
+  /** Los avisos a mostrar arriba de la lista, con la fecha si hay varios días. */
+  const avisosDeChoque = useMemo(() => {
+    const dias = Array.from(new Set(displayedItems.map((it) => it.date))).sort();
+    const avisos: Array<{ clave: string; texto: string; tipo: 'choque' | 'nota' }> = [];
+    for (const fecha of dias) {
+      const c = choquesPorDia[fecha];
+      if (!c) continue;
+      const prefijo = selectedDate ? '' : `${formatDate(fecha)}: `;
+      for (const choque of c.choques) {
+        avisos.push({ clave: `${fecha}|${choque.ids.join('|')}`, texto: prefijo + leyendaDeChoque(choque), tipo: 'choque' });
+      }
+      if (c.notasEnHorarioOcupado.length > 0) {
+        avisos.push({
+          clave: `${fecha}|notas`,
+          texto: prefijo + (c.notasEnHorarioOcupado.length === 1
+            ? '¡Tenés una nota dentro de un horario ocupado!'
+            : `¡Tenés ${c.notasEnHorarioOcupado.length} notas dentro de un horario ocupado!`),
+          tipo: 'nota',
+        });
+      }
+    }
+    // Con tope: diez días en conflicto taparían la lista que se vino a mirar.
+    return avisos.slice(0, 3);
+  }, [displayedItems, choquesPorDia, selectedDate]);
 
   // ---------------- Editor de entradas propias ----------------
   const [editorOpen, setEditorOpen] = useState(false);
@@ -376,6 +443,12 @@ export default function AgendaPage() {
             </button>
           )}
 
+          {avisosDeChoque.map((a) => (
+            <div key={a.clave} className={a.tipo === 'choque' ? 'aviso-choque' : 'aviso-nota'}>
+              {a.tipo === 'choque' ? '❗ ' : '📝 '}{a.texto}
+            </div>
+          ))}
+
           <div className="agenda-list">
             {displayedItems.length === 0 && (
               <div className="agenda-empty">
@@ -413,10 +486,24 @@ export default function AgendaPage() {
               const entry = item.entry;
 
               if (entry.isNote) {
+                // Desde el 20/08/2026 una nota puede tener hora y alarma. Sin
+                // esto se veía sólo el texto, y una nota puesta a las 15:00
+                // parecía no tener hora — hacía dudar de si se había guardado.
+                const horaDeLaNota = entry.allDay || !entry.timeFrom
+                  ? ''
+                  : `${entry.timeFrom}${entry.timeTo ? `–${entry.timeTo}` : ''}`;
                 return (
-                  <div key={`custom-${entry.id}`} className="note-card" onClick={() => openEditEntry(entry)}>
+                  <div key={`custom-${entry.id}`} className={`note-card${notaOcupada(item) ? ' nota-ocupada' : ''}`} onClick={() => openEditEntry(entry)}>
                     <span className="note-card-icon">📝</span>
-                    <p className="note-card-text">{entry.notes}</p>
+                    <div className="note-card-body">
+                      <p className="note-card-text">{entry.notes}</p>
+                      {(!!horaDeLaNota || entry.reminderEnabled) && (
+                        <p className="note-card-meta">
+                          {horaDeLaNota}
+                          {entry.reminderEnabled ? `${horaDeLaNota ? ' · ' : ''}⏰ con aviso` : ''}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 );
               }
@@ -424,13 +511,21 @@ export default function AgendaPage() {
               const meta = CATEGORY_META[entry.category];
               const checkedCount = entry.checklist.filter((c) => c.checked).length;
               return (
-                <div key={`custom-${entry.id}`} className="custom-card" style={{ borderLeftColor: meta.color }} onClick={() => openEditEntry(entry)}>
+                <div key={`custom-${entry.id}`} className={`custom-card${enChoque(item) ? ' en-choque' : ''}`} style={{ borderLeftColor: meta.color }} onClick={() => openEditEntry(entry)}>
                   <div className="custom-card-header">
                     <div className="job-card-title-wrap">
-                      <div className="job-card-title">{entry.title}</div>
+                      <div className="job-card-title">
+                        {/* Un recordatorio se veía igual que un evento común y no
+                            había forma de saber que tenía alarma. La alarma se
+                            configura en el teléfono; acá sólo se muestra. */}
+                        {entry.isReminder ? '⏰ ' : ''}{entry.title}
+                      </div>
                       <div className="job-card-type">
-                        {meta.label}
+                        {entry.isReminder ? 'Recordatorio' : meta.label}
                         {entry.allDay ? ' · Todo el día' : (entry.timeFrom ? ` · ${entry.timeFrom}${entry.timeTo ? `–${entry.timeTo}` : ''}` : '')}
+                        {entry.isReminder && (entry.alarmCount || 0) > 0
+                          ? ` · avisa ${entry.alarmCount} ${entry.alarmCount === 1 ? 'vez' : 'veces'} antes`
+                          : ''}
                       </div>
                     </div>
                   </div>

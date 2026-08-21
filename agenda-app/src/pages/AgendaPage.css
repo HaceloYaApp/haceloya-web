@@ -62,7 +62,12 @@
   cursor: pointer;
 }
 .note-card-icon { font-size: 15px; line-height: 1.4; }
-.note-card-text { flex: 1; margin: 0; font-size: 14.5px; line-height: 1.4; white-space: pre-wrap; }
+.note-card-body { flex: 1; min-width: 0; }
+/* El texto de la nota ES su título: va en negrita como el de las demás
+   tarjetas del listado. Antes iba en peso normal y se leía como el pie de la
+   tarjeta de arriba en vez de como una entrada propia. */
+.note-card-text { margin: 0; font-size: 14.5px; font-weight: 700; line-height: 1.4; white-space: pre-wrap; }
+.note-card-meta { margin: 4px 0 0; font-size: 12.5px; font-weight: 600; color: #4D4D4D; }
 .job-card-header, .custom-card-header {
   display: flex;
   align-items: flex-start;
@@ -104,3 +109,29 @@
   line-height: 1;
 }
 .fab:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+
+/* ---------------------------------------------------------------------------
+   Dos cosas al mismo tiempo (21/08/2026).
+
+   Mismo naranja que usa la app. Es distinto del amarillo de la nota a
+   propósito: uno dice "esto se pisa" y el otro "esto conviene que sepas".
+   --------------------------------------------------------------------------- */
+.aviso-choque,
+.aviso-nota {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.aviso-choque { border: 1px solid #D35400; color: #D35400; background: #FFF4EC; }
+.aviso-nota { border: 1px solid #C99A06; color: #4D4D4D; background: #FFF8E1; }
+
+/* El borde de la izquierda ya lo pinta la categoría, así que el choque se marca
+   con el contorno. */
+.custom-card.en-choque { outline: 2px solid #D35400; outline-offset: -2px; }
+.note-card.nota-ocupada { border-color: #C99A06; }
+
+/* El día del calendario con algo superpuesto. */
+.cal-cell.hay-choque { outline: 2px solid #D35400; outline-offset: -2px; border-radius: 8px; }
