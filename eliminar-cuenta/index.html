@@ -1,113 +1,151 @@
-<!doctype html>
-<html lang="es-AR">
+<!DOCTYPE html>
+<html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Eliminar tu cuenta · Hacelo Ya</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliminar tu cuenta - Hacelo Ya</title>
 <meta name="description" content="Cómo eliminar tu cuenta de Hacelo Ya y qué pasa con tus datos.">
-<link rel="canonical" href="https://haceloya.com/eliminar-cuenta/">
 <style>
-  :root{
-    --bg:#FFFFFF; --ink:#14140F; --yellow:#FFC800; --blue:#2F80ED;
-    --muted:#3D3D35; --line:#14140F; --card:#FBFAF5; --danger:#E5342A;
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background: #ffffff;
+    color: #111827;
+    line-height: 1.6;
   }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    line-height:1.6; padding:0 20px 80px;
-  }
-  .wrap{max-width:720px; margin:0 auto;}
-  header{padding:48px 0 24px; border-bottom:3px solid var(--line);}
-  a.volver{color:var(--muted); text-decoration:none; font-size:14px;}
-  a.volver:hover{text-decoration:underline;}
-  h1{font-size:clamp(28px,6vw,40px); line-height:1.1; margin:18px 0 10px; letter-spacing:-0.02em;}
-  .bajada{color:var(--muted); font-size:17px; margin:0;}
-  h2{font-size:20px; margin:36px 0 10px;}
-  p,li{font-size:16px;}
-  ol{padding-left:22px;} ol li{margin-bottom:8px;}
-  .card{
-    background:var(--card); border:2px solid var(--line); border-radius:10px;
-    padding:20px 22px; margin:22px 0;
-  }
-  .card.aviso{border-color:var(--danger);}
-  .card h2{margin-top:0;}
-  .mail{
-    display:inline-block; background:var(--yellow); color:var(--ink);
-    border:2px solid var(--line); border-radius:8px; padding:12px 20px;
-    font-weight:700; text-decoration:none; margin-top:6px;
-  }
-  .mail:hover{background:#E0AC00;}
-  table{border-collapse:collapse; width:100%; margin-top:10px; font-size:15px;}
-  th,td{text-align:left; padding:9px 10px; border-bottom:1px solid #c9c9bd; vertical-align:top;}
-  th{font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);}
-  footer{margin-top:48px; padding-top:20px; border-top:1px solid #c9c9bd; color:var(--muted); font-size:14px;}
-  footer a{color:var(--blue);}
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .updated { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 19px; font-weight: 700; margin-top: 36px; margin-bottom: 10px; }
+  p, li { font-size: 15px; color: #1f2937; }
+  ul, ol { margin: 8px 0 8px 22px; }
+  li { margin-bottom: 6px; }
+  a { color: #2F80ED; }
+  .box { background: #f3f4f6; border-radius: 10px; padding: 16px 18px; margin: 16px 0; font-size: 14px; }
+  .box strong { display: block; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  th { color: #6b7280; font-weight: 600; }
+  .pie { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <a class="volver" href="/">← Volver a Hacelo Ya</a>
-    <h1>Eliminar tu cuenta</h1>
-    <p class="bajada">Podés borrar tu cuenta de Hacelo Ya cuando quieras. Acá te contamos cómo, y qué pasa con tus datos.</p>
-  </header>
+  <h1>Eliminar tu cuenta de Hacelo Ya</h1>
+  <p class="updated">Última actualización: 21 de agosto de 2026</p>
 
-  <h2>Desde la app, en cuatro pasos</h2>
-  <p>Es la forma más rápida: se hace sola y no depende de que nosotros contestemos.</p>
+  <p>
+    Podés eliminar tu cuenta cuando quieras, sin pedirle permiso a nadie y sin dar explicaciones.
+    Esta página explica cómo hacerlo y, sobre todo, <strong>qué pasa con tus datos después</strong>.
+  </p>
+
+  <h2>Desde la app</h2>
+
+  <p>Es la forma más rápida y no depende de que nosotros hagamos nada:</p>
+
   <ol>
-    <li>Abrí Hacelo Ya e iniciá sesión.</li>
-    <li>Entrá al menú y tocá <strong>Configuración</strong>.</li>
-    <li>Bajá hasta el final y tocá <strong>Eliminar cuenta</strong>.</li>
-    <li>Confirmá. La cuenta se borra en el momento.</li>
+    <li>Abrí <strong>Hacelo Ya</strong> e iniciá sesión.</li>
+    <li>Entrá al menú (☰) y tocá <strong>Configuración</strong>.</li>
+    <li>Tocá <strong>Eliminar cuenta</strong>, al final de la pantalla.</li>
+    <li>Escribí la palabra de confirmación que te pide y tocá <strong>Eliminar mi cuenta</strong>.</li>
   </ol>
 
-  <div class="card">
-    <h2>¿No podés entrar a la app?</h2>
-    <p>Si perdiste el acceso, se te rompió el teléfono o preferís pedirlo por escrito, escribinos desde el mismo correo con el que te registraste y lo hacemos nosotros.</p>
-    <a class="mail" href="mailto:haceloyaapp@gmail.com?subject=Eliminar%20mi%20cuenta&amp;body=Hola%2C%20quiero%20eliminar%20mi%20cuenta%20de%20Hacelo%20Ya.%0A%0A(Escribinos%20desde%20el%20mismo%20mail%20con%20el%20que%20te%20registraste.)">Pedir la baja por mail</a>
-    <p style="margin-bottom:0"><strong>La procesamos dentro de los 30 días</strong> y te confirmamos por el mismo correo cuando esté hecha. Te la vamos a pedir por escrito una sola vez, para asegurarnos de que sos vos.</p>
+  <div class="box">
+    <strong>No hace falta que no debas nada</strong>
+    Podés eliminar la cuenta aunque tengas un trabajo en curso o una comisión pendiente de pago.
+    La deuda queda registrada aparte —como se explica más abajo— pero <strong>no es un requisito
+    para poder borrar la cuenta</strong>. Poder darte de baja es un derecho tuyo y no depende de
+    que nos hayas pagado.
   </div>
 
-  <h2>Qué se borra y qué no</h2>
-  <p>Borrar la cuenta es permanente. No se puede deshacer ni recuperar.</p>
+  <h2>Si ya no podés entrar a la app</h2>
+
+  <p>
+    Si perdiste el acceso —te olvidaste la contraseña, cambiaste de teléfono, borraste la app—
+    igual podés pedir la eliminación. Escribinos a:
+  </p>
+
+  <p style="font-size:17px;margin:12px 0">
+    <a href="mailto:haceloyaapp@gmail.com?subject=Eliminar%20mi%20cuenta">haceloyaapp@gmail.com</a>
+  </p>
+
+  <p>
+    Escribí desde <strong>el mismo correo con el que te registraste</strong>, con el asunto
+    "Eliminar mi cuenta". Es la forma de saber que sos vos: si el pedido llegara desde otra
+    dirección vamos a pedirte algún dato más antes de borrar nada, porque eliminar la cuenta de
+    otra persona sería peor que no eliminar la tuya.
+  </p>
+
+  <p>Respondemos dentro de los <strong>30 días</strong>, y en general mucho antes.</p>
+
+  <h2>Qué se borra</h2>
+
+  <ul>
+    <li>Tu perfil: nombre, foto, domicilio, teléfono y correo.</li>
+    <li>Las imágenes de tu DNI y de la factura de verificación, si todavía estuvieran (se borran solas a los 30 días de resuelta la verificación).</li>
+    <li>Tu agenda y tus recordatorios.</li>
+    <li>Tus publicaciones que nadie tomó todavía.</li>
+    <li>Tus mensajes, salvo los de operaciones ya iniciadas (ver abajo).</li>
+    <li>Tu usuario y tu forma de iniciar sesión.</li>
+  </ul>
+
+  <h2>Qué NO se borra, y por qué</h2>
+
+  <p>
+    Para que no haya sorpresas: hay cosas que sobreviven a la baja. Ninguna es por comodidad
+    nuestra — todas involucran a otra persona o a una obligación legal.
+  </p>
 
   <table>
-    <thead><tr><th>Se borra</th><th>Se conserva, y por qué</th></tr></thead>
-    <tbody>
-      <tr>
-        <td>Tu perfil, tu foto y tus datos de contacto.</td>
-        <td>Las operaciones ya cerradas, sin tu nombre: hacen falta para la contabilidad y las obligaciones fiscales.</td>
-      </tr>
-      <tr>
-        <td>Tus fotos de documento y la selfie de verificación.</td>
-        <td>Las reseñas que vos escribiste sobre otras personas quedan en el perfil de ellas, sin tu nombre: son parte de la reputación de un tercero.</td>
-      </tr>
-      <tr>
-        <td>Tus publicaciones, pedidos, presupuestos y mensajes.</td>
-        <td>Si quedaba una comisión impaga, queda registrada. No podés borrar la cuenta para no pagarla.</td>
-      </tr>
-      <tr>
-        <td>Tus reservas abiertas, que se cancelan solas y devuelven el stock a quien vendía.</td>
-        <td></td>
-      </tr>
-    </tbody>
+    <tr>
+      <th>Qué queda</th>
+      <th>Por qué</th>
+      <th>Hasta cuándo</th>
+    </tr>
+    <tr>
+      <td>Los asientos del registro de operaciones donde figurás</td>
+      <td>Son el respaldo contable de operaciones que ya pasaron, con otra persona del otro lado</td>
+      <td>Mientras dure la obligación contable e impositiva</td>
+    </tr>
+    <tr>
+      <td>Los trabajos ya iniciados o finalizados y sus mensajes</td>
+      <td>Borrarlos le sacaría a la otra parte la evidencia de una operación real</td>
+      <td>Igual que arriba</td>
+    </tr>
+    <tr>
+      <td>Las reseñas que escribiste sobre otras personas</td>
+      <td>Son parte de la reputación de esa persona, no de la tuya</td>
+      <td>Quedan <strong>sin tu nombre visible</strong></td>
+    </tr>
+    <tr>
+      <td>Una comisión impaga al momento de la baja</td>
+      <td>Es una deuda, y no desaparece por cerrar la cuenta</td>
+      <td>Hasta que se salde</td>
+    </tr>
+    <tr>
+      <td>Los archivos del registro diario ya generados</td>
+      <td>Respaldan la contabilidad de las comisiones</td>
+      <td>1 año</td>
+    </tr>
   </table>
 
-  <div class="card aviso">
-    <h2>Antes de borrar, revisá dos cosas</h2>
-    <p><strong>Si tenés saldo a favor, se pierde.</strong> Usalo o pedí el reintegro antes.</p>
-    <p style="margin-bottom:0"><strong>Si tenés una operación en curso</strong>, avisale a la otra persona: cuando borres la cuenta, la reserva se cancela.</p>
+  <h2>No tiene vuelta atrás</h2>
+
+  <p>
+    Eliminar la cuenta es definitivo: no hay un período de gracia ni forma de recuperarla. Si
+    más adelante querés volver, vas a tener que crear una cuenta nueva y verificar tu identidad
+    otra vez, desde cero.
+  </p>
+
+  <div class="pie">
+    <p>
+      <strong>Hacelo Ya</strong> ·
+      <a href="https://haceloyaapp-88e3d.web.app/privacidad.html">Política de privacidad</a> ·
+      <a href="https://haceloyaapp-88e3d.web.app/terminos.html">Términos y condiciones</a> ·
+      <a href="mailto:haceloyaapp@gmail.com">haceloyaapp@gmail.com</a>
+    </p>
   </div>
-
-  <h2>Tus otros derechos sobre tus datos</h2>
-  <p>Además de borrar la cuenta, podés pedirnos acceder a tus datos, corregirlos o que te los entreguemos. Escribinos al mismo correo y te respondemos dentro de los 10 días hábiles, como marca la Ley 25.326 de Protección de Datos Personales.</p>
-
-  <footer>
-    <p><a href="/">Inicio</a> · <a href="https://haceloyaapp-88e3d.web.app/privacidad.html">Política de privacidad</a> · <a href="https://haceloyaapp-88e3d.web.app/terminos.html">Términos y condiciones</a></p>
-    <p>Hacelo Ya · haceloyaapp@gmail.com</p>
-  </footer>
 
 </div>
 </body>
