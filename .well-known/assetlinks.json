@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bissi.haceloapp",
+      "sha256_cert_fingerprints": [
+        "03:A0:3F:77:31:23:B1:67:72:0C:C8:1C:C2:9A:94:BA:9D:5E:AB:F2:94:A8:63:31:81:C3:40:51:F6:B8:CC:CA"
+      ]
+    }
+  }
+]
