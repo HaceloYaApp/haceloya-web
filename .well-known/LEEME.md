@@ -53,3 +53,46 @@ Jekyll ignora por defecto las carpetas que empiezan con punto. El `.nojekyll`
 de la raíz del repo es lo que evita que esta carpeta desaparezca del sitio
 publicado. Si algún día los links dejan de andar, es lo primero que hay que
 mirar.
+
+---
+
+# Y falta el gemelo de iOS: `apple-app-site-association`
+
+Hoy da **404**. Es lo mismo que `assetlinks.json` pero para iPhone: sin él, los
+links de haceloya.com abren Safari en vez de la app.
+
+**No se puede escribir todavía**, y no es por olvido. El archivo lleva
+`<TEAM_ID>.com.bissi.haceloapp`, y el Team ID sale de la cuenta de
+desarrollador de Apple — que al 23/08/2026 **no está aprobada**. Inventar el
+valor sería peor que no tener el archivo: Apple los cachea de forma agresiva y
+quedaría uno inválido dando vueltas.
+
+Cuando la cuenta esté aprobada, el Team ID se ve en
+developer.apple.com → Membership. El archivo va acá al lado, se llama
+`apple-app-site-association` **sin extensión** (no `.json`, aunque el contenido
+sea JSON), y queda así:
+
+    {
+      "applinks": {
+        "apps": [],
+        "details": [
+          {
+            "appID": "<TEAM_ID>.com.bissi.haceloapp",
+            "paths": ["*"]
+          }
+        ]
+      }
+    }
+
+Dos trampas propias de iOS:
+
+1. **Se sirve sin extensión y con `content-type: application/json`.** GitHub
+   Pages lo manda como `application/octet-stream` si no tiene extensión, y
+   entonces iOS lo ignora en silencio. Hay que forzar el tipo desde Cloudflare
+   (Transform Rules → Modify Response Header, sólo para esa ruta).
+2. **`app.json` ya declara `associatedDomains: ["applinks:haceloya.com"]`**, así
+   que del lado de la app está listo. Lo único que falta es este archivo.
+
+Comprobación, una vez publicado:
+
+    curl -sI https://haceloya.com/.well-known/apple-app-site-association | grep -i content-type
