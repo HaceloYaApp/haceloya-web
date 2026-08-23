@@ -400,7 +400,7 @@
     <!-- aria-expanded/aria-controls: el botón abría el menú y no anunciaba
          que lo había abierto, así que con lector de pantalla no había forma de
          saber si estaba desplegado. Hallazgo H-W1-20. -->
-    <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mnav" onclick="toggleMobileMenu()">☰</button>
+    <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mnav">☰</button>
   </div>
   <nav id="mnav" class="container" style="display:none; flex-direction:column; gap:14px; padding-bottom:18px;">
     <a href="/agenda/">Iniciar sesión</a>
@@ -441,15 +441,15 @@
       <!-- role/aria-selected: se veían como pestañas y se anunciaban como
            botones sueltos, sin decir cuál estaba elegida. Hallazgo H-W1-20. -->
       <div class="tabs tabs-desktop" role="tablist">
-        <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-particular" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
-        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-profesional" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
+        <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-particular" data-tab="particular">Busco un servicio</button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-profesional" data-tab="profesional">Ofrezco un servicio</button>
       </div>
 
       <div class="how-panel active" id="panel-particular">
         <img src="assets/particulares-plomeria.webp" alt="Persona mostrando el logo H de Hacelo Ya en el celular, con una canilla goteando de fondo">
         <div class="tabs tabs-mobile" role="tablist">
-          <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-particular" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
-          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-profesional" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
+          <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-particular" data-tab="particular">Busco un servicio</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-profesional" data-tab="profesional">Ofrezco un servicio</button>
         </div>
         <ol class="steps">
           <li>
@@ -479,8 +479,8 @@
       <div class="how-panel" id="panel-profesional">
         <img src="assets/profesionales-plomero.webp" alt="Plomero profesional arreglando una canilla en una cocina">
         <div class="tabs tabs-mobile" role="tablist">
-          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-particular" data-tab="particular" onclick="showTab('particular')">Busco un servicio</button>
-          <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-profesional" data-tab="profesional" onclick="showTab('profesional')">Ofrezco un servicio</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-particular" data-tab="particular">Busco un servicio</button>
+          <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-profesional" data-tab="profesional">Ofrezco un servicio</button>
         </div>
         <ol class="steps">
           <li>
@@ -675,7 +675,13 @@
           <a href="https://www.instagram.com/haceloyaapp" target="_blank" rel="noopener">@haceloyaapp</a>
         </div>
 
-        <form class="contact-form" id="contactForm">
+        <!-- action y method NO son decorativos: son la red por si el JS vuelve a fallar.
+     Sin ellos el navegador manda el formulario por GET a esta misma URL y
+     el nombre, el mail y el mensaje terminan en la barra de direcciones, en
+     el historial y en los registros de Cloudflare y GitHub Pages. Pasó el
+     21/08/2026 cuando la CSP mató el preventDefault. -->
+        <form class="contact-form" id="contactForm"
+              action="mailto:haceloyaapp@gmail.com" method="post" enctype="text/plain">
           <h4>Consultas o sumar un oficio</h4>
           <label>
             Nombre
@@ -745,46 +751,7 @@
 </footer>
 
 
-<script>
-  function toggleMobileMenu(){
-    var nav = document.getElementById('mnav');
-    var abierto = (nav.style.display === 'none' || !nav.style.display);
-    nav.style.display = abierto ? 'flex' : 'none';
-    // El estado anunciado tiene que seguir al estado real: si sólo se pone en
-    // el HTML, queda mintiendo desde el primer toque. Hallazgo H-W1-20.
-    document.querySelectorAll('.menu-toggle').forEach(function(b){
-      b.setAttribute('aria-expanded', abierto ? 'true' : 'false');
-    });
-  }
-  function showTab(which){
-    document.querySelectorAll('.tab-btn').forEach(function(b){
-      b.classList.remove('active');
-      b.setAttribute('aria-selected', 'false');
-    });
-    document.querySelectorAll('.how-panel').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn[data-tab="'+which+'"]').forEach(function(b){
-      b.classList.add('active');
-      b.setAttribute('aria-selected', 'true');
-    });
-    document.getElementById('panel-'+which).classList.add('active');
-  }
-  document.getElementById('contactForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    var nombre = this.nombre.value.trim();
-    var email = this.email.value.trim();
-    var mensaje = this.mensaje.value.trim();
-    var subject = 'Consulta desde haceloya.com — ' + nombre;
-    var body = 'Nombre: ' + nombre + '\nEmail: ' + email + '\n\n' + mensaje;
-    var mailtoUrl = 'mailto:haceloyaapp@gmail.com'
-      + '?subject=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(body);
-    window.location.href = mailtoUrl;
-    // El mailto no avisa si falló: no hay evento, no hay error. Lo único que
-    // se puede hacer es contar qué tendría que haber pasado.
-    var aviso = document.getElementById('contactAviso');
-    if (aviso) aviso.hidden = false;
-  });
-</script>
+<script defer src="assets/portada.js"></script>
 
 </body>
 </html>
