@@ -23,7 +23,42 @@ type Administrador = {
   porClaim: boolean;
   porCodigo: boolean;
   existe: boolean;
+  /** Qué ve: 'moderacion' | 'mujer' | 'resumen' | 'admin'. */
+  permisos?: string[];
 };
+
+// LOS CUATRO PERMISOS QUE SE TILDAN (08/09/2026).
+//
+// "Ser administrador" dejó de ser una sola cosa: se eligen uno o varios. Esta
+// lista es la misma que decide el backend (functions/src/adminGuard.ts) y la
+// misma que dibuja la app (src/utils/permisosDeAdmin.ts) — si se separan, la
+// web ofrece un permiso que el servidor no conoce, o al revés.
+//
+// La web había quedado atrás: llamaba a `grantAdminRole` sin `permisos`, y como
+// el callable ahora exige al menos uno, dar acceso desde la compu fallaba con
+// "Elegí al menos un permiso" y no había dónde elegirlo.
+const PERMISOS: Array<{ key: string; titulo: string; detalle: string }> = [
+  {
+    key: 'moderacion',
+    titulo: 'Moderación',
+    detalle: 'Denuncias, reclamos, apelaciones y bloqueados. Puede leer el chat de la operación que está juzgando.',
+  },
+  {
+    key: 'mujer',
+    titulo: 'Mujer a mujer',
+    detalle: 'Las operaciones y los números de esa sección, y nada del resto.',
+  },
+  {
+    key: 'resumen',
+    titulo: 'Resumen',
+    detalle: 'El registro completo con la plata: todas las operaciones, los pagos por aprobar y la facturación.',
+  },
+  {
+    key: 'admin',
+    titulo: 'Todo',
+    detalle: 'Los tres de arriba y además sumar o sacar accesos. Es el único que reparte.',
+  },
+];
 
 type Proceso = {
   nombre: string;
@@ -61,6 +96,9 @@ function QuienesTienenAcceso() {
   const [completo, setCompleto] = useState(true);
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
+  // Arranca sin nada tildado: dar de más es lo que no se puede deshacer —
+  // sacarle el acceso después no le borra lo que ya vio.
+  const [permisos, setPermisos] = useState<string[]>([]);
   const [trabajando, setTrabajando] = useState(false);
   const [aviso, setAviso] = useState('');
 
@@ -85,12 +123,16 @@ function QuienesTienenAcceso() {
       setError('Escribí el email de la cuenta.');
       return;
     }
-    if (!grant && !window.confirm(`${limpio} va a dejar de poder aprobar pagos. ¿Seguro?`)) return;
+    if (grant && permisos.length === 0) {
+      setError('Tildá al menos una cosa que esta persona pueda ver.');
+      return;
+    }
+    if (!grant && !window.confirm(`${limpio} va a dejar de tener acceso al panel. ¿Seguro?`)) return;
     setTrabajando(true);
     setError('');
     setAviso('');
     try {
-      await httpsCallable(functions, 'grantAdminRole')({ email: limpio, grant });
+      await httpsCallable(functions, 'grantAdminRole')({ email: limpio, grant, permisos });
       // El claim entra cuando esa cuenta renueva su token: hasta una hora, o al
       // reabrir la app. Decirlo evita el "no me funciona" de los primeros
       // cinco minutos.
@@ -99,6 +141,7 @@ function QuienesTienenAcceso() {
         'El cambio entra en vigencia cuando esa persona vuelva a entrar (o dentro de una hora).',
       );
       setEmail('');
+      setPermisos([]);
       await cargar();
     } catch (e) {
       // El callable rechaza a propósito varias cosas —cuenta inexistente, mail
@@ -109,6 +152,15 @@ function QuienesTienenAcceso() {
       setTrabajando(false);
     }
   };
+
+  // Tildar "Todo" apaga los demás, y tildar uno suelto apaga "Todo": "puede
+  // repartir accesos" no puede quedar suelto de "ve todo", porque quien reparte
+  // se puede dar lo que quiera.
+  const alternar = (p: string) => setPermisos((antes) => {
+    if (p === 'admin') return antes.includes('admin') ? [] : ['admin'];
+    const sinTodo = antes.filter((x) => x !== 'admin');
+    return sinTodo.includes(p) ? sinTodo.filter((x) => x !== p) : [...sinTodo, p];
+  });
 
   return (
     <section className="admin-card">
@@ -124,6 +176,16 @@ function QuienesTienenAcceso() {
             <li key={a.uid}>
               <strong>{a.email || a.uid}{a.uid === quienSoy ? '  (vos)' : ''}</strong>
               {!!a.nombre && <span className="admin-sub">{a.nombre}</span>}
+              {/* QUÉ VE CADA UNO. La lista decía quiénes son administradores y
+                  no qué ve cada uno, que con permisos sueltos es la mitad que
+                  importa. */}
+              <span className="admin-permisos">
+                {(a.permisos && a.permisos.length > 0 ? a.permisos : ['(sin permisos)']).map((p) => (
+                  <span key={p} className={`admin-chip${p === 'admin' ? ' admin-chip-todo' : ''}`}>
+                    {p === 'admin' ? 'TODO' : (PERMISOS.find((x) => x.key === p)?.titulo || p)}
+                  </span>
+                ))}
+              </span>
               {a.existe === false ? (
                 <span className="admin-error-inline">
                   Esta cuenta ya no existe: sacala de la lista del código.
@@ -155,9 +217,26 @@ function QuienesTienenAcceso() {
         placeholder="nombre@ejemplo.com"
       />
 
+      <fieldset className="admin-permisos-form">
+        <legend className="admin-label">Qué va a poder ver</legend>
+        {PERMISOS.map((p) => (
+          <label key={p.key} className="admin-permiso">
+            <input
+              type="checkbox"
+              checked={permisos.includes(p.key)}
+              onChange={() => alternar(p.key)}
+            />
+            <span>
+              <strong>{p.titulo}</strong>
+              <span className="admin-sub">{p.detalle}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+
       <div className="admin-acciones">
         <button type="button" className="btn" disabled={trabajando} onClick={() => llamar(true)}>
-          {trabajando ? 'Guardando...' : 'Dar acceso de administrador'}
+          {trabajando ? 'Guardando...' : 'Dar acceso'}
         </button>
         <button type="button" className="btn btn-outline" disabled={trabajando} onClick={() => llamar(false)}>
           Quitar acceso

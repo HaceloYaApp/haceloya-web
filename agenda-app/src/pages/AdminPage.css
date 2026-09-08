@@ -167,3 +167,56 @@
   border-color: var(--ink, #14140F);
   color: var(--ink, #14140F);
 }
+
+/* LOS PERMISOS QUE SE TILDAN (08/09/2026).
+   La web mostraba quién es administrador pero no QUÉ ve, y al dar acceso no
+   había dónde elegirlo — el callable ya exigía al menos uno, así que desde la
+   compu no se podía dar acceso a nadie. */
+.admin-permisos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-chip {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--borde, #d8d8d8);
+  border-radius: 999px;
+  padding: 2px 8px;
+  opacity: 0.85;
+}
+
+/* "Todo" incluye repartir accesos: es el único que se distingue a simple
+   vista, porque es el único que puede crear más administradores. */
+.admin-chip-todo {
+  border-color: #1E7E45;
+  color: #1E7E45;
+  opacity: 1;
+}
+
+.admin-permisos-form {
+  border: 1px solid var(--borde, #e4e4e4);
+  border-radius: 12px;
+  padding: 10px 12px 12px;
+  margin: 14px 0 0;
+}
+
+.admin-permiso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  cursor: pointer;
+  border-bottom: 1px solid var(--borde, #f0f0f0);
+}
+
+.admin-permiso:last-child { border-bottom: none; }
+
+.admin-permiso input { margin-top: 3px; }
+
+.admin-permiso span { display: flex; flex-direction: column; gap: 2px; }
+
+.admin-permiso strong { font-size: 13.5px; }
