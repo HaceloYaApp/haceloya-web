@@ -132,18 +132,6 @@ export default function ReclamosPanel() {
   );
 }
 
-const RESOLUCIONES: Array<{ key: string; label: (r: Reclamo) => string }> = [
-  {
-    key: 'a_favor_de_quien_ofrece',
-    label: (r) => `A favor de ${r.nombres[r.partes[0]] || 'quien ofrece'}`,
-  },
-  {
-    key: 'a_favor_de_quien_busca',
-    label: (r) => `A favor de ${r.nombres[r.partes[1]] || 'quien reclamó'}`,
-  },
-  { key: 'desestimado', label: () => 'Se resolvió entre las partes' },
-];
-
 function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => void }) {
   const [mensajes, setMensajes] = useState<Mensaje[] | null>(null);
   const [errorChat, setErrorChat] = useState('');
@@ -155,6 +143,13 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
   const [calificando, setCalificando] = useState<string | null>(null);
   const [motivoStrike, setMotivoStrike] = useState('');
   const [avisoStrike, setAvisoStrike] = useState('');
+  // CERRAR UN CASO ES CONTESTAR DOS COSAS (09/09/2026): a favor de quién, y a
+  // quién le corresponde la estrella —o que no le corresponde a nadie, que
+  // también es una respuesta—. Antes eran dos botones sueltos y la estrella
+  // quedaba para "después", que en la práctica quería decir nunca.
+  const [aFavorDe, setAFavorDe] = useState<string | null>(null);
+  const [estrellaPara, setEstrellaPara] = useState<string | null>(null);
+  const [dias, setDias] = useState<number | null>(null);
 
   // La conversación, leída directo de Firestore. Las reglas dejan al moderador
   // entrar SÓLO mientras el reclamo está abierto: si ya se resolvió, esto va a
@@ -243,22 +238,55 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
     }
   };
 
-  const resolver = async (resolucion: string) => {
-    if (trabajando) return;
+  const nombreDe = (uid: string) => reclamo.nombres[uid] || uid;
+  /** Cuál de las dos resoluciones corresponde al uid elegido. */
+  const resolucionDe = (uid: string) => (
+    uid === reclamo.partes[0] ? 'a_favor_de_quien_ofrece' : 'a_favor_de_quien_busca'
+  );
+
+  const cerrarElCaso = async () => {
+    if (trabajando || !aFavorDe || !estrellaPara) return;
+    const etiqueta = aFavorDe === 'desestimado'
+      ? 'Se cierra sin responsables.'
+      : `A favor de ${nombreDe(aFavorDe)}.`;
+    const conEstrella = estrellaPara === 'ninguna'
+      ? 'Sin estrella roja.'
+      : `Estrella roja para ${nombreDe(estrellaPara)}.`;
     if (!window.confirm(
-      'Al resolver, el fallo se publica dentro de la conversación y perdés el acceso a leerla. ¿Seguro?',
+      `${etiqueta} ${conEstrella}\n\nEl fallo se publica dentro de la conversación y perdés el acceso a leerla. ¿Seguro?`,
     )) return;
     setTrabajando(true);
     setError('');
     try {
       await httpsCallable(functions, 'resolverReclamo')({
         reclamoId: reclamo.id,
-        resolucion,
+        resolucion: aFavorDe === 'desestimado' ? 'desestimado' : resolucionDe(aFavorDe),
+        estrellaPara,
         nota: nota.trim(),
       });
       onVolver();
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudo resolver.'));
+    } finally {
+      setTrabajando(false);
+    }
+  };
+
+  // EL PLAZO ACORDADO. No todos los reclamos se pueden cerrar el día que se
+  // leen: "devolvé la plata y lo cerramos". El caso queda ABIERTO con fecha, y
+  // las dos partes la ven adentro del chat con un botón para avisar si se
+  // resuelve antes.
+  const acordarPlazo = async () => {
+    if (trabajando || !dias || !nota.trim()) return;
+    setTrabajando(true);
+    setError('');
+    try {
+      await httpsCallable(functions, 'acordarPlazoDeReclamo')({
+        reclamoId: reclamo.id, dias, nota: nota.trim(),
+      });
+      onVolver();
+    } catch (e) {
+      setError(mensajeDeError(e, 'No se pudo acordar el plazo.'));
     } finally {
       setTrabajando(false);
     }
@@ -304,7 +332,59 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
             </button>
           </div>
 
-          <label className="admin-label" htmlFor="reclamo-nota">Nota para las dos partes (opcional)</label>
+          {/* PRIMERO: A FAVOR DE QUIÉN. Es una elección, no un botón que
+              cierra: el caso se cierra abajo, con las dos respuestas puestas. */}
+          <h2 style={{ marginTop: 18 }}>1. ¿A favor de quién se resuelve?</h2>
+          <div className="admin-acciones">
+            {reclamo.partes.map((uid) => (
+              <button
+                key={uid}
+                type="button"
+                className={`btn${aFavorDe === uid ? '' : ' btn-outline'}`}
+                onClick={() => setAFavorDe(uid)}
+              >
+                {nombreDe(uid)}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`btn${aFavorDe === 'desestimado' ? '' : ' btn-outline'}`}
+              onClick={() => setAFavorDe('desestimado')}
+            >
+              Se resolvió entre las partes
+            </button>
+          </div>
+
+          {/* SEGUNDO: LA ESTRELLA. "Sin estrella" es una respuesta y hay que
+              darla: no contestar no puede significar lo mismo que decidir que
+              no le corresponde a nadie. */}
+          <h2 style={{ marginTop: 12 }}>2. ¿A quién le corresponde la estrella roja?</h2>
+          <p className="admin-sub">Van 3 para que la cuenta pase a revisión.</p>
+          <div className="admin-acciones">
+            {reclamo.partes.map((uid) => (
+              <button
+                key={uid}
+                type="button"
+                className={`btn btn-rojo${estrellaPara === uid ? '' : ' btn-outline'}`}
+                onClick={() => setEstrellaPara(uid)}
+              >
+                ★ Estrella roja a {nombreDe(uid)}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`btn${estrellaPara === 'ninguna' ? '' : ' btn-outline'}`}
+              onClick={() => setEstrellaPara('ninguna')}
+            >
+              Sin estrella
+            </button>
+          </div>
+
+          <label className="admin-label" htmlFor="reclamo-nota">
+            {estrellaPara && estrellaPara !== 'ninguna'
+              ? 'Por qué le corresponde (lo lee esa persona)'
+              : 'Nota para las dos partes (opcional)'}
+          </label>
           <input
             id="reclamo-nota"
             className="admin-input"
@@ -314,22 +394,47 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
           />
 
           <div className="admin-acciones">
-            {RESOLUCIONES.map((r) => (
-              <button
-                key={r.key}
-                type="button"
-                className="btn"
-                disabled={trabajando}
-                onClick={() => resolver(r.key)}
-              >
-                {r.label(reclamo)}
-              </button>
-            ))}
+            <button
+              type="button"
+              className="btn"
+              disabled={trabajando || !aFavorDe || !estrellaPara}
+              onClick={cerrarElCaso}
+            >
+              {!aFavorDe || !estrellaPara ? 'Contestá las dos para cerrar' : 'Cerrar el caso'}
+            </button>
           </div>
           <p className="admin-sub">
             Al resolver, el fallo se publica dentro de la conversación y el acceso del moderador se
             cierra con el caso. Es la otra mitad de lo que se les prometió a las partes.
           </p>
+
+          {/* EL PLAZO, PARA LO QUE NO SE PUEDE CERRAR HOY. */}
+          <h2 style={{ marginTop: 18 }}>O acordar un plazo y dejarlo abierto</h2>
+          <p className="admin-sub">
+            Para cuando el caso está resuelto en la conversación pero todavía no en los hechos —una
+            devolución, un repuesto—. Las dos partes ven la fecha en el chat y pueden avisar si se
+            resuelve antes.
+          </p>
+          <div className="admin-acciones">
+            {[3, 7, 15, 30].map((d) => (
+              <button
+                key={d}
+                type="button"
+                className={`btn${dias === d ? '' : ' btn-outline'}`}
+                onClick={() => setDias(d)}
+              >
+                {d} días
+              </button>
+            ))}
+            <button
+              type="button"
+              className="btn"
+              disabled={trabajando || !dias || !nota.trim()}
+              onClick={acordarPlazo}
+            >
+              {!nota.trim() ? 'Escribí qué se acordó' : 'Acordar el plazo'}
+            </button>
+          </div>
         </>
       )}
 
