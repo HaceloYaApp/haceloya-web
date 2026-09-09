@@ -5,6 +5,7 @@ import { mensajeDeError } from '../utils/erroresDeFirebase';
 import ReclamosPanel from './ReclamosPanel';
 import AuditoriaPanel from './AuditoriaPanel';
 import ApelacionesPanel from './ApelacionesPanel';
+import ArrepentimientosPanel from './ArrepentimientosPanel';
 // Las solapas usan los mismos chips que el registro contable. Hay que pedir su
 // hoja de estilos acá: `LedgerPage` se carga en diferido, así que su CSS viaja
 // en otro pedazo y sólo llegaba si alguien había entrado antes al registro.
@@ -23,7 +24,7 @@ import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 // misma que en el teléfono, pero una sesión de navegador abierta en una compu
 // compartida es más fácil de dejar olvidada que un teléfono en el bolsillo.
 
-type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'apelaciones' | 'bloqueados' | 'auditoria';
+type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'apelaciones' | 'arrepentimientos' | 'bloqueados' | 'auditoria';
 
 // CADA SOLAPA CUELGA DE SU PERMISO (09/09/2026), igual que en la app.
 //
@@ -40,6 +41,10 @@ const SOLAPAS: Array<{ key: Solapa; label: string; puede: (p: PermisosDeAdmin) =
   // Estrellas automáticas que alguien discute. Va al lado de Denuncias porque
   // es la misma tarea —decidir sobre una sanción—, igual que en la app.
   { key: 'apelaciones', label: 'Apelaciones', puede: (p) => p.moderacion },
+  // El botón de arrepentimiento (art. 34) tiene dos relojes: 24 horas para
+  // acusar recibo y diez días para devolver. Hasta el 09/09/2026 el mail de la
+  // solicitud decía "Resolvelo desde el panel" y el panel no existía.
+  { key: 'arrepentimientos', label: 'Arrepentimientos', puede: (p) => p.moderacion },
   { key: 'bloqueados', label: 'Bloqueados', puede: (p) => p.moderacion },
   // Quién miró los datos de quién. Se anotaba desde el 17/08 y no la podía
   // leer nadie: un registro que nadie consulta no es un control.
@@ -80,6 +85,7 @@ export default function ModeracionPage({ permisos }: { permisos: PermisosDeAdmin
       {solapa === 'reclamos' && <ReclamosPanel />}
       {solapa === 'denuncias' && <Denuncias />}
       {solapa === 'apelaciones' && <ApelacionesPanel />}
+      {solapa === 'arrepentimientos' && <ArrepentimientosPanel />}
       {solapa === 'bloqueados' && <Bloqueados />}
       {solapa === 'auditoria' && <AuditoriaPanel />}
     </>

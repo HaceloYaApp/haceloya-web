@@ -220,3 +220,15 @@
 .admin-permiso span { display: flex; flex-direction: column; gap: 2px; }
 
 .admin-permiso strong { font-size: 13.5px; }
+
+/* La conversación de un arrepentimiento, adentro de su tarjeta (09/09/2026).
+   Casi siempre lo que falta para resolver es una sola pregunta, y hasta acá
+   esa pregunta costaba un mail que quizás nadie lee. */
+.admin-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--borde, #d8d8d8);
+}
