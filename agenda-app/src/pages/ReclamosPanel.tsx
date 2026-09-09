@@ -394,13 +394,20 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
           />
 
           <div className="admin-acciones">
+            {/* El porqué no es opcional si hay estrella: la regla tiene que
+                estar donde se toma la decisión, no en el rebote del servidor. */}
             <button
               type="button"
               className="btn"
-              disabled={trabajando || !aFavorDe || !estrellaPara}
+              disabled={
+                trabajando || !aFavorDe || !estrellaPara
+                || (estrellaPara !== 'ninguna' && !nota.trim())
+              }
               onClick={cerrarElCaso}
             >
-              {!aFavorDe || !estrellaPara ? 'Contestá las dos para cerrar' : 'Cerrar el caso'}
+              {estrellaPara && estrellaPara !== 'ninguna' && !nota.trim()
+                ? 'Escribí por qué le corresponde la estrella'
+                : (!aFavorDe || !estrellaPara ? 'Contestá las dos para cerrar' : 'Cerrar el caso')}
             </button>
           </div>
           <p className="admin-sub">
