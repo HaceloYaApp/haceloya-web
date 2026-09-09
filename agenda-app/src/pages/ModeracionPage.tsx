@@ -10,6 +10,7 @@ import ApelacionesPanel from './ApelacionesPanel';
 // en otro pedazo y sólo llegaba si alguien había entrado antes al registro.
 import './LedgerPage.css';
 import './AdminPage.css';
+import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 
 // PAGOS, DENUNCIAS Y BLOQUEADOS, LAS TRES QUE FALTABAN.
 //
@@ -24,39 +25,51 @@ import './AdminPage.css';
 
 type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'apelaciones' | 'bloqueados' | 'auditoria';
 
-const SOLAPAS: Array<{ key: Solapa; label: string }> = [
-  { key: 'pagos', label: 'Pagos por aprobar' },
+// CADA SOLAPA CUELGA DE SU PERMISO (09/09/2026), igual que en la app.
+//
+// "Pagos por aprobar" es la excepción: aprobar un comprobante acredita plata,
+// así que es del permiso de la plata (`resumen`), no del de moderación. Las
+// otras cinco son trabajo de moderación y no muestran un peso.
+const SOLAPAS: Array<{ key: Solapa; label: string; puede: (p: PermisosDeAdmin) => boolean }> = [
+  { key: 'pagos', label: 'Pagos por aprobar', puede: (p) => p.resumen },
   // Los reclamos entre dos partes de una operación. Son otra cosa que las
   // denuncias: acá hay plata o una entrega de por medio y alguien tiene que
   // fallar a favor de uno de los dos.
-  { key: 'reclamos', label: 'Reclamos' },
-  { key: 'denuncias', label: 'Denuncias' },
+  { key: 'reclamos', label: 'Reclamos', puede: (p) => p.moderacion },
+  { key: 'denuncias', label: 'Denuncias', puede: (p) => p.moderacion },
   // Estrellas automáticas que alguien discute. Va al lado de Denuncias porque
   // es la misma tarea —decidir sobre una sanción—, igual que en la app.
-  { key: 'apelaciones', label: 'Apelaciones' },
-  { key: 'bloqueados', label: 'Bloqueados' },
+  { key: 'apelaciones', label: 'Apelaciones', puede: (p) => p.moderacion },
+  { key: 'bloqueados', label: 'Bloqueados', puede: (p) => p.moderacion },
   // Quién miró los datos de quién. Se anotaba desde el 17/08 y no la podía
   // leer nadie: un registro que nadie consulta no es un control.
-  { key: 'auditoria', label: 'Quién miró qué' },
+  { key: 'auditoria', label: 'Quién miró qué', puede: (p) => p.moderacion },
 ];
 
 const fecha = (ms: number | null) => (ms ? new Date(ms).toLocaleString('es-AR') : '—');
 const plata = (n: number) => `$${Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
-export default function ModeracionPage() {
-  const [solapa, setSolapa] = useState<Solapa>('pagos');
+export default function ModeracionPage({ permisos }: { permisos: PermisosDeAdmin }) {
+  const visibles = SOLAPAS.filter((s) => s.puede(permisos));
+  // Igual que en Administración: la solapa activa la decide `visibles[0]` hasta
+  // que se elige una. Fijar 'pagos' de entrada dejaba a quien sólo modera
+  // mirando una lista que no puede leer.
+  const [elegida, setElegida] = useState<Solapa | null>(null);
+  const solapa: Solapa | null = elegida && visibles.some((s) => s.key === elegida)
+    ? elegida
+    : (visibles[0]?.key ?? null);
 
   return (
     // Sin encabezado propio: esto es una pestaña de Administración. Estas
     // solapas son de segundo nivel, adentro de Moderación.
     <>
       <div className="ledger-filtros">
-        {SOLAPAS.map((s) => (
+        {visibles.map((s) => (
           <button
             key={s.key}
             type="button"
             className={`ledger-chip${s.key === solapa ? ' ledger-chip-activo' : ''}`}
-            onClick={() => setSolapa(s.key)}
+            onClick={() => setElegida(s.key)}
           >
             {s.label}
           </button>

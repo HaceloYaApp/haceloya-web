@@ -4,6 +4,7 @@ import { auth } from '../firebase';
 import LedgerPage from './LedgerPage';
 import ModeracionPage from './ModeracionPage';
 import AdminPage from './AdminPage';
+import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 import './LedgerPage.css';
 import './AdminPage.css';
 
@@ -24,22 +25,54 @@ import './AdminPage.css';
 
 type Pestana = 'moderacion' | 'resumen' | 'administradores';
 
-const PESTANAS: Array<{ key: Pestana; label: string; bajada: string }> = [
-  { key: 'moderacion', label: 'Moderación', bajada: 'Pagos por aprobar, reclamos, denuncias y cuentas bloqueadas.' },
-  { key: 'resumen', label: 'Resumen', bajada: 'El registro de todas las transacciones, por sección.' },
-  { key: 'administradores', label: 'Administradores', bajada: 'Quiénes tienen acceso, cuánta gente hay y si los procesos corren.' },
+// CADA PESTAÑA CUELGA DE SU PERMISO (09/09/2026).
+//
+// Es la misma línea que traza el backend, y tiene que decir lo mismo que la
+// app: mostrar una pestaña que el servidor va a rechazar hace que la persona
+// vea un error donde tendría que entender que ese acceso no es suyo.
+//
+// El Resumen lo abre también `mujer`: adentro va a ver una sola sección —la
+// suya—, que es exactamente lo que ese permiso otorga.
+const PESTANAS: Array<{ key: Pestana; label: string; bajada: string; puede: (p: PermisosDeAdmin) => boolean }> = [
+  {
+    key: 'moderacion',
+    label: 'Moderación',
+    bajada: 'Pagos por aprobar, reclamos, denuncias y cuentas bloqueadas.',
+    puede: (p) => p.moderacion || p.resumen,
+  },
+  {
+    key: 'resumen',
+    label: 'Resumen',
+    bajada: 'El registro de todas las transacciones, por sección.',
+    puede: (p) => p.resumen || p.mujer,
+  },
+  {
+    key: 'administradores',
+    label: 'Administradores',
+    bajada: 'Quiénes tienen acceso, cuánta gente hay y si los procesos corren.',
+    puede: (p) => p.admin,
+  },
 ];
 
-export default function AdministracionPage({ onBack }: { onBack: () => void }) {
-  const [pestana, setPestana] = useState<Pestana>('moderacion');
-  const actual = PESTANAS.find((p) => p.key === pestana)!;
+export default function AdministracionPage(
+  { permisos, onBack }: { permisos: PermisosDeAdmin; onBack: () => void },
+) {
+  const visibles = PESTANAS.filter((p) => p.puede(permisos));
+  // Arranca en null y la resuelve `visibles[0]` hasta que se elige una: fijar
+  // 'moderacion' de entrada dejaba a quien no la tiene mirando una pestaña
+  // vacía. Es el mismo cuidado que en el panel de la app (H-R10-18).
+  const [elegida, setElegida] = useState<Pestana | null>(null);
+  const pestana: Pestana | null = elegida && visibles.some((p) => p.key === elegida)
+    ? elegida
+    : (visibles[0]?.key ?? null);
+  const actual = visibles.find((p) => p.key === pestana);
 
   return (
     <div className="admin-page">
       <header className="agenda-header">
         <div>
           <h1>Administración</h1>
-          <p className="agenda-sub">{actual.bajada}</p>
+          <p className="agenda-sub">{actual?.bajada || 'Tu cuenta no tiene ningún acceso de administración.'}</p>
         </div>
         <div className="agenda-header-actions">
           <button type="button" className="btn btn-outline" onClick={onBack}>← Volver a la agenda</button>
@@ -53,13 +86,13 @@ export default function AdministracionPage({ onBack }: { onBack: () => void }) {
           adentro de Moderación y del Resumen. Si fueran los mismos chips, dos
           filas seguidas de lo mismo no dejarían ver cuál manda sobre cuál. */}
       <nav className="admin-tabs" aria-label="Secciones de administración">
-        {PESTANAS.map((p) => (
+        {visibles.map((p) => (
           <button
             key={p.key}
             type="button"
             className={`admin-tab${p.key === pestana ? ' admin-tab-activa' : ''}`}
             aria-current={p.key === pestana ? 'page' : undefined}
-            onClick={() => setPestana(p.key)}
+            onClick={() => setElegida(p.key)}
           >
             {p.label}
           </button>
@@ -70,8 +103,8 @@ export default function AdministracionPage({ onBack }: { onBack: () => void }) {
           aparecer, así volver a una pestaña muestra lo de ahora y no lo que
           había cuando se salió. En moderación eso importa — un pago aprobado
           desde otro lado tiene que desaparecer de la cola. */}
-      {pestana === 'moderacion' && <ModeracionPage />}
-      {pestana === 'resumen' && <LedgerPage />}
+      {pestana === 'moderacion' && <ModeracionPage permisos={permisos} />}
+      {pestana === 'resumen' && <LedgerPage permisos={permisos} />}
       {pestana === 'administradores' && <AdminPage />}
     </div>
   );

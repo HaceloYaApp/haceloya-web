@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import './LedgerPage.css';
+import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 
 // ESTA PÁGINA LLAMABA A UN CALLABLE QUE SE BORRÓ.
 //
@@ -91,8 +92,17 @@ const ETIQUETA_RESULTADO: Record<string, string> = {
 
 const plata = (n: number) => `$${Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
-export default function LedgerPage() {
-  const [bucket, setBucket] = useState<Bucket>('servicio');
+export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) {
+  // SÓLO LAS SECCIONES QUE PUEDE PEDIR (09/09/2026).
+  //
+  // Quien tiene el permiso de mujer a mujer y no el del registro entero ve una
+  // sola sección, que es la suya: es la misma línea que traza el backend
+  // (exigirAdminDeSeccion). Con las quince a la vista, catorce le devolvían
+  // "Tu acceso no incluye el resto del registro" — un error donde tendría que
+  // haber una pantalla que no ofrece lo que no es suyo.
+  const soloMujer = permisos.mujer && !permisos.resumen;
+  const tabs = soloMujer ? TABS.filter((t) => t.key === 'servicio_mujer') : TABS;
+  const [bucket, setBucket] = useState<Bucket>(soloMujer ? 'servicio_mujer' : 'servicio');
   const [items, setItems] = useState<LedgerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -177,7 +187,7 @@ export default function LedgerPage() {
       {loadError && <div className="agenda-error">{loadError}</div>}
 
       <div className="ledger-tabs">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.key}
             type="button"

@@ -14,7 +14,7 @@ import { formatDate, toLocalISODate } from '../utils/dateUtils';
 import { getJobEmoji, getJobTypeLabel } from '../utils/postLabel';
 import { computeProposalTotal, formatARS } from '../utils/money';
 import { uploadAgendaPhoto } from '../utils/imageUpload';
-import { puedeVerElRegistro } from '../utils/ledgerAdmins';
+import { misPermisosDeAdmin, SIN_PERMISOS, type PermisosDeAdmin } from '../utils/permisosDeAdmin';
 // CARGA DIFERIDA.
 //
 // El bundle de la agenda es uno solo: 245 KB comprimidos que descarga
@@ -37,10 +37,17 @@ export default function AgendaPage() {
   // Se le pregunta al backend en vez de llevar la lista acá: este repositorio
   // es público y el archivo publicaba el uid y el email de la persona con
   // acceso a los pagos. Hallazgos H-W1-08 / H-W1-09.
-  const [isLedgerAdmin, setIsLedgerAdmin] = useState(false);
+  // ANTES ERA UN SÍ/NO, Y ESE ERA EL BUG (09/09/2026).
+  //
+  // Se preguntaba `puedeVerElRegistro` —¿ve la plata?— y con esa sola respuesta
+  // se decidía si mostrar el botón "Administración" entero. Desde que los
+  // permisos se tildan por separado (08/09/2026), dar un acceso PARCIAL
+  // equivalía a no dar nada: a quien tenía sólo mujer a mujer la web le
+  // escondía la puerta.
+  const [permisos, setPermisos] = useState<PermisosDeAdmin>(SIN_PERMISOS);
   useEffect(() => {
     let vivo = true;
-    puedeVerElRegistro().then((r) => { if (vivo) setIsLedgerAdmin(r); });
+    misPermisosDeAdmin().then((r) => { if (vivo) setPermisos(r); });
     return () => { vivo = false; };
   }, [uid]);
 
@@ -402,7 +409,7 @@ export default function AgendaPage() {
   if (showAdministracion) {
     return (
       <Suspense fallback={<div className="cargando-ledger">Abriendo administración…</div>}>
-        <AdministracionPage onBack={() => setShowAdministracion(false)} />
+        <AdministracionPage permisos={permisos} onBack={() => setShowAdministracion(false)} />
       </Suspense>
     );
   }
@@ -417,7 +424,7 @@ export default function AgendaPage() {
           </p>
         </div>
         <div className="agenda-header-actions">
-          {isLedgerAdmin && (
+          {permisos.alguno && (
             // Un solo botón: adentro están Moderación, Resumen y
             // Administradores como pestañas. Antes eran tres puertas separadas
             // y había que volver a la agenda para pasar de una a otra.
