@@ -32,7 +32,12 @@ const ACCION_LEGIBLE: Record<string, string> = {
   desbloquear: 'Desbloqueó la cuenta',
   ajustar_duracion: 'Cambió la duración de un bloqueo',
   borrar_strike: 'Borró un strike',
+  // Desde el 09/09/2026 una reseña se tapa, no se borra: es reversible,
+  // auditable y explicable. La acción vieja sigue acá porque el registro
+  // guarda lo que pasó, no lo que hoy se puede hacer.
   borrar_resena: 'Borró una reseña',
+  ocultar_resena: 'Tapó una reseña',
+  mostrar_resena: 'Volvió a mostrar una reseña',
 };
 
 const nombreDe = (uid: string, nombres: Record<string, string>) => {
