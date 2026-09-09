@@ -232,3 +232,22 @@
   padding-top: 10px;
   border-top: 1px solid var(--borde, #d8d8d8);
 }
+
+/* El globito de lo que está esperando en cada solapa de moderación
+   (09/09/2026). Sin él hay que entrar una por una para saber si hay algo sin
+   atender, y del otro lado hay alguien esperando una respuesta. */
+.admin-globo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}

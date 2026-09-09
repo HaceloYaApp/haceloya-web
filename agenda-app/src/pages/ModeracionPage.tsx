@@ -55,6 +55,20 @@ const fecha = (ms: number | null) => (ms ? new Date(ms).toLocaleString('es-AR') 
 const plata = (n: number) => `$${Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
 export default function ModeracionPage({ permisos }: { permisos: PermisosDeAdmin }) {
+  // LO QUE ESTÁ ESPERANDO (09/09/2026), igual que en el panel del teléfono.
+  //
+  // Sin esto hay que entrar solapa por solapa para saber si hay algo sin
+  // atender, y del otro lado hay alguien esperando una respuesta: una cuenta
+  // bloqueada por un comprobante sin mirar, un reclamo sin fallo.
+  const [pendientes, setPendientes] = useState<Record<string, number | null>>({});
+  useEffect(() => {
+    let vivo = true;
+    httpsCallable(functions, 'contadoresDelDia')({})
+      .then((r) => { if (vivo) setPendientes(((r.data as any)?.pendientes || {})); })
+      .catch(() => { /* sin números las solapas siguen sirviendo */ });
+    return () => { vivo = false; };
+  }, []);
+
   const visibles = SOLAPAS.filter((s) => s.puede(permisos));
   // Igual que en Administración: la solapa activa la decide `visibles[0]` hasta
   // que se elige una. Fijar 'pagos' de entrada dejaba a quien sólo modera
@@ -77,6 +91,13 @@ export default function ModeracionPage({ permisos }: { permisos: PermisosDeAdmin
             onClick={() => setElegida(s.key)}
           >
             {s.label}
+            {/* Sólo cuando hay algo: un cero con globo se lee como "hay uno"
+                de reojo, que es lo que un globo no puede hacer. */}
+            {!!pendientes[s.key] && (
+              <span className="admin-globo">
+                {(pendientes[s.key] as number) > 99 ? '99+' : pendientes[s.key]}
+              </span>
+            )}
           </button>
         ))}
       </div>

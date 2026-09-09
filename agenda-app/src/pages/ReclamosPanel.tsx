@@ -54,6 +54,27 @@ export default function ReclamosPanel() {
   const [items, setItems] = useState<Reclamo[] | null>(null);
   const [error, setError] = useState('');
   const [abierto, setAbierto] = useState<Reclamo | null>(null);
+  // Reabrir uno cerrado (09/09/2026). El motivo es obligatorio: las dos partes
+  // lo van a leer, y un caso que se abre dos veces tiene que poder explicarse.
+  const [motivos, setMotivos] = useState<Record<string, string>>({});
+  const [reabriendo, setReabriendo] = useState<string | null>(null);
+
+  const reabrir = async (r: Reclamo) => {
+    const motivo = (motivos[r.id] || '').trim();
+    if (!motivo) { setError('Escribí por qué se reabre: las dos partes lo van a leer.'); return; }
+    if (!window.confirm('Vuelve a quedar sin resolver y el chat se reabre para los dos. ¿Seguro?')) return;
+    setReabriendo(r.id);
+    setError('');
+    try {
+      await httpsCallable(functions, 'reabrirReclamo')({ reclamoId: r.id, motivo });
+      setMotivos((m) => ({ ...m, [r.id]: '' }));
+      await cargar(estado);
+    } catch (e) {
+      setError(mensajeDeError(e, 'No se pudo reabrir.'));
+    } finally {
+      setReabriendo(null);
+    }
+  };
 
   const cargar = useCallback(async (cual: string) => {
     setItems(null);
@@ -125,6 +146,35 @@ export default function ReclamosPanel() {
                 {r.estado === 'abierto' ? 'Abrir y resolver' : 'Ver'}
               </button>
             </div>
+
+            {/* REABRIR UNO CERRADO. Aparece una foto que no estaba, o habla
+                recién ahora la parte que había callado. Antes la única salida
+                era dejarlo así: el sistema no deja abrir un segundo caso sobre
+                la misma operación, para que no haya dos fallos que se
+                contradigan. Sólo un moderador, por pedido explícito. */}
+            {r.estado !== 'abierto' && (
+              <>
+                <label className="admin-label" htmlFor={`reabrir-${r.id}`}>
+                  Por qué se reabre (lo leen las dos partes)
+                </label>
+                <input
+                  id={`reabrir-${r.id}`}
+                  className="admin-input"
+                  value={motivos[r.id] || ''}
+                  onChange={(e) => setMotivos((m) => ({ ...m, [r.id]: e.target.value }))}
+                />
+                <div className="admin-acciones">
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={reabriendo === r.id}
+                    onClick={() => reabrir(r)}
+                  >
+                    {reabriendo === r.id ? 'Reabriendo...' : 'Reabrir el reclamo'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ))
       )}
