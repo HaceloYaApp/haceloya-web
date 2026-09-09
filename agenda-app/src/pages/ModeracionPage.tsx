@@ -4,6 +4,7 @@ import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import ReclamosPanel from './ReclamosPanel';
 import AuditoriaPanel from './AuditoriaPanel';
+import ApelacionesPanel from './ApelacionesPanel';
 // Las solapas usan los mismos chips que el registro contable. Hay que pedir su
 // hoja de estilos acá: `LedgerPage` se carga en diferido, así que su CSS viaja
 // en otro pedazo y sólo llegaba si alguien había entrado antes al registro.
@@ -21,7 +22,7 @@ import './AdminPage.css';
 // misma que en el teléfono, pero una sesión de navegador abierta en una compu
 // compartida es más fácil de dejar olvidada que un teléfono en el bolsillo.
 
-type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'bloqueados' | 'auditoria';
+type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'apelaciones' | 'bloqueados' | 'auditoria';
 
 const SOLAPAS: Array<{ key: Solapa; label: string }> = [
   { key: 'pagos', label: 'Pagos por aprobar' },
@@ -30,6 +31,9 @@ const SOLAPAS: Array<{ key: Solapa; label: string }> = [
   // fallar a favor de uno de los dos.
   { key: 'reclamos', label: 'Reclamos' },
   { key: 'denuncias', label: 'Denuncias' },
+  // Estrellas automáticas que alguien discute. Va al lado de Denuncias porque
+  // es la misma tarea —decidir sobre una sanción—, igual que en la app.
+  { key: 'apelaciones', label: 'Apelaciones' },
   { key: 'bloqueados', label: 'Bloqueados' },
   // Quién miró los datos de quién. Se anotaba desde el 17/08 y no la podía
   // leer nadie: un registro que nadie consulta no es un control.
@@ -62,6 +66,7 @@ export default function ModeracionPage() {
       {solapa === 'pagos' && <PagosPorAprobar />}
       {solapa === 'reclamos' && <ReclamosPanel />}
       {solapa === 'denuncias' && <Denuncias />}
+      {solapa === 'apelaciones' && <ApelacionesPanel />}
       {solapa === 'bloqueados' && <Bloqueados />}
       {solapa === 'auditoria' && <AuditoriaPanel />}
     </>
@@ -190,11 +195,21 @@ const TIPO_LEGIBLE: Record<string, string> = {
   review: 'Reseña',
 };
 
+type CuentaEncontrada = {
+  uid: string; nombre?: string; role?: string; kycStatus?: string; accountStatus?: string;
+};
+
 function Denuncias() {
   const [estado, setEstado] = useState('abierta');
   const [items, setItems] = useState<DenunciaItem[] | null>(null);
   const [error, setError] = useState('');
   const [trabajando, setTrabajando] = useState<string | null>(null);
+  // EL BUSCADOR DE CUENTAS, QUE ACÁ NO ESTABA (09/09/2026). La app lo tiene
+  // arriba de esta misma cola, y por un motivo: la mitad de las veces se llega
+  // a moderar sabiendo a quién hay que mirar, no leyendo la lista.
+  const [busqueda, setBusqueda] = useState('');
+  const [cuentas, setCuentas] = useState<CuentaEncontrada[] | null>(null);
+  const [buscando, setBuscando] = useState(false);
 
   const cargar = useCallback(async (cual: string) => {
     setItems(null);
@@ -229,8 +244,66 @@ function Denuncias() {
     }
   };
 
+  const buscar = async () => {
+    const q = busqueda.trim();
+    if (q.length < 3) {
+      setError('Escribí al menos 3 letras, o pegá el id de la cuenta.');
+      return;
+    }
+    setBuscando(true);
+    setCuentas(null);
+    setError('');
+    try {
+      const r: any = await httpsCallable(functions, 'buscarCuentas')({ q });
+      setCuentas((r?.data?.items || []) as CuentaEncontrada[]);
+    } catch (e) {
+      setError(mensajeDeError(e, 'No pudimos buscar.'));
+      setCuentas([]);
+    } finally {
+      setBuscando(false);
+    }
+  };
+
   return (
     <section className="admin-card">
+      <h2>Buscar una cuenta</h2>
+      <p className="admin-sub">
+        Busca por el principio del nombre de pila. Para encontrar por apellido o mail, pegá el id de
+        la cuenta.
+      </p>
+      <div className="admin-acciones">
+        <input
+          className="admin-input"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') buscar(); }}
+          placeholder="Nombre de pila, o pegá el id de la cuenta"
+          aria-label="Buscar una cuenta por nombre o id"
+        />
+        <button type="button" className="btn" disabled={buscando} onClick={buscar}>
+          {buscando ? 'Buscando...' : 'Buscar'}
+        </button>
+      </div>
+      {cuentas !== null && (
+        cuentas.length === 0 ? (
+          <p className="admin-sub">No encontramos ninguna cuenta con eso.</p>
+        ) : (
+          <ul className="admin-lista">
+            {cuentas.map((c) => (
+              <li key={c.uid}>
+                <strong>{c.nombre || '(sin nombre)'}</strong>
+                <span className="admin-sub">
+                  {c.role || 'Particular'} · KYC: {c.kycStatus || 'unverified'}
+                  {c.accountStatus ? ` · ${c.accountStatus}` : ''}
+                </span>
+                <span className="admin-sub">{c.uid}</span>
+              </li>
+            ))}
+          </ul>
+        )
+      )}
+
+      <h2 style={{ marginTop: 18 }}>Denuncias</h2>
       <div className="ledger-filtros">
         {ESTADOS.map((e) => (
           <button

@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import './AdminPage.css';
+import RegistroDiarioPanel from './RegistroDiarioPanel';
 
 // LA MISMA SECCIÓN "ADMINISTRADORES" QUE LA APP.
 //
@@ -80,6 +81,9 @@ export default function AdminPage() {
       </p>
       <QuienesTienenAcceso />
       <CuantaGenteHay />
+      {/* El registro diario por mail: quién lo recibe y el envío de prueba.
+          Estaba sólo en el teléfono. */}
+      <RegistroDiarioPanel />
       <SaludDeLosProcesos />
     </>
   );

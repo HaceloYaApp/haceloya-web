@@ -18,6 +18,7 @@ import './LedgerPage.css';
 type Bucket =
   | 'todos' | 'servicio' | 'servicio_mujer' | 'actividad' | 'turno'
   | 'curso' | 'oficio' | 'marketplace' | 'oferta_laboral'
+  | 'oferta_laboral:postulado' | 'oferta_laboral:preseleccionado' | 'oferta_laboral:aceptado'
   | 'usuario_nuevo' | 'baja_usuario' | 'reclamo';
 
 const TABS: Array<{ key: Bucket; label: string }> = [
@@ -30,6 +31,11 @@ const TABS: Array<{ key: Bucket; label: string }> = [
   { key: 'oficio', label: 'Oficios' },
   { key: 'marketplace', label: 'Marketplace' },
   { key: 'oferta_laboral', label: 'Oferta laboral' },
+  // Las tres etapas de una búsqueda, que estaban sólo en el teléfono: son las
+  // que dicen cuánta gente se postula y cuánta llega a ser tomada.
+  { key: 'oferta_laboral:postulado', label: 'Postulantes' },
+  { key: 'oferta_laboral:preseleccionado', label: 'Preseleccionados' },
+  { key: 'oferta_laboral:aceptado', label: 'Aceptados' },
   { key: 'usuario_nuevo', label: 'Nuevos usuarios' },
   { key: 'baja_usuario', label: 'Bajas' },
   { key: 'reclamo', label: 'Reclamos' },
