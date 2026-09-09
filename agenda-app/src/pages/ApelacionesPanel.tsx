@@ -37,6 +37,9 @@ const SECCION_LEGIBLE: Record<string, string> = {
 const MOTIVO_LEGIBLE: Record<string, string> = {
   cancelacion: 'Canceló la operación',
   inaccion: 'No cerró la operación a tiempo',
+  // La que deja un moderador al fallar un reclamo (09/09/2026). No es
+  // automática: la puso una persona, y hasta hoy no se podía discutir.
+  estrella_de_admin: 'Estrella puesta por un moderador al resolver un reclamo',
 };
 
 type Apelacion = {
