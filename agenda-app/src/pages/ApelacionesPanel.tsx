@@ -110,7 +110,12 @@ export default function ApelacionesPanel() {
       {items === null ? (
         <p className="admin-loading">Cargando...</p>
       ) : items.length === 0 ? (
-        <p className="admin-sub">No hay apelaciones sin resolver.</p>
+        // NO AFIRMAR LO QUE NO SE SABE (09/09/2026). Si la consulta falló, la
+        // lista queda vacía por otro motivo: decir "no hay apelaciones" al
+        // lado del cartel de error es contarle dos cosas distintas a la vez, y
+        // la que se cree es la primera. Pasó de verdad, por un índice que
+        // faltaba: se leía "no hay ninguna" mientras había.
+        error ? null : <p className="admin-sub">No hay apelaciones sin resolver.</p>
       ) : (
         <ul className="admin-lista">
           {items.map((ap) => (
