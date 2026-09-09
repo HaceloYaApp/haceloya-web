@@ -48,6 +48,11 @@ button {
 .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
 .btn-dark { background: var(--ink); color: #fff; }
 .btn-outline { background: #fff; }
+/* La estrella roja de moderación: es la única acción del panel que sanciona a
+   una persona, y tiene que verse distinta de las que sólo cierran un caso. */
+.btn-rojo { background: #C62828; color: #fff; border-color: #C62828; box-shadow: 4px 4px 0 #7F1D1D; }
+.btn-outline.btn-rojo { background: #fff; color: #C62828; }
+.btn-rojo:disabled { opacity: 0.55; }
 
 .hazard-stripe {
   height: 6px;

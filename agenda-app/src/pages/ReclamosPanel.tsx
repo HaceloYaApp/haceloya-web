@@ -151,6 +151,10 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
   const [trabajando, setTrabajando] = useState(false);
   const [pausado, setPausado] = useState(reclamo.chatPausado);
   const [nota, setNota] = useState('');
+  // La estrella roja: a quién y por qué. Ver el bloque de abajo.
+  const [calificando, setCalificando] = useState<string | null>(null);
+  const [motivoStrike, setMotivoStrike] = useState('');
+  const [avisoStrike, setAvisoStrike] = useState('');
 
   // La conversación, leída directo de Firestore. Las reglas dejan al moderador
   // entrar SÓLO mientras el reclamo está abierto: si ya se resolvió, esto va a
@@ -198,6 +202,42 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
       setPausado(r?.data?.bloqueado === true);
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudo.'));
+    } finally {
+      setTrabajando(false);
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // LA ESTRELLA ROJA, QUE ACÁ NO ESTABA (08/09/2026).
+  //
+  // La web sabía resolver y nada más. Resolver cierra el caso y avisa a las
+  // partes; la sanción —una reseña de una estrella que cuenta como strike, y a
+  // la tercera pasa la cuenta a revisión— es OTRA decisión, con su propio
+  // botón, y desde la compu no existía. Quien moderaba desde acá cerraba el
+  // caso creyendo que la sanción salía sola.
+  //
+  // Está disponible con el caso abierto Y con el caso cerrado: se cierra a
+  // favor de uno y después se decide si al otro le corresponde la estrella.
+  // ---------------------------------------------------------------------------
+  const calificar = async () => {
+    const motivo = motivoStrike.trim();
+    if (!calificando || !motivo || trabajando) return;
+    setTrabajando(true);
+    setError('');
+    setAvisoStrike('');
+    try {
+      const r: any = await httpsCallable(functions, 'calificarComoAdmin')({
+        uid: calificando,
+        motivo,
+        reclamoId: reclamo.id,
+      });
+      setCalificando(null);
+      setMotivoStrike('');
+      setAvisoStrike(r?.data?.bloquea
+        ? 'Es la tercera: la cuenta quedó bloqueada y pasó a revisión.'
+        : `Listo. Quedó con ${r?.data?.strikes || 1} de 3. A la tercera se bloquea.`);
+    } catch (e) {
+      setError(mensajeDeError(e, 'No se pudo calificar.'));
     } finally {
       setTrabajando(false);
     }
@@ -292,6 +332,57 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
           </p>
         </>
       )}
+
+      {/* LA ESTRELLA ROJA. Fuera del `estado === 'abierto'` a propósito: se
+          puede calificar después de cerrar el caso, que es como se usa de
+          verdad. */}
+      <h2 style={{ marginTop: 18 }}>Estrella roja</h2>
+      <p className="admin-sub">
+        Es una reseña de una estrella en la sección del reclamo y cuenta como strike. A la tercera,
+        la cuenta pasa a revisión. Es una decisión aparte de en qué quedó el caso.
+      </p>
+      <div className="admin-acciones">
+        {reclamo.partes.map((uid) => (
+          <button
+            key={uid}
+            type="button"
+            className="btn btn-outline btn-rojo"
+            disabled={trabajando}
+            onClick={() => { setMotivoStrike(''); setAvisoStrike(''); setCalificando(uid); }}
+          >
+            ★ {reclamo.nombres[uid] || uid}
+          </button>
+        ))}
+      </div>
+
+      {!!calificando && (
+        <>
+          <label className="admin-label" htmlFor="reclamo-strike">
+            Por qué se califica así a {reclamo.nombres[calificando] || calificando}
+          </label>
+          <input
+            id="reclamo-strike"
+            className="admin-input"
+            value={motivoStrike}
+            onChange={(e) => setMotivoStrike(e.target.value)}
+            placeholder="Lo lee esa persona en la notificación y queda como comentario de la reseña."
+          />
+          <div className="admin-acciones">
+            <button
+              type="button"
+              className="btn btn-rojo"
+              disabled={trabajando || !motivoStrike.trim()}
+              onClick={calificar}
+            >
+              {trabajando ? 'Poniendo...' : 'Poner la estrella'}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => setCalificando(null)}>
+              Cancelar
+            </button>
+          </div>
+        </>
+      )}
+      {!!avisoStrike && <p className="admin-ok">{avisoStrike}</p>}
 
       {!!error && <p className="admin-error-inline">{error}</p>}
     </section>
