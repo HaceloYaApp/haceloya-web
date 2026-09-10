@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.bissi.haceloapp",
       "sha256_cert_fingerprints": [
-        "03:A0:3F:77:31:23:B1:67:72:0C:C8:1C:C2:9A:94:BA:9D:5E:AB:F2:94:A8:63:31:81:C3:40:51:F6:B8:CC:CA"
+        "03:A0:3F:77:31:23:B1:67:72:0C:C8:1C:C2:9A:94:BA:9D:5E:AB:F2:94:A8:63:31:81:C3:40:51:F6:B8:CC:CA",
+        "33:57:12:A7:B3:EB:AA:F1:B1:36:03:52:DC:BC:36:B2:60:F5:00:E1:F1:02:F0:B9:A0:91:A0:0E:4D:42:ED:57"
       ]
     }
   }
