@@ -247,7 +247,13 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
       await httpsCallable(functions, 'hablarEnElReclamo')({ reclamoId: reclamo.id, texto });
       setMensaje('');
     } catch (e) {
-      alert(`No se pudo enviar: ${(e as { message?: string })?.message || 'probá de nuevo'}`);
+      // EL ÚNICO `alert()` CRUDO DEL PANEL (10/09/2026).
+      //
+      // Salteaba `mensajeDeError` y mostraba el `message` del SDK tal cual, así
+      // que un permiso denegado se leía "Firebase: Error
+      // (functions/permission-denied)." — que es exactamente el problema que
+      // ese módulo vino a resolver, reintroducido en el archivo de al lado.
+      setError(mensajeDeError(e, 'No se pudo enviar el mensaje.'));
     } finally {
       setTrabajando(false);
     }

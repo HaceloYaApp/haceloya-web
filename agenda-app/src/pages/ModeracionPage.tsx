@@ -205,6 +205,8 @@ type DenunciaItem = {
   id: string; targetType: string; targetId: string; targetOwnerUid: string;
   reporterUid: string; motivo: string; detalle: string; estado: string;
   createdAt: number | null; resueltaPor: string | null; nota: string | null;
+  /** Varias personas distintas denunciaron esta cuenta. Ver DENUNCIAS_PARA_PRIORIZAR. */
+  prioritaria?: boolean;
 };
 
 const ESTADOS = [
@@ -365,12 +367,29 @@ function Denuncias() {
       ) : (
         items.map((d) => (
           <div key={d.id} className="admin-caso">
+            {/* LA SEÑAL QUE DICE POR DÓNDE EMPEZAR (10/09/2026).
+                El backend marca `prioritaria` cuando varias personas DISTINTAS
+                denunciaron la misma cuenta. La app lo destaca desde siempre; la
+                web ni siquiera lo tenía en el tipo, así que esa señal se perdía
+                entera y las denuncias se leían todas iguales. */}
+            {d.prioritaria && (
+              <strong className="admin-warn">
+                Varias personas distintas denunciaron esta cuenta — mirá esto primero
+              </strong>
+            )}
             <strong>{MOTIVO_LEGIBLE[d.motivo] || d.motivo}</strong>
             <span className="admin-sub">
               {TIPO_LEGIBLE[d.targetType] || d.targetType} · {fecha(d.createdAt)}
             </span>
+            {/* A QUIÉN DENUNCIARON. El campo se declaraba y no se dibujaba
+                nunca: un moderador leía "Parece una estafa · Perfil · 10/09" y
+                no podía saber de quién se hablaba. */}
+            {!!d.targetOwnerUid && (
+              <span className="admin-sub">Cuenta denunciada: {d.targetOwnerUid}</span>
+            )}
             {!!d.detalle && <p className="admin-detalle">“{d.detalle}”</p>}
             {!!d.nota && <span className="admin-sub">Nota: {d.nota}</span>}
+            {!!d.resueltaPor && <span className="admin-sub">Resuelta por: {d.resueltaPor}</span>}
             {d.estado === 'abierta' && (
               <div className="admin-acciones">
                 <button type="button" className="btn" disabled={trabajando === d.id} onClick={() => resolver(d.id, 'resuelta')}>
@@ -511,6 +530,22 @@ function Bloqueados() {
               <button type="button" className="btn" disabled={trabajando === c.uid} onClick={() => moderar(c.uid, 'desbloquear')}>
                 Levantar el bloqueo
               </button>
+              {/* BORRAR UN STRIKE, QUE EXISTÍA EN TODOS LADOS MENOS ACÁ
+                  (10/09/2026). El callable lo acepta desde siempre, la app
+                  tiene el botón, y la web hasta lista "Borró un strike" en su
+                  propio registro de auditoría — de una acción que no podía
+                  hacer. Es el mismo patrón que ya apareció dos veces este mes:
+                  el backend ofrece, la app tiene el botón, la web no. */}
+              {c.strikes > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={trabajando === c.uid}
+                  onClick={() => moderar(c.uid, 'borrarStrike')}
+                >
+                  Borrar un strike
+                </button>
+              )}
               {DURACIONES.map((d) => (
                 <button
                   key={d.key}

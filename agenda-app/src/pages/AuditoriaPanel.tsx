@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
+import { textoDeListaVacia } from '../utils/listaQueFalla';
 
 // QUIÉN MIRÓ LOS DATOS DE QUIÉN.
 //
@@ -107,15 +108,24 @@ export default function AuditoriaPanel() {
         )}
       </div>
 
-      {!!error && <p className="admin-error-inline">{error}</p>}
+      {!!error && items !== null && items.length > 0 && (
+        <p className="admin-error-inline">{error}</p>
+      )}
 
       {items === null ? (
         <p className="admin-loading">Cargando...</p>
       ) : items.length === 0 ? (
         <p className="admin-sub">
-          {filtro.trim()
-            ? 'Nadie tocó esa cuenta.'
-            : 'Todavía no hay nada anotado. Es lo esperable si nadie abrió el panel.'}
+          {/* En un registro de ACCESOS, afirmar "nadie tocó esa cuenta" cuando
+              lo que falló fue la lectura es lo contrario del control que
+              promete la política de privacidad. Ver utils/listaQueFalla.ts. */}
+          {textoDeListaVacia(
+            !!error,
+            filtro.trim() ?
+              'Nadie tocó esa cuenta.' :
+              'Todavía no hay nada anotado. Es lo esperable si nadie abrió el panel.',
+            'el registro',
+          )}
         </p>
       ) : (
         <ul className="admin-lista">

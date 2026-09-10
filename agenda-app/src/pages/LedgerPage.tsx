@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import './LedgerPage.css';
 import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
+import { mensajeDeError } from '../utils/erroresDeFirebase';
 
 // ESTA PÁGINA LLAMABA A UN CALLABLE QUE SE BORRÓ.
 //
@@ -158,7 +159,11 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
     load(bucket).then((newItems) => { if (!cancelled) { setItems(newItems); setLoadError(''); } })
       .catch((e) => {
         console.error('[Ledger] error cargando:', e);
-        if (!cancelled) { setItems([]); setLoadError('No pudimos cargar el registro. Revisá tu conexión y volvé a intentar.'); }
+        // `mensajeDeError` Y NO UN TEXTO FIJO (10/09/2026).
+        // Decía "revisá tu conexión" pasara lo que pasara. A quien tiene sólo
+        // el acceso de sección, el backend le contesta "tu acceso no incluye el
+        // resto del registro" — y la web lo mandaba a arreglar internet.
+        if (!cancelled) { setItems([]); setLoadError(mensajeDeError(e, 'No pudimos cargar el registro.')); }
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -174,7 +179,7 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
       setLoadError('');
     } catch (e) {
       console.error('[Ledger] error cargando más:', e);
-      setLoadError('No pudimos cargar más registros. Volvé a intentar.');
+      setLoadError(mensajeDeError(e, 'No pudimos cargar más registros.'));
     } finally {
       setLoadingMore(false);
     }

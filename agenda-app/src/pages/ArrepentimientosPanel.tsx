@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { functions, db } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
+import { textoDeListaVacia } from '../utils/listaQueFalla';
 
 // LA COLA DE ARREPENTIMIENTOS (09/09/2026).
 //
@@ -231,6 +232,7 @@ function Conversacion({ solicitudId, alEscribir }: { solicitudId: string; alEscr
   const [texto, setTexto] = useState('');
   const [mandando, setMandando] = useState(false);
   const [error, setError] = useState('');
+  const [noSePudoLeer, setNoSePudoLeer] = useState(false);
 
   useEffect(() => {
     const q = query(
@@ -239,8 +241,18 @@ function Conversacion({ solicitudId, alEscribir }: { solicitudId: string; alEscr
     );
     const unsub = onSnapshot(
       q,
-      (snap) => setMensajes(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))),
-      () => { /* sin permiso o sin red: queda vacía y el campo sigue sirviendo */ },
+      (snap) => {
+        setNoSePudoLeer(false);
+        setMensajes(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      },
+      // SE TRAGABA EL ERROR ENTERO (10/09/2026).
+      //
+      // El comentario decía "queda vacía y el campo sigue sirviendo", pero la
+      // pantalla afirma "todavía no se escribieron mensajes" — o sea que un
+      // moderador leía que la persona no dijo nada cuando en realidad no se
+      // pudo leer lo que dijo. Y una revocación del art. 34 tiene reloj de 24
+      // horas. Ver utils/listaQueFalla.ts.
+      () => { setNoSePudoLeer(true); },
     );
     return () => unsub();
   }, [solicitudId]);
@@ -264,7 +276,9 @@ function Conversacion({ solicitudId, alEscribir }: { solicitudId: string; alEscr
   return (
     <div className="admin-chat">
       {mensajes.length === 0 ? (
-        <span className="admin-sub">Todavía no se escribieron mensajes.</span>
+        <span className="admin-sub">
+          {textoDeListaVacia(noSePudoLeer, 'Todavía no se escribieron mensajes.', 'la conversación')}
+        </span>
       ) : mensajes.map((m) => (
         <p key={m.id} className="admin-detalle">
           <strong>{m.deModeracion ? 'Administración' : 'Quien pidió'}: </strong>{m.texto}

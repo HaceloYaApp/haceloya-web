@@ -15,7 +15,15 @@ import { mensajeDeError } from '../utils/erroresDeFirebase';
 // los días son nombres, uid y montos de cada operación, y el descargo textual
 // de cada persona bloqueada.
 
-type Envio = { dia?: string; operaciones?: number; enviadoA?: number };
+// `estado` y `error` los devuelve el callable desde siempre (ver
+// exportacionDiaria.ts) y la web los ignoraba: un envío que explotó se pintaba
+// como "0 operaciones · a 0 direcciones", igual que un día sin movimiento. La
+// evidencia contable de una jornada no se generaba y el panel decía que ese día
+// no pasó nada (10/09/2026).
+type Envio = {
+  dia?: string; operaciones?: number; enviadoA?: number;
+  estado?: string; error?: string;
+};
 
 export default function RegistroDiarioPanel() {
   const [lista, setLista] = useState<string[] | null>(null);
@@ -165,9 +173,15 @@ export default function RegistroDiarioPanel() {
             {ultimas.map((u, i) => (
               <li key={`${u.dia}-${i}`}>
                 <strong>{u.dia}</strong>
-                <span className="admin-sub">
-                  {u.operaciones ?? 0} operaciones · a {u.enviadoA ?? 0} direcciones
-                </span>
+                {u.estado === 'error' ? (
+                  <span className="admin-warn">
+                    · no se pudo generar{u.error ? `: ${u.error}` : ''}
+                  </span>
+                ) : (
+                  <span className="admin-sub">
+                    {u.operaciones ?? 0} operaciones
+                  </span>
+                )}
               </li>
             ))}
           </ul>
