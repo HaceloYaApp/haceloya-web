@@ -3,7 +3,11 @@
   --ink: #14140F;
   --yellow: #FFC800;
   --yellow-deep: #E0AC00;
-  --blue: #2F80ED;
+  /* --blue: #2F80ED se fue el 10/09/2026. El acento de la app pasó de azul
+     a amarillo y la web era la que ya estaba bien: negro + amarillo. Los 5
+     usos que quedaban eran restos. Ojo: como LETRA sobre blanco el amarillo
+     da 1,55:1 y --yellow-deep 2,09:1 — los dos ilegibles. El acento de
+     primer plano acá es --ink, igual que `accentText` en la app. */
   --success: #27AE60;
   --danger: #EB5757;
   --muted: #3D3D35;

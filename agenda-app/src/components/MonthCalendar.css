@@ -43,7 +43,8 @@
 }
 .cal-cell:hover { background: rgba(0,0,0,0.05); }
 .cal-cell-empty { pointer-events: none; }
-.cal-cell-today { font-weight: 800; color: var(--blue); }
+/* Negro y en negrita, igual que `todayText` en la app. El azul daba 3,87:1. */
+.cal-cell-today { font-weight: 800; color: var(--ink); }
 .cal-cell-selected { background: var(--yellow); font-weight: 800; }
 .cal-day-pro {
   display: inline-flex;
@@ -57,6 +58,9 @@
   color: var(--yellow);
   font-weight: 800;
 }
-.cal-day-pro-selected { border-color: var(--blue); }
+/* El chip normal es fondo negro con borde y letra amarillos. Elegido no
+   podía pasar a amarillo —quedaba igual que sin elegir—, así que el borde
+   va blanco: 18,47:1 contra el fondo del chip. */
+.cal-day-pro-selected { border-color: var(--bg); }
 .cal-dots { display: flex; gap: 3px; margin-top: 1px; }
 .cal-dot { width: 8px; height: 8px; border-radius: 4px; }

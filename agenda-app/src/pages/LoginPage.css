@@ -55,7 +55,10 @@
 .login-link {
   background: none;
   border: none;
-  color: var(--blue);
+  /* Va subrayado, así que se lee como enlace sin depender del color.
+     De paso: el azul daba 3,87:1 contra el blanco, abajo del 4,5:1 de
+     WCAG AA. Éste da 18,47:1. */
+  color: var(--ink);
   font-size: 13px;
   margin-top: 12px;
   text-decoration: underline;
