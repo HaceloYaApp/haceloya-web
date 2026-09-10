@@ -266,3 +266,18 @@
   font-weight: 800;
   line-height: 1;
 }
+
+/* El detalle de una operación (10/09/2026). El documento crudo va en <pre> y
+   con desplazamiento propio: algunos traen arrays largos y sin el límite se
+   comen la pantalla entera. */
+.admin-campos { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.admin-json {
+  max-height: 320px;
+  overflow: auto;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 8px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

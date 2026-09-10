@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import './LedgerPage.css';
 import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
+import DetalleDeOperacion from './DetalleDeOperacion';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 
 // ESTA PÁGINA LLAMABA A UN CALLABLE QUE SE BORRÓ.
@@ -105,6 +106,8 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
   const tabs = soloMujer ? TABS.filter((t) => t.key === 'servicio_mujer') : TABS;
   const [bucket, setBucket] = useState<Bucket>(soloMujer ? 'servicio_mujer' : 'servicio');
   const [items, setItems] = useState<LedgerItem[]>([]);
+  /** La operación abierta, si hay una. Ver DetalleDeOperacion.tsx. */
+  const [abierta, setAbierta] = useState<LedgerItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -184,6 +187,13 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
       setLoadingMore(false);
     }
   };
+
+  // El detalle reemplaza a la lista en vez de abrirse encima: es la misma
+  // navegación que en la app, y así el botón de Volver del panel no compite con
+  // el de la operación.
+  if (abierta) {
+    return <DetalleDeOperacion fila={abierta} alVolver={() => setAbierta(null)} />;
+  }
 
   return (
     <>
@@ -266,7 +276,19 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
       ) : (
         <div className="ledger-list">
           {items.map((it) => (
-            <div key={it.id} className="ledger-card">
+            /* SE PUEDE ABRIR (10/09/2026). Las filas no eran clickeables y
+               `verOperacion` no existía en la web: un moderador veía la fila y
+               no tenía cómo llegar al teléfono de quien debe la comisión. Ver
+               DetalleDeOperacion.tsx. */
+            <div
+              key={it.id}
+              className="ledger-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => setAbierta(it)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setAbierta(it); }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="ledger-card-row">
                 <span className="ledger-detalle">{it.detalle}</span>
                 {it.precio > 0 && <span className="ledger-precio">{plata(it.precio)}</span>}
