@@ -44,7 +44,7 @@ export default function AgendaPage() {
   // permisos se tildan por separado (08/09/2026), dar un acceso PARCIAL
   // equivalía a no dar nada: a quien tenía sólo mujer a mujer la web le
   // escondía la puerta.
-  const [permisos, setPermisos] = useState<PermisosDeAdmin>(SIN_PERMISOS);
+  const [permisos, setPermisos] = useState<PermisosDeAdmin & { noSePudoPreguntar?: boolean }>(SIN_PERMISOS);
   useEffect(() => {
     let vivo = true;
     misPermisosDeAdmin().then((r) => { if (vivo) setPermisos(r); });
@@ -429,6 +429,22 @@ export default function AgendaPage() {
             // Administradores como pestañas. Antes eran tres puertas separadas
             // y había que volver a la agenda para pasar de una a otra.
             <button type="button" className="btn btn-outline" onClick={() => setShowAdministracion(true)}>Administración</button>
+          )}
+          {/* SI NO SE PUDO PREGUNTAR, SE DICE (10/09/2026).
+              Sin red, con App Check rechazando el token o con la function
+              caída, el botón simplemente no estaba — sin ninguna diferencia
+              visible con "no sos admin". Un botón que reintenta es la
+              alternativa honesta al ancla que la app tiene y la web no puede
+              tener, porque este repo es público. */}
+          {permisos.noSePudoPreguntar && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => { misPermisosDeAdmin().then(setPermisos); }}
+              title="No pudimos preguntar si tenés acceso de administración"
+            >
+              Reintentar el acceso
+            </button>
           )}
           <button type="button" className="btn btn-outline logout-btn" onClick={() => signOut(auth)}>Salir</button>
         </div>

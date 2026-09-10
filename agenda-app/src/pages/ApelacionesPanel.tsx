@@ -81,6 +81,9 @@ export default function ApelacionesPanel() {
   useEffect(() => { cargar(); }, [cargar]);
 
   const resolver = async (ap: Apelacion, resultado: string, label: string) => {
+    // Guarda global: `resolviendo` es un solo id y el `finally` de una
+    // resolución limpiaba la marca de otra en vuelo. Ver ArrepentimientosPanel.
+    if (resolviendo) return;
     // Se confirma porque no hay vuelta atrás: una apelación se resuelve una
     // sola vez, y "pasarla a la otra parte" le pone una sanción a alguien que
     // no está mirando esta pantalla.

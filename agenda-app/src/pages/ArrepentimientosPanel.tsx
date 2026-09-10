@@ -62,6 +62,13 @@ export default function ArrepentimientosPanel() {
   useEffect(() => { cargar(); }, [cargar]);
 
   const gestionar = async (s: Solicitud, accion: string, label: string) => {
+    // GUARDA GLOBAL, NO POR SOLICITUD (10/09/2026).
+    //
+    // `trabajando` es un solo id: si se lanzaba una acción sobre la solicitud A
+    // y otra sobre la B, el `finally` de la primera limpiaba la marca de la
+    // segunda y los botones se re-habilitaban con una llamada TODAVÍA EN VUELO.
+    // Y estas acciones mueven plata.
+    if (trabajando) return;
     const monto = Math.round(Number((montos[s.id] || '').replace(/\D/g, '')) || 0);
     if (accion === 'devolver_saldo' && !(monto > 0)) {
       setError('Poné cuánto se le devuelve como saldo a favor.');
