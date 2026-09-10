@@ -433,6 +433,18 @@ function Bloqueados() {
 
   const moderar = async (uid: string, accion: string, duracion?: string) => {
     if (trabajando) return;
+    // LAS DOS QUE NO SE PUEDEN DESHACER SOLAS, SE PREGUNTAN (10/09/2026).
+    //
+    // Los seis botones —levantar, 1 día, 7 días, 1 mes, 1 año, para siempre—
+    // están uno al lado del otro y disparaban directo. Un clic corrido entre
+    // "1 año" y "Para siempre" dejaba una cuenta permabloqueada sin preguntar.
+    // La app de celular ya confirmaba al levantar; acá no.
+    const pregunta = accion === 'desbloquear' ?
+      'Levantar el bloqueo: la persona va a poder operar de nuevo. ¿Seguro?' :
+      duracion === 'permanente' ?
+        'Bloquear PARA SIEMPRE. Es la única duración que no se levanta sola. ¿Seguro?' :
+        '';
+    if (pregunta && !window.confirm(pregunta)) return;
     setTrabajando(uid);
     setError('');
     try {

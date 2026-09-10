@@ -30,6 +30,8 @@ type Reclamo = {
   conversationPath: string | null;
   abiertoPor: string | null;
   partes: string[];
+  /** Quién ofrece y quién busca, congelados al abrirse el caso. */
+  involucrados?: { ofreceUid?: string | null; buscaUid?: string | null } | null;
   nombres: Record<string, string>;
   resolucion: string | null;
   createdAtMillis: number | null;
@@ -305,9 +307,33 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
   };
 
   const nombreDe = (uid: string) => reclamo.nombres[uid] || uid;
-  /** Cuál de las dos resoluciones corresponde al uid elegido. */
+
+  /**
+   * Cuál de las dos resoluciones corresponde al uid elegido.
+   *
+   * EL FALLO SE GRABABA AL REVÉS EN SERVICIOS Y EN OFERTA LABORAL (10/09/2026).
+   *
+   * Decía `uid === reclamo.partes[0] ? 'a_favor_de_quien_ofrece' : ...`, y
+   * `partes[0]` NO es quien ofrece: se arma como
+   * `[authorUid, proposerUid, sellerUid, buyerUid, teacherUid, studentUid,
+   * employerUid, applicantUid].filter(Boolean)`, así que el primero es
+   * `authorUid` en un pedido y `employerUid` en una oferta laboral — y los dos
+   * son QUIEN BUSCA. En marketplace y en cursos daba bien de casualidad.
+   *
+   * El moderador tocaba el botón con el nombre correcto y el servidor grababa
+   * lo contrario. Y `resolverReclamo` publica el fallo DENTRO de la
+   * conversación y lo manda por push a las dos partes: al que ganó le llegaba
+   * "se resolvió a favor del otro", sin vuelta atrás salvo reabrir el caso.
+   *
+   * `involucrados` viene congelado en el reclamo desde que se abre —quiénes
+   * eran cuando pasó— y es lo que usa la app de celular desde el 09/09. La
+   * caída a `partes[0]` queda sólo para los reclamos viejos que se abrieron
+   * antes de que el campo existiera.
+   */
   const resolucionDe = (uid: string) => (
-    uid === reclamo.partes[0] ? 'a_favor_de_quien_ofrece' : 'a_favor_de_quien_busca'
+    uid === (reclamo.involucrados?.ofreceUid || reclamo.partes[0]) ?
+      'a_favor_de_quien_ofrece' :
+      'a_favor_de_quien_busca'
   );
 
   const cerrarElCaso = async () => {
