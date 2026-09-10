@@ -111,6 +111,21 @@
 /* La conversación de un reclamo, leída desde el panel.
    Alto acotado y scroll propio: un chat largo, suelto, empuja los botones de
    resolver fuera de la pantalla justo cuando hay que usarlos. */
+/* Escribirle a las dos partes desde el panel (09/09/2026). El botón abajo y no
+   al lado: en un teléfono en vertical, un textarea y un botón compartiendo
+   renglón dejan los dos inservibles. */
+.reclamo-escribir {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.reclamo-escribir textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 56px;
+}
+
 .reclamo-chat {
   max-height: 340px;
   overflow-y: auto;

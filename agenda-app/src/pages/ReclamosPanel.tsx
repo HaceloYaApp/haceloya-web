@@ -185,6 +185,7 @@ export default function ReclamosPanel() {
 function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => void }) {
   const [mensajes, setMensajes] = useState<Mensaje[] | null>(null);
   const [errorChat, setErrorChat] = useState('');
+  const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
   const [trabajando, setTrabajando] = useState(false);
   const [pausado, setPausado] = useState(reclamo.chatPausado);
@@ -234,6 +235,21 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
     });
     return () => unsub();
   }, [reclamo.conversationPath, reclamo.estado]);
+
+  // Hablar en la conversación desde el panel. Ver el comentario del campo.
+  const hablar = async () => {
+    const texto = mensaje.trim();
+    if (!texto || trabajando) return;
+    setTrabajando(true);
+    try {
+      await httpsCallable(functions, 'hablarEnElReclamo')({ reclamoId: reclamo.id, texto });
+      setMensaje('');
+    } catch (e) {
+      alert(`No se pudo enviar: ${(e as { message?: string })?.message || 'probá de nuevo'}`);
+    } finally {
+      setTrabajando(false);
+    }
+  };
 
   const pausar = async () => {
     if (trabajando) return;
@@ -376,6 +392,32 @@ function UnReclamo({ reclamo, onVolver }: { reclamo: Reclamo; onVolver: () => vo
 
       {reclamo.estado === 'abierto' && (
         <>
+          {/* HABLAR EN LA CONVERSACIÓN (09/09/2026).
+              Acá sólo se leía: para preguntar algo había que salir del panel, y
+              desde la web eso ni siquiera existía. Casi todo caso se destraba
+              con UNA pregunta, y sin poder hacerla el moderador falla a ciegas
+              o se va a WhatsApp — que es lo que el reclamo vino a evitar.
+              Mismo callable que usa la app: la web tiene que poder hacer lo
+              mismo que el panel del celular. */}
+          <div className="reclamo-escribir">
+            <textarea
+              className="admin-input"
+              rows={2}
+              value={mensaje}
+              onChange={(e) => setMensaje(e.target.value)}
+              placeholder="Escribile a las dos partes..."
+              aria-label="Escribir en la conversación del reclamo"
+            />
+            <button
+              type="button"
+              className="btn"
+              disabled={trabajando || !mensaje.trim()}
+              onClick={hablar}
+            >
+              Enviar mensaje
+            </button>
+          </div>
+
           <div className="admin-acciones">
             <button type="button" className="btn btn-outline" disabled={trabajando} onClick={pausar}>
               {pausado ? 'Reabrir el chat' : 'Pausar el chat mientras reviso'}
