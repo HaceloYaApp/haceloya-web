@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidad - Hacelo Ya</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background: #ffffff;
+    color: #111827;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .updated { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 19px; font-weight: 700; margin-top: 36px; margin-bottom: 10px; }
+  h3 { font-size: 16px; font-weight: 700; margin-top: 20px; margin-bottom: 6px; }
+  p, li { font-size: 15px; color: #1f2937; }
+  ul { margin: 8px 0 8px 22px; }
+  li { margin-bottom: 6px; }
+  a { color: #2F80ED; }
+  .box { background: #f3f4f6; border-radius: 10px; padding: 16px 18px; margin: 16px 0; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  th { color: #6b7280; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Política de Privacidad de Hacelo Ya</h1>
+  <div class="updated">Última actualización: 20 de agosto de 2026</div>
+
+  <h2>Quién es el responsable de tus datos</h2>
+  <p>
+    El responsable de la base de datos es <strong>Ignacio Rodrigo Gimenez</strong>,
+    CUIT <strong>20-36159218-3</strong>, con domicilio en
+    <strong>Simbrón 4550, Villa Devoto, Ciudad Autónoma de Buenos Aires, Argentina</strong>.
+    Para cualquier consulta sobre tus datos personales, escribinos a
+    <a href="mailto:HaceloYaApp@gmail.com">HaceloYaApp@gmail.com</a>.
+  </p>
+
+  <p>Hacelo Ya ("nosotros", "la app y el sitio haceloya.com") es una plataforma que conecta a personas que necesitan un servicio ("Particulares") con quienes lo ofrecen ("Profesionales"), y que además permite comprar y vender productos, publicar y anotarse en cursos y oficios, y publicar búsquedas de trabajo y postularse a ellas. Esta política explica qué datos personales recolectamos, para qué los usamos, con quién los compartimos y qué derechos tenés sobre ellos, en cumplimiento de la Ley 25.326 de Protección de Datos Personales de la República Argentina.</p>
+
+  <h2>1. Datos que recolectamos</h2>
+
+  <h3>1.1 Datos de cuenta</h3>
+  <ul>
+    <li>Email y contraseña (gestionados por Firebase Authentication; nunca vemos ni almacenamos tu contraseña en texto plano).</li>
+    <li>Nombre y apellido, teléfono, domicilio, foto de perfil.</li>
+    <li>Género y fecha de nacimiento (opcionales, los cargás vos desde tu perfil). Una vez que tu identidad está verificada, estos dos datos quedan fijos y no se pueden volver a cambiar sin pasar de nuevo por verificación, para que no se puedan usar para simular una identidad distinta.</li>
+  </ul>
+
+  <h3>1.2 Verificación de identidad (KYC)</h3>
+
+  <div class="box">
+    <strong>Por qué se lo pedimos a todo el mundo.</strong> Hacelo Ya conecta a personas que entran
+    a la casa de otras personas. La verificación de identidad es el único mecanismo que sostiene esa
+    confianza, y sirve tanto para quien contrata como para quien ofrece el servicio: por eso se
+    pide en el alta a todas las cuentas, no sólo a quien va a cobrar. Es una decisión de diseño de
+    la plataforma, y la explicitamos acá porque la Ley 25.326 exige que sepas para qué se te pide
+    cada dato.
+  </div>
+
+  <p><strong>Consentimiento expreso.</strong> Una foto de documento es un dato sensible. Antes de
+  subirla, la app te pide una autorización específica —una casilla propia, aparte de los Términos y
+  Condiciones que aceptaste al registrarte— que dice qué hacemos con esa foto, cuánto la guardamos
+  y que podés retirarla. Queda constancia con la fecha en que la diste. Sin esa autorización, el
+  sistema no acepta la subida: no es un cartel, es un requisito.</p>
+
+  <p><strong>Podés retirarla.</strong> Retirar la autorización frena cualquier subida nueva. No
+  borra por sí sola las fotos ya enviadas: para eso está la baja de la cuenta (sección 4), o el
+  plazo de 30 días que se explica abajo, lo que pase primero.</p>
+
+  <p>Para poder ofrecer o solicitar servicios de forma segura, te pedimos que subas fotos de tu DNI (frente y dorso) y de una factura de servicios a tu nombre. Estas imágenes se procesan con reconocimiento óptico de caracteres (OCR, mediante Google Cloud Vision API) para extraer tu nombre y domicilio y compararlos con los datos de tu perfil.</p>
+  <p><strong>Del dorso del DNI también leemos el sexo</strong>, con una única finalidad: si en tu perfil declaraste que sos mujer o no binaria, compararlo con lo que dice el documento para habilitar el filtro de pedidos "sólo mujeres". Ese dato no se publica ni se comparte: de la comparación queda únicamente una insignia (verificada / no verificada) en tu perfil. Si no usás ese filtro, la comparación no tiene ningún otro efecto.</p>
+  <p><strong>Cuánto tiempo guardamos las imágenes:</strong> las fotos del DNI y de la factura, y el texto que el OCR leyó de ellas, se borran automáticamente a los 30 días de resuelta tu verificación — se haya aprobado o rechazado. Sólo se conserva el resultado (verificado o no) y, si fue rechazada, el motivo. El plazo de 30 días existe para poder revisar un rechazo si nos lo reclamás.</p>
+  <p>La app incluye, además, la posibilidad técnica de pedirte una selfie y compararla con la foto de tu DNI (reconocimiento facial/biometría) como paso adicional de verificación. <strong>Hoy ese paso está desactivado</strong>: la verificación activa se basa únicamente en la lectura de texto (OCR) de tu DNI y tu factura, sin comparación facial. Si en el futuro activamos la comparación facial, actualizaremos esta política antes de que empiece a usarse y te lo notificaremos dentro de la app.</p>
+  <ul>
+    <li>Las imágenes del DNI y la factura se guardan en un área privada de nuestro almacenamiento (Firebase Storage), accesible únicamente por vos y por nuestros sistemas de verificación.</li>
+    <li>El resultado de la verificación (aprobado/rechazado) es visible en tu perfil; el detalle del proceso (textos extraídos) es privado y solo vos podés leerlo.</li>
+  </ul>
+
+  <h3>1.3 Ubicación</h3>
+  <p>Con tu permiso, usamos la ubicación de tu dispositivo (GPS) de dos formas distintas:</p>
+  <ul>
+    <li><strong>Ubicación precisa:</strong> las coordenadas exactas que da el GPS se usan una vez, en el momento en que las pedís, para completar automáticamente la dirección (calle, barrio, ciudad) al crear tu perfil o un pedido — no rastreamos tu posición en segundo plano ni de forma continua.</li>
+    <li><strong>Ubicación aproximada:</strong> a partir de esas coordenadas guardamos una versión redondeada (una grilla de zona, no el punto exacto) para poder mostrarte profesionales cercanos y que ellos te encuentren a vos según tu zona, sin necesidad de exponer tu dirección exacta en esa búsqueda.</li>
+  </ul>
+  <p>Podés desactivar el permiso de ubicación en cualquier momento desde la configuración de tu dispositivo; algunas funciones (autocompletado de dirección, profesionales cercanos) dejarán de estar disponibles.</p>
+
+  <h3>1.4 Contenido que generás</h3>
+  <ul>
+    <li>Publicaciones de pedidos de servicio (título, descripción, categoría, fotos y videos adjuntos).</li>
+    <li>Propuestas y presupuestos enviados por los Profesionales.</li>
+    <li>Mensajes entre Particulares y Profesionales dentro de un pedido, incluidas fotos y videos adjuntos al chat.</li>
+    <li>Calificaciones y reseñas luego de finalizar un servicio.</li>
+    <li>Publicaciones de compra/venta en el marketplace (título, descripción, precio, fotos) y los mensajes entre comprador y vendedor dentro de esa conversación, incluidos los videos que se adjunten al chat.</li>
+    <li>Publicaciones de cursos y oficios que dictás (título, descripción, precio, cupos, modalidad, fotos) y las inscripciones a los cursos de otros.</li>
+    <li>Búsquedas de trabajo que publicás en Oferta laboral (puesto, empresa, condiciones, zona), las postulaciones que enviás a las de otros, y los mensajes y entrevistas que se coordinan a partir de ellas — incluidos el día, la hora y el lugar acordados.</li>
+    <li>Entradas de tu agenda personal dentro de la app (recordatorios y eventos que cargás vos, además de los turnos y trabajos generados por tus pedidos).</li>
+  </ul>
+
+  <h3>1.5 Tarjeta de presentación (CV) y diplomas</h3>
+  <p>Si armás tu tarjeta de presentación para Oferta laboral, guardamos lo que cargues en ella: tu foto, tu presentación y una descripción sobre vos, tu año de nacimiento, tu ciudad y provincia, tu zona aproximada, tus experiencias previas, desde cuándo trabajás en el rubro, tus roles por categoría, tu disponibilidad horaria y tus cualidades.</p>
+  <p>También podés adjuntar diplomas, títulos o constancias, tanto en la tarjeta como en una publicación de cursos y oficios. <strong>No verificamos la autenticidad de esos documentos</strong>: son declaraciones tuyas y así se muestran.</p>
+  <ul>
+    <li><strong>Quién ve tu tarjeta:</strong> cuando te postulás a una búsqueda, quien la publicó puede verla completa. Postularte es voluntario y equivale a autorizar ese acceso.</li>
+    <li>Podés editarla o vaciarla en cualquier momento desde la app.</li>
+  </ul>
+
+  <h3>1.6 Notificaciones push</h3>
+  <p>Si aceptás recibir notificaciones, guardamos un identificador de tu dispositivo (token de Expo/FCM) para poder enviarte avisos sobre nuevas propuestas, mensajes y actualizaciones de tus pedidos.</p>
+
+  <h3>1.7 Verificación por SMS</h3>
+  <p>Si verificás tu número de celular, usamos el servicio de autenticación telefónica de Firebase para enviarte un código por SMS y confirmar que el número es tuyo. No vemos ni almacenamos el contenido de ese mensaje: sólo guardamos el resultado (verificado o no) y el número asociado a tu cuenta.</p>
+
+  <h3>1.8 Datos bancarios (CBU/Alias)</h3>
+  <p>Si sos Profesional y cargás un CBU o Alias para recibir pagos, ese dato se guarda en la parte privada de tu cuenta. Sólo se lo mostramos al cliente cuando acepta contratarte para un trabajo puntual — nunca es visible públicamente ni para otros usuarios. Hacelo Ya nunca te va a pedir la clave de tu homebanking ni el código de tu cajero.</p>
+
+  <h3>1.9 Datos técnicos</h3>
+  <p>Como toda app que corre sobre Firebase, se generan automáticamente registros técnicos de uso y errores (Cloud Functions logs) con fines de diagnóstico y seguridad. Además usamos Sentry, un servicio de terceros, para recibir un aviso automático cuando la app se cierra inesperadamente o encuentra un error — esos reportes pueden incluir información técnica del dispositivo (modelo, versión de sistema operativo) y el paso de la app donde ocurrió el error, pero no están pensados para incluir tu contraseña ni tus datos bancarios. No usamos estos registros con fines publicitarios.</p>
+
+  <h2>2. Para qué usamos tus datos</h2>
+  <table>
+    <tr><th>Finalidad</th><th>Datos involucrados</th></tr>
+    <tr><td>Crear y mantener tu cuenta</td><td>Email, nombre, teléfono</td></tr>
+    <tr><td>Verificar tu identidad y generar confianza entre usuarios</td><td>DNI, factura, nombre, domicilio</td></tr>
+    <tr><td>Habilitar el filtro de pedidos "sólo mujeres"</td><td>Sexo que figura en el dorso del DNI, comparado con el género que declaraste</td></tr>
+    <tr><td>Conectar pedidos con profesionales relevantes</td><td>Ubicación, categoría del pedido, oficio</td></tr>
+    <tr><td>Permitir la comunicación entre las partes de un pedido</td><td>Mensajes, datos de contacto (email/teléfono) revelados sólo entre el autor del pedido y el profesional aceptado</td></tr>
+    <tr><td>Enviarte notificaciones sobre tu actividad</td><td>Token de notificaciones push</td></tr>
+    <tr><td>Prevenir fraude y abuso de la plataforma</td><td>Historial de verificación, registros técnicos</td></tr>
+    <tr><td>Procesar el pago de la comisión de la plataforma, de una compra en el marketplace o de la reserva de un curso</td><td>CBU/Alias, historial de pagos</td></tr>
+    <tr><td>Mostrarte cursos y oficios cerca tuyo, y permitirte anotarte</td><td>Ubicación aproximada, inscripciones</td></tr>
+    <tr><td>Mostrarte búsquedas laborales que puedan corresponderte, y permitirte postularte</td><td>Ubicación aproximada, roles y categorías de tu perfil, tarjeta de presentación (CV)</td></tr>
+    <tr><td>Coordinar entrevistas entre quien busca personal y quien se postula</td><td>Día, hora y lugar acordados, mensajes</td></tr>
+  </table>
+
+  <h2>3. Con quién compartimos tus datos</h2>
+  <ul>
+    <li><strong>Otros usuarios de la app:</strong> tu nombre, foto de perfil, calificaciones y reseñas son visibles públicamente dentro de la app. Tu email, teléfono y domicilio sólo se comparten con la contraparte de una operación concreta: el autor de un pedido y el profesional cuya propuesta fue aceptada, el comprador y el vendedor de una reserva del marketplace, o quien dicta un curso y quien se anotó en él. Nunca con otros usuarios ajenos a esa operación. Tu tarjeta de presentación (CV) se comparte con quien publicó una búsqueda laboral únicamente cuando vos te postulás a ella.</li>
+
+    <!-- El acceso del equipo de moderación es legítimo y esperable —hace falta
+         para resolver un reclamo— pero no estaba declarado en ningún lado, y
+         "nunca con usuarios ajenos" se leía como si nadie más pudiera verlo.
+         Hallazgo H-T6-15. -->
+    <li><strong>Nuestro equipo de soporte y moderación:</strong> para resolver un reclamo, revisar una denuncia o aprobar un comprobante de pago, una persona de nuestro equipo puede ver tu email, teléfono y domicilio junto con los datos de la operación involucrada. Cada uno de esos accesos queda registrado —quién miró, de quién y cuándo—, y no incluye las fotos de tu DNI ni de tu factura de verificación, que quedan fuera de lo que el panel puede mostrar.</li>
+    <li><strong>Proveedores de infraestructura:</strong> usamos Google Firebase (Authentication, Firestore, Storage, Cloud Functions, Cloud Messaging) para operar la app, y Google Cloud Vision API para el proceso de OCR de verificación de identidad. Estos proveedores procesan los datos en nuestro nombre y bajo sus propias políticas de seguridad.</li>
+    <li><strong>Sentry:</strong> usamos este servicio para recibir reportes automáticos de errores y fallas de la app (ver sección 1.9). Procesa información técnica del dispositivo y del error, bajo su propia política de privacidad.</li>
+    <li><strong>Mercado Pago:</strong> si elegís pagar con Mercado Pago, tu pago se procesa directamente en su plataforma bajo su propia política de privacidad — no vemos ni almacenamos los datos de tu tarjeta.</li>
+    <li><strong>Nuestro propio equipo de administración:</strong> todas las noches generamos un resumen de las operaciones del día para la contabilidad y el control interno. Ese resumen incluye nombre y apellido de las partes, montos y comisiones, y se envía por correo únicamente a las casillas del equipo de Hacelo Ya — nunca a terceros. Se conserva un año y después se borra.</li>
+    <li><strong>Autoridades:</strong> podemos divulgar información si una ley o una orden judicial válida así lo requiere.</li>
+  </ul>
+  <p>No vendemos tus datos personales a terceros ni los usamos con fines publicitarios.</p>
+
+  <h2>4. Cuánto tiempo guardamos tus datos, y cómo borrar tu cuenta</h2>
+  <p>Conservamos tus datos mientras tu cuenta esté activa. Si eliminás tu cuenta, eliminamos tus datos personales (perfil, DNI/factura de verificación, agenda, mensajes, publicaciones propias sin trabajo en curso, token de notificaciones, etc.) dentro de un plazo razonable, salvo la información que debamos conservar por obligaciones legales, para resolver disputas ya iniciadas entre usuarios, o el registro de una comisión adeudada al momento del borrado (asociado a tu DNI/teléfono, para poder reclamarla si volvés a crear una cuenta).</p>
+
+  <!-- Los plazos concretos, que faltaban. La Ley 25.326 (art. 4 inc. 7) obliga
+       a destruir los datos cuando dejan de ser necesarios para el fin que
+       justificó recolectarlos, y el art. 6 inc. b) obliga a informar la
+       finalidad: el plazo es parte de esa información. Los números salen del
+       código (DIAS_DE_RETENCION_KYC y DIAS_DE_RETENCION_EXPORTACIONES en
+       functions/src/retencionKyc.ts), así que esto y la app dicen lo mismo.
+       Hallazgo H-T6-12. -->
+  <h3>4.2 Cuánto tiempo guardamos cada cosa</h3>
+  <ul>
+    <li><strong>Fotos de DNI y factura de la verificación de identidad: 30 días.</strong> Se borran solas pasado ese plazo, haya salido aprobada o rechazada. Lo que queda después es el resultado (verificado o no) y los datos que ya cargaste en tu perfil, no las imágenes.</li>
+    <li><strong>Archivos del registro diario de operaciones: 1 año.</strong> Son los que respaldan la contabilidad de las comisiones.</li>
+    <li><strong>Asientos del registro de operaciones:</strong> se conservan mientras exista la obligación contable e impositiva que los respalda. Llevan tu nombre y el de la contraparte, porque son el comprobante de una operación entre dos personas.</li>
+    <li><strong>Mensajes y conversaciones:</strong> mientras exista la operación que los originó. Al eliminar tu cuenta se borran los tuyos, con la excepción de abajo.</li>
+  </ul>
+
+  <!-- Lo que el borrado NO borra, dicho antes y no después. La sección
+       prometía eliminar "tus datos personales" con tres excepciones y había
+       más. Hallazgo H-T6-13. -->
+  <h3>4.3 Qué NO se borra al eliminar la cuenta</h3>
+  <p>Para que no haya sorpresas, esto es lo que sobrevive y por qué:</p>
+  <ul>
+    <li><strong>Los asientos del registro de operaciones</strong> en los que figurás, incluido el de tu alta y el de tu baja. Son el respaldo contable de operaciones que ya pasaron y en las que hubo otra persona involucrada.</li>
+    <li><strong>Los archivos del registro diario</strong> ya generados, hasta que se cumple el año de retención.</li>
+    <li><strong>Los trabajos ya iniciados o finalizados</strong> y sus mensajes: borrarlos eliminaría la evidencia de la contraparte sobre una operación real.</li>
+    <li><strong>Las reseñas que escribiste</strong> sobre otras personas, sin tu nombre visible.</li>
+    <li><strong>Una comisión adeudada</strong> al momento del borrado, asociada a tu DNI y teléfono.</li>
+  </ul>
+
+  <h3>4.1 Cómo eliminar tu cuenta</h3>
+  <p>Podés eliminar tu cuenta y tus datos vos mismo, desde adentro de la app, en cualquier momento:</p>
+  <ol style="margin: 8px 0 8px 22px;">
+    <li style="margin-bottom: 6px;">Abrí el menú lateral (ícono ☰ arriba a la izquierda) y entrá a <strong>Configuración</strong>.</li>
+    <li style="margin-bottom: 6px;">Tocá <strong>Eliminar cuenta</strong>, al final de la pantalla.</li>
+    <li style="margin-bottom: 6px;">Escribí la palabra de confirmación que te pide la pantalla y tocá <strong>Eliminar mi cuenta</strong>.</li>
+  </ol>
+  <p>El borrado es inmediato y permanente: no se puede deshacer. Se permite eliminar la cuenta incluso con una comisión pendiente de pago o un trabajo en curso — esa deuda queda registrada como se explica arriba, pero no es un requisito para poder borrar la cuenta.</p>
+
+  <h3>4.2 Si no podés entrar a la app</h3>
+  <p>Si perdiste el acceso, se te rompió el teléfono o preferís pedirlo por escrito, podés solicitar la baja desde <a href="https://haceloya.com/eliminar-cuenta/">haceloya.com/eliminar-cuenta</a>, escribiéndonos desde el mismo correo con el que te registraste. <strong>La procesamos dentro de los 30 días</strong> y te confirmamos por ese mismo correo cuando esté hecha.</p>
+
+  <h2>5. Tus derechos</h2>
+  <p>De acuerdo con la Ley 25.326, tenés derecho a acceder, rectificar, actualizar y solicitar la supresión de tus datos personales. También podés retirar tu consentimiento para el tratamiento de tus datos en cualquier momento: el de la verificación de identidad se retira desde la propia app, y para el resto alcanza con escribirnos. Retirar el consentimiento puede dejar sin efecto funciones que dependen de ese dato — sin identidad verificada, por ejemplo, no se puede publicar ni vender.</p>
+  <div class="box">
+    Para ejercer cualquiera de estos derechos, escribinos a <a href="mailto:haceloyaapp@gmail.com">haceloyaapp@gmail.com</a>. La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley 25.326, tiene la atribución de atender las denuncias y reclamos que se interpongan con relación al incumplimiento de las normas sobre protección de datos personales.
+  </div>
+
+  <h2>6. Seguridad</h2>
+  <p>Aplicamos medidas técnicas y organizativas para proteger tus datos:</p>
+  <ul>
+    <li><strong>Reglas de acceso a nivel de base de datos.</strong> La lectura de información privada está restringida a su dueño o a la contraparte legítima de una operación concreta. Esas reglas corren en el servidor de Google, no en la app: no dependen de que la app se comporte bien.</li>
+    <li><strong>Cifrado en tránsito y en reposo</strong>, provisto por Google Cloud.</li>
+    <li><strong>Registro de los accesos del equipo.</strong> Cuando alguien de nuestro equipo abre los datos de contacto de una persona, o toma una decisión de moderación sobre ella, queda anotado quién, sobre quién y cuándo (ver sección 3).</li>
+  </ul>
+
+  <!-- Antes esta sección afirmaba, sin más, que los procesos "evitan que un
+       usuario pueda ver datos de otro". Es una promesa de resultado, no una
+       descripción de una medida, y no hay software que pueda garantizarla.
+       Prometer seguridad absoluta es lo que después se lee como declaración
+       falsa cuando algo pasa. Hallazgo H-T6-19. -->
+  <p>Ninguna de estas medidas puede garantizar seguridad absoluta, y no te la prometemos: ningún
+  sistema conectado a internet puede. Lo que sí asumimos es el compromiso de avisarte si detectamos
+  un incidente que afecte tus datos personales, y de informarlo a la Agencia de Acceso a la
+  Información Pública cuando corresponda.</p>
+
+  <!-- El alcance del documento decía "la app" y el sitio manda la IP y el
+       user-agent de cada visitante a Cloudflare y a Google. Ninguna de las dos
+       cosas estaba declarada, justo en el documento que se carga en las dos
+       tiendas. Hallazgo H-W1-11. -->
+  <h2>7. El sitio haceloya.com</h2>
+  <p>Además de la app, tenemos el sitio <a href="https://haceloya.com/">haceloya.com</a>. Al visitarlo:</p>
+  <ul>
+    <li><strong>Medición de visitas.</strong> Usamos Cloudflare Web Analytics, que <strong>no usa cookies</strong> y no arma un perfil de la persona. Cloudflare recibe la dirección IP y el navegador de cada visita para contarla.</li>
+    <li><strong>Tipografías.</strong> Las fuentes se cargan desde Google Fonts (<code>fonts.googleapis.com</code> y <code>fonts.gstatic.com</code>), así que Google recibe la dirección IP y el navegador al pedirlas.</li>
+    <li><strong>La agenda web.</strong> En <a href="https://haceloya.com/agenda">haceloya.com/agenda</a> se entra con la misma cuenta de la app; ahí valen exactamente los mismos tratamientos de datos descriptos arriba para la app.</li>
+  </ul>
+  <p>El sitio no usa cookies de publicidad ni comparte datos con anunciantes.</p>
+
+  <h2>8. Menores de edad</h2>
+  <p>Hacelo Ya no está dirigida a menores de 18 años. No recolectamos intencionalmente datos de menores.</p>
+
+  <h2>9. Cambios a esta política</h2>
+  <p>Podemos actualizar esta política ocasionalmente. Si los cambios son significativos, te lo notificaremos dentro de la app antes de que entren en vigencia.</p>
+
+  <h2>10. Contacto</h2>
+  <p>Si tenés preguntas sobre esta política o sobre cómo tratamos tus datos, escribinos a <a href="mailto:haceloyaapp@gmail.com">haceloyaapp@gmail.com</a>.</p>
+
+  <div class="box">
+    Ver también nuestros <a href="https://haceloya.com/terminos/">Términos y Condiciones</a>, que explican las reglas de uso de la app (comisiones, verificación de identidad, marketplace, etc.).
+  </div>
+</div>
+</body>
+</html>
