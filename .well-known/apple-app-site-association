@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["69JKRXFPN5.com.bissi.haceloapp"],
+        "components": [
+          { "/": "/pedido*" },
+          { "/": "/clase*" },
+          { "/": "/curso*" },
+          { "/": "/perfil*" },
+          { "/": "/cv*" }
+        ]
+      }
+    ]
+  }
+}
