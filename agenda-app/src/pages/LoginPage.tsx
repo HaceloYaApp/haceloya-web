@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
-  signInWithEmailAndPassword, sendPasswordResetEmail, setPersistence,
+  signInWithEmailAndPassword, setPersistence,
   browserLocalPersistence, browserSessionPersistence,
   GoogleAuthProvider, OAuthProvider, signInWithPopup,
 } from 'firebase/auth';
-import { auth } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import './LoginPage.css';
 
@@ -86,7 +87,18 @@ export default function LoginPage() {
       return;
     }
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      // EL MISMO MAIL QUE MANDA LA APP, NO EL DE FIREBASE (16/09/2026).
+      //
+      // Acá estaba `sendPasswordResetEmail`, que dispara la plantilla por
+      // defecto de Firebase: un mail sin marca y, sobre todo, una página de
+      // cambio de contraseña genérica con UN SOLO campo — sin repetir la
+      // contraseña, y sin parecerse en nada a la app.
+      //
+      // El callable manda el mail con la marca y con un link a nuestra propia
+      // página (public/index.html del repo de la app), que pide la contraseña
+      // dos veces. Es el mismo camino que usa la app: un solo mail de
+      // recuperación para los dos lados.
+      await httpsCallable(functions, 'sendCustomPasswordReset')({ email: email.trim() });
       setNotice('Te enviamos un email con instrucciones. Revisá tu bandeja.');
     } catch (err: unknown) {
       setError(mensajeDeError(err, 'No se pudo enviar el email. Intentá más tarde.'));
