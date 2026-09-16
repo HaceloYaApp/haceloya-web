@@ -10,7 +10,24 @@ import { getFunctions } from 'firebase/functions';
 // secreto: el acceso real se controla con firestore.rules/storage.rules.
 const firebaseConfig = {
   apiKey: 'AIzaSyDpcOcD9ivZ_KojBg2NJBY475z4X447_MI',
-  authDomain: 'haceloyaapp-88e3d.firebaseapp.com',
+  // NUESTRO DOMINIO, NO EL DE FIREBASE (16/09/2026).
+  //
+  // Con `haceloyaapp-88e3d.firebaseapp.com`, entrar con Google o con Apple
+  // abría una ventana de OTRO dominio, que guardaba el estado del login en su
+  // propio sessionStorage. Los navegadores están cerrando ese almacenamiento
+  // de terceros —Safari hace años, Firefox con la protección total de
+  // cookies, Chrome con el particionado— y el resultado era:
+  //
+  //   "Unable to process request due to missing initial state."
+  //
+  // Con `authDomain` acá, el login ocurre en un solo origen y no hay nada que
+  // particionar. Lo que lo hace posible es el worker de Cloudflare que sirve
+  // `/__/auth/*` desde este dominio: ver cloudflare/worker-auth.js.
+  //
+  // OJO CON EL ORDEN: sin ese worker publicado, Google y Apple no entran. El
+  // ingreso con mail y contraseña no usa el manejador, así que no depende de
+  // esto.
+  authDomain: 'haceloya.com',
   projectId: 'haceloyaapp-88e3d',
   storageBucket: 'haceloyaapp-88e3d.firebasestorage.app',
   messagingSenderId: '266536498833',
