@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  comoSeLee, fechaIso, ventanaDeLaFecha, ventanaDeLosUltimos, ventanaDelRango,
+  type Ventana,
+} from '../utils/diaOperativo';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import './LedgerPage.css';
@@ -79,6 +83,26 @@ type Totales = {
 
 /** Los mismos tres estados que filtra el panel de la app. */
 type Filtro = 'todos' | 'pagados' | 'impagos' | 'free';
+// UN DÍA, O UN RANGO DE DÍAS (pedido suyo, 16/09/2026).
+//
+// Los mismos atajos que la app, en el mismo orden: el panel de la web y el del
+// celular tienen que poder hacer lo mismo. Las ventanas van de las 2:00 a las
+// 2:00 —el día operativo— y no de medianoche a medianoche: ver diaOperativo.ts.
+const ATAJOS: Array<{ key: string; label: string; ventana: () => Ventana }> = [
+  { key: 'todo', label: 'Todo', ventana: () => null },
+  { key: 'hoy', label: 'Hoy', ventana: () => ventanaDeLosUltimos(1) },
+  {
+    key: 'ayer',
+    label: 'Ayer',
+    ventana: () => {
+      const hoy = ventanaDeLosUltimos(1);
+      return { desde: hoy.desde - 86_400_000, hasta: hoy.desde };
+    },
+  },
+  { key: '7', label: '7 días', ventana: () => ventanaDeLosUltimos(7) },
+  { key: '30', label: '30 días', ventana: () => ventanaDeLosUltimos(30) },
+];
+
 const FILTROS: Array<{ key: Filtro; label: string }> = [
   { key: 'todos', label: 'Todos' },
   { key: 'pagados', label: 'Cobrados' },
@@ -126,10 +150,24 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
   // dependencias.
   const filtroRef = useRef<Filtro>('todos');
   useEffect(() => { filtroRef.current = filtro; }, [filtro]);
+  // La ventana de fechas, con el mismo truco de la ref que el filtro.
+  const [ventana, setVentana] = useState<Ventana>(null);
+  const [atajo, setAtajo] = useState('todo');
+  const [desdeIso, setDesdeIso] = useState('');
+  const [hastaIso, setHastaIso] = useState('');
+  const ventanaRef = useRef<Ventana>(null);
+  useEffect(() => { ventanaRef.current = ventana; }, [ventana]);
 
   const load = useCallback(async (targetBucket: Bucket, cursorMillis?: number) => {
     const call = httpsCallable(functions, 'listarRegistro');
-    const resp: any = await call({ seccion: targetBucket, filtro: filtroRef.current, cursorMillis });
+    const resp: any = await call({
+      seccion: targetBucket,
+      filtro: filtroRef.current,
+      cursorMillis,
+      // Recortan también los totales, no sólo la lista.
+      desdeMillis: ventanaRef.current?.desde,
+      hastaMillis: ventanaRef.current?.hasta,
+    });
     // `listarRegistro` devuelve más campos que los que esta pantalla muestra
     // (comisión, quién ofrece, quién busca): se mapea a lo que se usa acá y el
     // resto queda disponible para cuando haga falta.
@@ -170,7 +208,7 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [bucket, filtro, load]);
+  }, [bucket, filtro, ventana, load]);
 
   const loadMore = async () => {
     if (loadingMore || !hasMore || items.length === 0) return;
@@ -212,6 +250,62 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
             {t.label}
           </button>
         ))}
+      </div>
+
+      {/* El día o el rango. Los atajos cubren casi todo; las dos cajas de
+          fecha quedan para cuando hace falta una fecha puntual. */}
+      <div className="ledger-filtros">
+        {ATAJOS.map((a) => (
+          <button
+            key={a.key}
+            type="button"
+            className={`ledger-chip${a.key === atajo ? ' ledger-chip-activo' : ''}`}
+            onClick={() => {
+              setAtajo(a.key);
+              setDesdeIso('');
+              setHastaIso('');
+              setVentana(a.ventana());
+            }}
+          >
+            {a.label}
+          </button>
+        ))}
+        <span className="ledger-rango">
+          <input
+            type="date"
+            aria-label="Desde"
+            value={desdeIso}
+            max={hastaIso || fechaIso()}
+            onChange={(e) => {
+              const d = e.target.value;
+              setDesdeIso(d);
+              setAtajo('elegido');
+              // Con una sola punta cargada se muestra ESE día. Esperar a que
+              // estén las dos dejaría la pantalla sin responder al primer
+              // cambio, como si el filtro no funcionara.
+              setVentana(d ? (hastaIso ? ventanaDelRango(d, hastaIso) : ventanaDeLaFecha(d)) : null);
+            }}
+          />
+          <span className="ledger-rango-sep">a</span>
+          <input
+            type="date"
+            aria-label="Hasta"
+            value={hastaIso}
+            min={desdeIso || undefined}
+            max={fechaIso()}
+            onChange={(e) => {
+              const h = e.target.value;
+              setHastaIso(h);
+              setAtajo('elegido');
+              setVentana(
+                desdeIso
+                  ? (h ? ventanaDelRango(desdeIso, h) : ventanaDeLaFecha(desdeIso))
+                  : (h ? ventanaDeLaFecha(h) : null),
+              );
+            }}
+          />
+        </span>
+        {!!ventana && <span className="ledger-rango-lectura">{comoSeLee(ventana)}</span>}
       </div>
 
       {/* Los tres estados de la comisión, igual que en el panel de la app. */}

@@ -161,3 +161,49 @@
 
 .ledger-pill-cobrada { color: #1E7E45; border-color: #1E7E45; opacity: 1; }
 .ledger-pill-impaga { color: #8A6100; border-color: #8A6100; opacity: 1; }
+
+/* EL DÍA O EL RANGO (16/09/2026).
+   Las dos cajas de fecha van pegadas y con la misma altura que los chips, para
+   que la fila se lea como una sola cosa y no como dos controles sueltos. */
+.ledger-rango {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ledger-rango input[type='date'] {
+  border: 1px solid var(--borde, #d8d8d8);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 36px;
+  font-family: inherit;
+}
+
+.ledger-rango-sep {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.ledger-rango-lectura {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+/* En pantallas angostas las dos cajas no entran al lado de los chips: bajan
+   juntas y ocupan la fila entera en vez de partirse por la mitad. */
+@media (max-width: 520px) {
+  .ledger-rango {
+    flex: 1 1 100%;
+  }
+  .ledger-rango input[type='date'] {
+    flex: 1;
+    min-width: 0;
+  }
+}
