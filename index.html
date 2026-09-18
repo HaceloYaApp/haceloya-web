@@ -289,6 +289,18 @@
   .launch-banner p{color:#c9c9bd; font-size:16.5px; margin-top:12px;}
   .store-badges{display:flex; justify-content:center; align-items:center; gap:18px; margin-top:28px; flex-wrap:wrap;}
   .store-badge{height:54px; width:auto; display:block;}
+  .store-badge-link{display:block; border-radius:10px; transition:transform .12s ease;}
+  .store-badge-link:hover{transform:translateY(-2px);}
+  .store-badge-link:focus-visible{outline:3px solid var(--yellow); outline-offset:4px;}
+  .btn-android-aviso{
+    display:inline-flex; align-items:center; gap:9px;
+    background:var(--yellow); color:var(--ink); text-decoration:none;
+    font-weight:800; font-size:15.5px; line-height:1;
+    padding:18px 22px; border-radius:12px; border:2.5px solid var(--ink);
+    box-shadow:4px 4px 0 #fff; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn-android-aviso:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 #fff;}
+  .btn-android-aviso:active{transform:translate(4px,4px); box-shadow:0 0 0 #fff;}
 
   /* ---------- contacto ---------- */
   .contact-card{
@@ -633,20 +645,23 @@
 
   <section id="lanzamiento" class="launch-banner">
     <div class="container">
-      <span class="kicker">Ya llega</span>
-      <h2>Disponible el 25 de agosto</h2>
-      <p>Descargala en Google Play y App Store.</p>
-      <!-- LOS BADGES NO SON ENLACES, Y NO PUEDEN SERLO TODAVÍA.
-           Decían "Disponible en Google Play" y "Descargar en App Store" en su
-           texto alternativo —que es lo que lee un lector de pantalla— y tocarlos
-           no hacía nada, porque la app todavía no está publicada. Envolverlos en
-           un enlace hacia una ficha que no existe sería peor.
-           Mientras tanto: texto alternativo que no promete lo que no hay.
-           Cuando la app se publique, esto pasa a ser un enlace a cada ficha.
-           Hallazgo H-W1-13. -->
+      <span class="kicker">Ya está</span>
+      <h2>Descargá Hacelo Ya</h2>
+      <p>Disponible para iPhone. La versión de Android está en la última etapa de prueba de Google Play.</p>
+      <!-- El badge de Apple SÍ es un enlace: la app está publicada desde el
+           15/09/2026 (id 6811084324). El de Google Play NO puede usarse todavía
+           —las normas de marca de Google prohíben que su badge lleve a un lugar
+           que no sea la ficha de Play—, así que hasta que la app salga a
+           producción va un botón propio que lleva a Instagram, que es donde se
+           avisa. Cuando Play esté vivo: acá vuelve el badge, enlazado a la
+           ficha, y en /ir/index.html se pone PLAY_LIVE = true. -->
       <div class="store-badges">
-        <img src="assets/google-play-badge.png" alt="Va a estar en Google Play" class="store-badge">
-        <img src="assets/app-store-badge.svg" alt="Va a estar en la App Store" class="store-badge store-badge-apple">
+        <a href="/ir/?ref=web-lanzamiento" class="store-badge-link">
+          <img src="assets/app-store-badge.svg" alt="Descargar en la App Store" class="store-badge store-badge-apple">
+        </a>
+        <a href="https://www.instagram.com/haceloyaapp" target="_blank" rel="noopener" class="btn-android-aviso">
+          <span aria-hidden="true">🤖</span> Android: avisame cuando salga
+        </a>
       </div>
     </div>
   </section>
