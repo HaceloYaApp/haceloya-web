@@ -107,11 +107,18 @@ export default function MarketingPanel() {
                 <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{hoy?.total ?? 0}</div>
                 <div className="admin-sub">hoy</div>
               </div>
+              {/* LA QUE MÁS TRAJO, y no "cuántas piezas tuvieron al menos un
+                  escaneo", que es lo que decía antes. Aquel número contestaba
+                  una pregunta que nadie se hace: saber que 5 de 10 piezas
+                  funcionaron no dice cuál imprimir de nuevo. Éste sí. */}
               <div>
-                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{canales.length}</div>
-                {/* Decía "piezas con al menos uno" y no se entendía qué era "uno". */}
+                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>
+                  {canales.length ? canales[0][1] : '—'}
+                </div>
                 <div className="admin-sub">
-                  {canales.length === 1 ? 'pieza ya trajo gente' : 'piezas ya trajeron gente'}
+                  {canales.length
+                    ? `la que más trajo: ${datos.nombres?.[canales[0][0]] || canales[0][0]}`
+                    : 'todavía ninguna pieza trajo gente'}
                 </div>
               </div>
             </div>
@@ -171,7 +178,17 @@ export default function MarketingPanel() {
               Cada escaneo con su día y su hora, del más nuevo al más viejo. No se guarda
               nada de quien escaneó: sólo qué QR y cuándo.
             </p>
-            {/* Filtrar por pieza. "Todos" primero: es el estado al que se vuelve. */}
+            {/* LOS BOTONES SALEN DE LAS PIEZAS QUE YA TIENEN ESCANEOS, no de
+                las 18 que existen: un filtro que lleva a una lista vacía no es
+                un filtro. Mientras no haya ninguno quedaba sólo "Todos" y la
+                pantalla parecía rota, así que ahí se explica en vez de mostrar
+                el botón solo. */}
+            {canales.length === 0 ? (
+              <p className="admin-sub">
+                Todavía no hay ningún escaneo. Cuando los haya, acá van a aparecer los
+                botones para ver el registro de cada pieza por separado.
+              </p>
+            ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '10px 0 14px' }}>
               <button
                 type="button"
@@ -191,10 +208,13 @@ export default function MarketingPanel() {
                 </button>
               ))}
             </div>
+            )}
             {(() => {
               const lista = datos.eventos || [];
               if (lista.length === 0) {
-                return <p className="admin-sub">Todavía no hay ningún escaneo acá.</p>;
+                return filtro
+                  ? <p className="admin-sub">Esta pieza todavía no tuvo ningún escaneo.</p>
+                  : null;
               }
               return (
                 <ul className="admin-lista">
