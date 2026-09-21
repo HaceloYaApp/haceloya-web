@@ -26,6 +26,7 @@ type Datos = {
   nombres: Record<string, string>;
   porDia: Array<{ dia: string; total: number }>;
   locales: Array<{ local: string; total: number }>;
+  eventos: Array<{ id: string; canal: string; local: string | null; ms: number | null }>;
 };
 
 /** 'ferreteria-lopez' → 'Ferreteria lopez' */
@@ -40,16 +41,33 @@ function diaCorto(dia: string): string {
   return d && m ? `${d}/${m}` : dia;
 }
 
+/** 1758… → '21/09/2026 14:32'. En hora de Buenos Aires, no la de la máquina. */
+function cuando(ms: number | null): string {
+  if (!ms) return '—';
+  return new Date(ms).toLocaleString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
 export default function MarketingPanel() {
   const [datos, setDatos] = useState<Datos | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // null = el registro de todos los QR juntos. Con un canal, sólo el de ése.
+  const [filtro, setFiltro] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
+  // EL FILTRO LO RESUELVE EL SERVIDOR, NO ESTA PANTALLA.
+  //
+  // Filtrar acá los 200 eventos ya cargados sería instantáneo, pero mentiría en
+  // cuanto haya volumen: si una pieza tuvo escaneos más viejos que esos 200, al
+  // filtrarla se verían incompletos sin que nada lo avise.
+  const cargar = useCallback(async (canal?: string | null) => {
     setCargando(true);
     setError(null);
     try {
-      const r = await httpsCallable(functions, 'verMarketing')({ dias: 30 });
+      const r = await httpsCallable(functions, 'verMarketing')({ dias: 30, canal: canal || '' });
       setDatos((r.data || null) as Datos | null);
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudieron leer las visitas.'));
@@ -59,7 +77,7 @@ export default function MarketingPanel() {
     }
   }, []);
 
-  useEffect(() => { void cargar(); }, [cargar]);
+  useEffect(() => { void cargar(null); }, [cargar]);
 
   const canales = Object.entries(datos?.canales || {})
     .filter(([, n]) => n > 0)
@@ -91,7 +109,10 @@ export default function MarketingPanel() {
               </div>
               <div>
                 <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{canales.length}</div>
-                <div className="admin-sub">piezas con al menos uno</div>
+                {/* Decía "piezas con al menos uno" y no se entendía qué era "uno". */}
+                <div className="admin-sub">
+                  {canales.length === 1 ? 'pieza ya trajo gente' : 'piezas ya trajeron gente'}
+                </div>
               </div>
             </div>
           </div>
@@ -143,6 +164,53 @@ export default function MarketingPanel() {
               </ul>
             </div>
           )}
+
+          <div className="admin-card">
+            <h3>Registro de escaneos</h3>
+            <p className="admin-sub">
+              Cada escaneo con su día y su hora, del más nuevo al más viejo. No se guarda
+              nada de quien escaneó: sólo qué QR y cuándo.
+            </p>
+            {/* Filtrar por pieza. "Todos" primero: es el estado al que se vuelve. */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '10px 0 14px' }}>
+              <button
+                type="button"
+                className={`btn${filtro ? ' btn-outline' : ''}`}
+                onClick={() => { setFiltro(null); void cargar(null); }}
+              >
+                Todos
+              </button>
+              {canales.map(([canal]) => (
+                <button
+                  key={canal}
+                  type="button"
+                  className={`btn${filtro === canal ? '' : ' btn-outline'}`}
+                  onClick={() => { setFiltro(canal); void cargar(canal); }}
+                >
+                  {datos.nombres?.[canal] || canal}
+                </button>
+              ))}
+            </div>
+            {(() => {
+              const lista = datos.eventos || [];
+              if (lista.length === 0) {
+                return <p className="admin-sub">Todavía no hay ningún escaneo acá.</p>;
+              }
+              return (
+                <ul className="admin-lista">
+                  {lista.map((e) => (
+                    <li key={e.id}>
+                      <span>
+                        {datos.nombres?.[e.canal] || e.canal}
+                        {e.local ? ` · ${legible(e.local)}` : ''}
+                      </span>
+                      <span className="admin-sub">{cuando(e.ms)}</span>
+                    </li>
+                  ))}
+                </ul>
+              );
+            })()}
+          </div>
 
           {datos.porDia?.length > 0 && (
             <div className="admin-card">
