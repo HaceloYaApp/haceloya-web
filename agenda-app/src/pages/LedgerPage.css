@@ -207,3 +207,49 @@
     min-width: 0;
   }
 }
+
+/* A QUÉ HORA ESCANEAN (21/09/2026).
+   24 barras, una por hora. Sin librería de gráficos: son divs con altura en
+   porcentaje, y encima cada una es un botón que elige esa hora. */
+.horas-grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 120px;
+  margin: 12px 0 6px;
+}
+
+.horas-barra {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  cursor: pointer;
+}
+
+.horas-valor {
+  display: block;
+  width: 100%;
+  /* Una hora con cero escaneos tiene que verse como cero y no como "poquito":
+     el mínimo es una línea de 2px, que se lee como el piso del gráfico. */
+  min-height: 2px;
+  background: var(--ink, #14140F);
+  border-radius: 2px 2px 0 0;
+}
+
+.horas-barra:hover .horas-valor { background: var(--yellow-deep, #E0AC00); }
+.horas-barra-apagada .horas-valor { opacity: 0.25; }
+
+.horas-rotulo {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted, #3D3D35);
+  height: 12px;
+  line-height: 12px;
+}

@@ -51,9 +51,14 @@ type Datos = {
   canales: Record<string, number>;
   nombres: Record<string, string>;
   porDia: Array<{ dia: string; total: number; canales: Record<string, number> }>;
+  porHora: number[];
+  porHoraSinFranja: number[];
+  franja: { desde: number; hasta: number } | null;
   locales: Array<{ local: string; total: number }>;
   eventos: Array<{ id: string; canal: string; local: string | null; ms: number | null }>;
 };
+
+const HORAS = Array.from({ length: 24 }, (_, i) => i);
 
 /** 'ferreteria-lopez' → 'Ferreteria lopez' */
 function legible(local: string): string {
@@ -101,7 +106,11 @@ function cuando(ms: number | null): string {
     timeZone: z, day: '2-digit', month: '2-digit', year: 'numeric',
   });
   const hora = d.toLocaleTimeString('es-AR', {
-    timeZone: z, hour: '2-digit', minute: '2-digit',
+    // `hourCycle: 'h23'` no es decoración: es-AR resuelve a reloj de 12 horas,
+    // así que sin esto un escaneo de las 21:30 se lee "09:30 p. m." — que acá
+    // nadie escribe, y que a un ojo apurado se le parece a las nueve y media de
+    // la mañana. El resto del panel dice las horas en 24.
+    timeZone: z, hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   });
   return `${dia} ${fecha} · ${hora}`;
 }
@@ -117,13 +126,18 @@ export default function MarketingPanel() {
   const [atajo, setAtajo] = useState('todo');
   const [desdeIso, setDesdeIso] = useState('');
   const [hastaIso, setHastaIso] = useState('');
+  // La franja horaria, las dos puntas incluidas. 0 y 23 es "todas".
+  const [horaDesde, setHoraDesde] = useState(0);
+  const [horaHasta, setHoraHasta] = useState(23);
 
   // EL FILTRO LO RESUELVE EL SERVIDOR, NO ESTA PANTALLA.
   //
   // Filtrar acá los 200 eventos ya cargados sería instantáneo, pero mentiría en
   // cuanto haya volumen: si una pieza tuvo escaneos más viejos que esos 200, al
   // filtrarla se verían incompletos sin que nada lo avise.
-  const cargar = useCallback(async (canal?: string | null, v?: Ventana) => {
+  const cargar = useCallback(async (
+    canal?: string | null, v?: Ventana, franja?: { desde: number; hasta: number },
+  ) => {
     setCargando(true);
     setError(null);
     try {
@@ -131,6 +145,8 @@ export default function MarketingPanel() {
         canal: canal || '',
         desdeMillis: v?.desde,
         hastaMillis: v?.hasta,
+        horaDesde: franja?.desde ?? 0,
+        horaHasta: franja?.hasta ?? 23,
       });
       setDatos((r.data || null) as Datos | null);
     } catch (e) {
@@ -171,7 +187,7 @@ export default function MarketingPanel() {
               setHastaIso('');
               const v = a.ventana();
               setVentana(v);
-              void cargar(filtro, v);
+              void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
             }}
           >
             {a.label}
@@ -192,7 +208,7 @@ export default function MarketingPanel() {
               // cambio, como si el filtro no funcionara.
               const v = d ? (hastaIso ? ventanaDelRango(d, hastaIso) : ventanaDeLaFecha(d)) : null;
               setVentana(v);
-              void cargar(filtro, v);
+              void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
             }}
           />
           <span className="ledger-rango-sep">a</span>
@@ -210,11 +226,64 @@ export default function MarketingPanel() {
                 ? (h ? ventanaDelRango(desdeIso, h) : ventanaDeLaFecha(desdeIso))
                 : (h ? ventanaDeLaFecha(h) : null);
               setVentana(v);
-              void cargar(filtro, v);
+              void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
             }}
           />
         </span>
         {!!ventana && <span className="ledger-rango-lectura">{comoSeLee(ventana)}</span>}
+      </div>
+
+      {/* LA FRANJA HORARIA, aparte de la fecha y no adentro.
+          "De 18 a 22" no es un rango de tiempo continuo: es una franja que se
+          repite todos los días del período. Mezclarla con el selector de fechas
+          haría creer que se elige "del lunes a las 18 al martes a las 22", que
+          es otra cosa. */}
+      <div className="ledger-filtros">
+        <span className="ledger-rango">
+          <span className="admin-sub">Entre las</span>
+          <select
+            aria-label="Desde la hora"
+            value={horaDesde}
+            onChange={(e) => {
+              const h = Number(e.target.value);
+              setHoraDesde(h);
+              void cargar(filtro, ventana, { desde: h, hasta: horaHasta });
+            }}
+          >
+            {HORAS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}</option>)}
+          </select>
+          <span className="ledger-rango-sep">y las</span>
+          <select
+            aria-label="Hasta la hora"
+            value={horaHasta}
+            onChange={(e) => {
+              const h = Number(e.target.value);
+              setHoraHasta(h);
+              void cargar(filtro, ventana, { desde: horaDesde, hasta: h });
+            }}
+          >
+            {HORAS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}:59</option>)}
+          </select>
+        </span>
+        {(horaDesde !== 0 || horaHasta !== 23) && (
+          <>
+            <button
+              type="button"
+              className="ledger-chip"
+              onClick={() => {
+                setHoraDesde(0); setHoraHasta(23);
+                void cargar(filtro, ventana, { desde: 0, hasta: 23 });
+              }}
+            >
+              Todo el día
+            </button>
+            <span className="ledger-rango-lectura">
+              {horaDesde > horaHasta
+                ? `de las ${String(horaDesde).padStart(2, '0')} a las ${String(horaHasta).padStart(2, '0')}:59 del día siguiente`
+                : `de las ${String(horaDesde).padStart(2, '0')} a las ${String(horaHasta).padStart(2, '0')}:59`}
+            </span>
+          </>
+        )}
       </div>
 
       {error && <p className="admin-error-inline">{error}</p>}
@@ -331,7 +400,7 @@ export default function MarketingPanel() {
               <button
                 type="button"
                 className={`btn${filtro ? ' btn-outline' : ''}`}
-                onClick={() => { setFiltro(null); void cargar(null, ventana); }}
+                onClick={() => { setFiltro(null); void cargar(null, ventana, { desde: horaDesde, hasta: horaHasta }); }}
               >
                 Todos
               </button>
@@ -340,7 +409,7 @@ export default function MarketingPanel() {
                   key={canal}
                   type="button"
                   className={`btn${filtro === canal ? '' : ' btn-outline'}`}
-                  onClick={() => { setFiltro(canal); void cargar(canal, ventana); }}
+                  onClick={() => { setFiltro(canal); void cargar(canal, ventana, { desde: horaDesde, hasta: horaHasta }); }}
                 >
                   {datos.nombres?.[canal] || canal}
                 </button>
@@ -369,6 +438,65 @@ export default function MarketingPanel() {
                     </li>
                   ))}
                 </ul>
+              );
+            })()}
+          </div>
+
+          {/* A QUÉ HORA ESCANEAN.
+              Es el dato que decide a qué hora pegar y a qué hora publicar, y no
+              se puede sacar de ninguna otra pantalla. Un afiche que junta
+              escaneos a las 8 está en un camino al trabajo; uno que los junta
+              el sábado a las 21 está en una salida. Son dos afiches distintos
+              aunque digan lo mismo. */}
+          <div className="admin-card">
+            <h3>A qué hora escanean</h3>
+            <p className="admin-sub">
+              Las 24 horas del día, en hora de Buenos Aires, sumando todos los días del
+              período. El gráfico muestra el día entero aunque haya una franja elegida: si
+              se filtrara a sí mismo no se podría ver dónde está el pico de verdad.
+            </p>
+            {(() => {
+              const horas = datos.porHoraSinFranja || [];
+              const pico = Math.max(...horas, 1);
+              const total = horas.reduce((a, b) => a + b, 0);
+              const dentro = (h: number) => (
+                horaDesde <= horaHasta
+                  ? h >= horaDesde && h <= horaHasta
+                  : h >= horaDesde || h <= horaHasta
+              );
+              if (!total) {
+                return <p className="admin-sub">Todavía no hay ningún escaneo en este período.</p>;
+              }
+              const mejor = horas.indexOf(pico);
+              return (
+                <>
+                  <div className="horas-grafico">
+                    {horas.map((n, h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        className={`horas-barra${dentro(h) ? '' : ' horas-barra-apagada'}`}
+                        title={`${String(h).padStart(2, '0')}:00 — ${n} escaneo${n === 1 ? '' : 's'}`}
+                        onClick={() => {
+                          // Tocar una hora la elige como franja de una sola
+                          // hora; tocarla de nuevo vuelve al día entero.
+                          const sola = horaDesde === h && horaHasta === h;
+                          const d = sola ? 0 : h, t = sola ? 23 : h;
+                          setHoraDesde(d); setHoraHasta(t);
+                          void cargar(filtro, ventana, { desde: d, hasta: t });
+                        }}
+                      >
+                        <span className="horas-valor" style={{ height: `${Math.round((n / pico) * 100)}%` }} />
+                        <span className="horas-rotulo">{h % 3 === 0 ? String(h).padStart(2, '0') : ''}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="admin-sub">
+                    La hora más fuerte es las <b>{String(mejor).padStart(2, '0')}:00</b>, con{' '}
+                    {pico} de {total} ({porcentaje(pico, total)}). Tocá una barra para ver sólo
+                    esa hora en toda la pantalla.
+                  </p>
+                </>
               );
             })()}
           </div>
