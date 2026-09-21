@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import {
+  comoSeLee, fechaIso, ventanaDeLaFecha, ventanaDeLosUltimos, ventanaDelRango,
+  type Ventana,
+} from '../utils/diaOperativo';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
+import './LedgerPage.css';
 
 // DE DÓNDE VIENE LA GENTE.
 //
@@ -20,8 +25,28 @@ import { mensajeDeError } from '../utils/erroresDeFirebase';
 // (src/screens/panel/Marketing.tsx). Lo que se puede hacer desde el teléfono
 // tiene que poder hacerse desde la compu, y al revés.
 
+// Los mismos atajos y en el mismo orden que el registro de operaciones: "ayer"
+// tiene que significar lo mismo en las dos pantallas. Las ventanas van de las
+// 2:00 a las 2:00 —el día operativo— y no de medianoche a medianoche.
+const ATAJOS: Array<{ key: string; label: string; ventana: () => Ventana }> = [
+  { key: 'todo', label: 'Todo', ventana: () => null },
+  { key: 'hoy', label: 'Hoy', ventana: () => ventanaDeLosUltimos(1) },
+  {
+    key: 'ayer',
+    label: 'Ayer',
+    ventana: () => {
+      const hoy = ventanaDeLosUltimos(1);
+      return { desde: hoy.desde - 86_400_000, hasta: hoy.desde };
+    },
+  },
+  { key: '7', label: '7 días', ventana: () => ventanaDeLosUltimos(7) },
+  { key: '30', label: '30 días', ventana: () => ventanaDeLosUltimos(30) },
+];
+
 type Datos = {
   total: number;
+  totalHistorico: number;
+  truncado: boolean;
   canales: Record<string, number>;
   nombres: Record<string, string>;
   porDia: Array<{ dia: string; total: number; canales: Record<string, number> }>;
@@ -86,17 +111,26 @@ export default function MarketingPanel() {
   const [error, setError] = useState<string | null>(null);
   // null = el registro de todos los QR juntos. Con un canal, sólo el de ése.
   const [filtro, setFiltro] = useState<string | null>(null);
+  // La ventana de fechas manda sobre TODA la pantalla.
+  const [ventana, setVentana] = useState<Ventana>(null);
+  const [atajo, setAtajo] = useState('todo');
+  const [desdeIso, setDesdeIso] = useState('');
+  const [hastaIso, setHastaIso] = useState('');
 
   // EL FILTRO LO RESUELVE EL SERVIDOR, NO ESTA PANTALLA.
   //
   // Filtrar acá los 200 eventos ya cargados sería instantáneo, pero mentiría en
   // cuanto haya volumen: si una pieza tuvo escaneos más viejos que esos 200, al
   // filtrarla se verían incompletos sin que nada lo avise.
-  const cargar = useCallback(async (canal?: string | null) => {
+  const cargar = useCallback(async (canal?: string | null, v?: Ventana) => {
     setCargando(true);
     setError(null);
     try {
-      const r = await httpsCallable(functions, 'verMarketing')({ dias: 30, canal: canal || '' });
+      const r = await httpsCallable(functions, 'verMarketing')({
+        canal: canal || '',
+        desdeMillis: v?.desde,
+        hastaMillis: v?.hasta,
+      });
       setDatos((r.data || null) as Datos | null);
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudieron leer las visitas.'));
@@ -106,13 +140,12 @@ export default function MarketingPanel() {
     }
   }, []);
 
-  useEffect(() => { void cargar(null); }, [cargar]);
+  useEffect(() => { void cargar(null, null); }, [cargar]);
 
   const canales = Object.entries(datos?.canales || {})
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1]);
   const mayor = canales.length ? canales[0][1] : 0;
-  const hoy = datos?.porDia?.[0];
 
   return (
     <>
@@ -120,6 +153,68 @@ export default function MarketingPanel() {
         Cuánta gente entró desde cada pieza impresa. Son escaneos de QR, no descargas:
         la cuenta se corta cuando el teléfono salta a la tienda.
       </p>
+
+      {/* El día o el rango, igual que en el registro de operaciones. Manda sobre
+          toda la pantalla: las cifras, el detalle por pieza, el registro y el
+          día por día. Un filtro que sólo afectara a una parte haría que dos
+          números de la misma pantalla contestaran preguntas distintas. */}
+      <div className="ledger-filtros">
+        {ATAJOS.map((a) => (
+          <button
+            key={a.key}
+            type="button"
+            className={`ledger-chip${a.key === atajo ? ' ledger-chip-activo' : ''}`}
+            onClick={() => {
+              setAtajo(a.key);
+              setDesdeIso('');
+              setHastaIso('');
+              const v = a.ventana();
+              setVentana(v);
+              void cargar(filtro, v);
+            }}
+          >
+            {a.label}
+          </button>
+        ))}
+        <span className="ledger-rango">
+          <input
+            type="date"
+            aria-label="Desde"
+            value={desdeIso}
+            max={hastaIso || fechaIso()}
+            onChange={(e) => {
+              const d = e.target.value;
+              setDesdeIso(d);
+              setAtajo('elegido');
+              // Con una sola punta cargada se muestra ESE día: esperar a que
+              // estén las dos dejaría la pantalla sin responder al primer
+              // cambio, como si el filtro no funcionara.
+              const v = d ? (hastaIso ? ventanaDelRango(d, hastaIso) : ventanaDeLaFecha(d)) : null;
+              setVentana(v);
+              void cargar(filtro, v);
+            }}
+          />
+          <span className="ledger-rango-sep">a</span>
+          <input
+            type="date"
+            aria-label="Hasta"
+            value={hastaIso}
+            min={desdeIso || undefined}
+            max={fechaIso()}
+            onChange={(e) => {
+              const h = e.target.value;
+              setHastaIso(h);
+              setAtajo('elegido');
+              const v = desdeIso
+                ? (h ? ventanaDelRango(desdeIso, h) : ventanaDeLaFecha(desdeIso))
+                : (h ? ventanaDeLaFecha(h) : null);
+              setVentana(v);
+              void cargar(filtro, v);
+            }}
+          />
+        </span>
+        {!!ventana && <span className="ledger-rango-lectura">{comoSeLee(ventana)}</span>}
+      </div>
 
       {error && <p className="admin-error-inline">{error}</p>}
       {cargando && !datos && <p className="admin-loading">Cargando…</p>}
@@ -130,11 +225,11 @@ export default function MarketingPanel() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
               <div>
                 <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{datos.total}</div>
-                <div className="admin-sub">escaneos en total</div>
+                <div className="admin-sub">{ventana ? 'escaneos en el período' : 'escaneos en total'}</div>
               </div>
               <div>
-                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{hoy?.total ?? 0}</div>
-                <div className="admin-sub">hoy</div>
+                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{datos.totalHistorico}</div>
+                <div className="admin-sub">desde siempre</div>
               </div>
               {/* LA QUE MÁS TRAJO, y no "cuántas piezas tuvieron al menos un
                   escaneo", que es lo que decía antes. Aquel número contestaba
@@ -152,6 +247,13 @@ export default function MarketingPanel() {
               </div>
             </div>
           </div>
+
+          {datos.truncado && (
+            <p className="admin-error-inline">
+              Hay más escaneos de los que se pueden leer de una. Achicá el período para
+              que los números sean exactos.
+            </p>
+          )}
 
           <div className="admin-card">
             <h3>Por pieza</h3>
@@ -225,7 +327,7 @@ export default function MarketingPanel() {
               <button
                 type="button"
                 className={`btn${filtro ? ' btn-outline' : ''}`}
-                onClick={() => { setFiltro(null); void cargar(null); }}
+                onClick={() => { setFiltro(null); void cargar(null, ventana); }}
               >
                 Todos
               </button>
@@ -234,7 +336,7 @@ export default function MarketingPanel() {
                   key={canal}
                   type="button"
                   className={`btn${filtro === canal ? '' : ' btn-outline'}`}
-                  onClick={() => { setFiltro(canal); void cargar(canal); }}
+                  onClick={() => { setFiltro(canal); void cargar(canal, ventana); }}
                 >
                   {datos.nombres?.[canal] || canal}
                 </button>
