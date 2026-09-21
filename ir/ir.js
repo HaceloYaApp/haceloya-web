@@ -30,6 +30,34 @@
   if (forced === 'android') { isAndroid = true; isIOS = false; }
   if (forced === 'web') { isIOS = false; isAndroid = false; }
 
+  // DE DÓNDE VINO ESTA PERSONA.
+  //
+  // Antes de saltar a la tienda se le avisa al backend qué QR se escaneó. Eso
+  // es lo que alimenta la pestaña Marketing del panel: cuánta gente entró desde
+  // el afiche amarillo, cuánta desde el tótem de tal ferretería.
+  //
+  // Se cuenta acá y no en Cloudflare por tres razones: no está garantizado que
+  // Web Analytics separe por query string —que es justo donde viaja el canal—,
+  // traerlo a la app pediría guardar un token de su API, y el dato quedaría
+  // afuera sin poder cruzarlo nunca con lo que pasa adentro.
+  //
+  // sendBeacon y no fetch: está hecho para sobrevivir a que la página se vaya,
+  // que es exactamente lo que pasa 900 ms después. Con fetch, el salto a la
+  // tienda puede cancelar el pedido y el escaneo no se cuenta.
+  //
+  // La CSP del sitio ya tiene el dominio de las funciones en `connect-src`; si
+  // alguna vez se cambia de región o de proyecto, hay que tocarla también o
+  // esto deja de contar SIN dar ningún error visible.
+  var AVISAR = 'https://southamerica-east1-haceloyaapp-88e3d.cloudfunctions.net/registrarVisita';
+  function avisar(canal){
+    if (!canal) return;
+    var u = AVISAR + '?ref=' + encodeURIComponent(canal);
+    try {
+      if (navigator.sendBeacon) { navigator.sendBeacon(u); return; }
+      fetch(u, { method: 'POST', mode: 'no-cors', keepalive: true });
+    } catch (e) { /* que falle la estadística nunca puede frenar el salto */ }
+  }
+
   // El ?ref= viaja a la tienda en el link de Apple (campaña de App Analytics)
   // y queda igual en la URL de esta página, que es lo que cuenta Cloudflare.
   var ref = (params.get('ref') || '').slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, '');
@@ -39,6 +67,11 @@
   }
 
   function mostrar(id){ var el = document.getElementById(id); if (el) el.hidden = false; }
+
+  // Se avisa SIEMPRE, en las tres ramas: quien cae en la pantalla de Android
+  // sin Play todavía vivo también escaneó el papel, y ese escaneo cuenta igual
+  // para saber si la pieza funciona.
+  avisar(ref);
 
   if (isIOS) {
     var destino = conRef(APP_STORE);
