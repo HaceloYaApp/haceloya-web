@@ -334,3 +334,112 @@
 }
 
 .mapa-capa b { font-weight: 800; }
+
+/* EL MAPA INTERACTIVO (21/09/2026).
+   Se arrastra, hace zoom con la rueda y se abre en pantalla completa. Nada de
+   esto necesita una librería de mapas: el lienzo es un div con overflow oculto
+   y adentro van los mosaicos y las celdas en posición absoluta. */
+.mapa-lienzo {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 1;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--borde, #ccc);
+  border-radius: 6px;
+  background: #EAEAEA;
+  /* Sin esto, arrastrar el mapa en el celular scrollea la página de atrás. */
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.mapa-lienzo:active { cursor: grabbing; }
+.mapa-lienzo img { pointer-events: none; }
+
+/* Pantalla completa. Envuelve TODO el bloque del mapa y no sólo el lienzo: si
+   tapara los controles, adentro no habría con qué moverse ni con qué salir. */
+.mapa-encima {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  overflow: auto;
+  background: var(--bg, #FFFFFF);
+}
+
+.mapa-encima .mapa-lienzo {
+  flex: 1;
+  min-height: 300px;
+  max-width: none;
+  aspect-ratio: auto;
+}
+
+.mapa-buscador {
+  font: inherit;
+  font-size: 13px;
+  flex: 1 1 260px;
+  min-width: 0;
+  padding: 6px 11px;
+  border: 1px solid var(--borde, #d8d8d8);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+}
+
+/* Un resultado de búsqueda, o una fila de la lista que lleva el mapa a esa
+   zona: es un botón, pero se lee como el link que era antes. */
+.mapa-resultado {
+  appearance: none;
+  font: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  color: var(--enlace, #1155CC);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* LAS REFERENCIAS DE COLOR.
+   Un mapa con nueve colores y sin referencias es un mapa que hay que adivinar. */
+.mapa-referencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+
+.mapa-referencia {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted, #3D3D35);
+}
+
+.mapa-muestra {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.mapa-muestra-flojo { background: #14140F; opacity: 0.35; }
+
+/* El puntito de color adentro del botón de cada capa: el mismo color con el que
+   se pinta esa capa en el mapa, para no tener que cruzar dos listas. */
+.mapa-punto {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: baseline;
+}
