@@ -41,14 +41,27 @@ function diaCorto(dia: string): string {
   return d && m ? `${d}/${m}` : dia;
 }
 
-/** 1758… → '21/09/2026 14:32'. En hora de Buenos Aires, no la de la máquina. */
+/**
+ * 1758… → 'lunes 21/09/2026 · 14:32'. En hora de Buenos Aires, no la de la
+ * máquina de quien mira.
+ *
+ * VA EL DÍA DE LA SEMANA Y NO SÓLO LA FECHA. Para la vía pública es la mitad
+ * del dato: que un afiche junte escaneos un sábado a la tarde y otro un martes
+ * a las 8 dice dos cosas distintas sobre dónde está pegado y quién pasa por
+ * ahí. Con "21/09" hay que ir a buscar un calendario para saberlo.
+ */
 function cuando(ms: number | null): string {
   if (!ms) return '—';
-  return new Date(ms).toLocaleString('es-AR', {
-    timeZone: 'America/Argentina/Buenos_Aires',
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+  const d = new Date(ms);
+  const z = 'America/Argentina/Buenos_Aires';
+  const dia = d.toLocaleDateString('es-AR', { timeZone: z, weekday: 'long' });
+  const fecha = d.toLocaleDateString('es-AR', {
+    timeZone: z, day: '2-digit', month: '2-digit', year: 'numeric',
   });
+  const hora = d.toLocaleTimeString('es-AR', {
+    timeZone: z, hour: '2-digit', minute: '2-digit',
+  });
+  return `${dia} ${fecha} · ${hora}`;
 }
 
 export default function MarketingPanel() {
@@ -175,8 +188,8 @@ export default function MarketingPanel() {
           <div className="admin-card">
             <h3>Registro de escaneos</h3>
             <p className="admin-sub">
-              Cada escaneo con su día y su hora, del más nuevo al más viejo. No se guarda
-              nada de quien escaneó: sólo qué QR y cuándo.
+              Cada escaneo con su origen, el día de la semana, la fecha y la hora, del más
+              nuevo al más viejo. No se guarda nada de quien escaneó: sólo qué QR y cuándo.
             </p>
             {/* LOS BOTONES SALEN DE LAS PIEZAS QUE YA TIENEN ESCANEOS, no de
                 las 18 que existen: un filtro que lleva a una lista vacía no es
@@ -218,13 +231,16 @@ export default function MarketingPanel() {
               }
               return (
                 <ul className="admin-lista">
+                  {/* El origen arriba y el cuándo abajo, uno debajo del otro:
+                      el nombre de la pieza y la fecha completa no entran juntos
+                      en una pantalla angosta sin que uno se corte. */}
                   {lista.map((e) => (
-                    <li key={e.id}>
-                      <span>
+                    <li key={e.id} style={{ display: 'block' }}>
+                      <div>
                         {datos.nombres?.[e.canal] || e.canal}
                         {e.local ? ` · ${legible(e.local)}` : ''}
-                      </span>
-                      <span className="admin-sub">{cuando(e.ms)}</span>
+                      </div>
+                      <div className="admin-sub">{cuando(e.ms)}</div>
                     </li>
                   ))}
                 </ul>
