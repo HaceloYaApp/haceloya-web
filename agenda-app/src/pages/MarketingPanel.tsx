@@ -24,7 +24,7 @@ type Datos = {
   total: number;
   canales: Record<string, number>;
   nombres: Record<string, string>;
-  porDia: Array<{ dia: string; total: number }>;
+  porDia: Array<{ dia: string; total: number; canales: Record<string, number> }>;
   locales: Array<{ local: string; total: number }>;
   eventos: Array<{ id: string; canal: string; local: string | null; ms: number | null }>;
 };
@@ -35,10 +35,26 @@ function legible(local: string): string {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-/** '2026-09-21' → '21/09' */
-function diaCorto(dia: string): string {
-  const [, m, d] = dia.split('-');
-  return d && m ? `${d}/${m}` : dia;
+/**
+ * Cuánto pesa una pieza sobre el total, en porcentaje entero.
+ *
+ * Se redondea sin decimales a propósito: con 12 escaneos, "58,3 %" finge una
+ * precisión que el número no tiene. Y nunca devuelve 0 %: si la pieza trajo a
+ * alguien, mostrar un cero se lee como que no trajo a nadie.
+ */
+function porcentaje(parte: number, total: number): string {
+  if (!total || !parte) return '0 %';
+  return `${Math.max(1, Math.round((parte / total) * 100))} %`;
+}
+
+/** '2026-09-21' → 'lunes 21/09'. El día de la semana va también acá. */
+function diaLargo(dia: string): string {
+  const [a, m, d] = dia.split('-').map(Number);
+  if (!a || !m || !d) return dia;
+  // Mediodía UTC para que el cambio de huso no corra la fecha un día.
+  const x = new Date(Date.UTC(a, m - 1, d, 12));
+  const nombre = x.toLocaleDateString('es-AR', { timeZone: 'UTC', weekday: 'long' });
+  return `${nombre} ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
 }
 
 /**
@@ -150,7 +166,10 @@ export default function MarketingPanel() {
                   <li key={canal} style={{ display: 'block' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                       <span>{datos.nombres?.[canal] || canal}</span>
-                      <strong>{n}</strong>
+                      <span>
+                        <strong>{n}</strong>
+                        <span className="admin-sub"> · {porcentaje(n, datos.total)}</span>
+                      </span>
                     </div>
                     {/* La barra se mide contra la pieza que más trajo, no contra
                         el total: lo que interesa es comparar una con otra. */}
@@ -251,13 +270,34 @@ export default function MarketingPanel() {
           {datos.porDia?.length > 0 && (
             <div className="admin-card">
               <h3>Día por día</h3>
+              <p className="admin-sub">
+                El total de cada día y de dónde salió. Los porcentajes son sobre ese día,
+                no sobre el total de la campaña.
+              </p>
               <ul className="admin-lista">
-                {datos.porDia.map((d) => (
-                  <li key={d.dia}>
-                    <span>{diaCorto(d.dia)}</span>
-                    <strong>{d.total}</strong>
-                  </li>
-                ))}
+                {datos.porDia.map((d) => {
+                  const delDia = Object.entries(d.canales || {})
+                    .filter(([, n]) => n > 0)
+                    .sort((x, y) => y[1] - x[1]);
+                  return (
+                    <li key={d.dia} style={{ display: 'block' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                        <strong>{diaLargo(d.dia)}</strong>
+                        <strong>{d.total}</strong>
+                      </div>
+                      {delDia.map(([canal, n]) => (
+                        <div
+                          key={canal}
+                          className="admin-sub"
+                          style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}
+                        >
+                          <span>{datos.nombres?.[canal] || canal}</span>
+                          <span>{n} · {porcentaje(n, d.total)}</span>
+                        </div>
+                      ))}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
