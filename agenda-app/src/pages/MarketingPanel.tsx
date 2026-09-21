@@ -6,6 +6,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
+import MapaDensidad from './MapaDensidad';
 import './LedgerPage.css';
 
 // DE DÓNDE VIENE LA GENTE.
@@ -219,6 +220,9 @@ export default function MarketingPanel() {
       {error && <p className="admin-error-inline">{error}</p>}
       {cargando && !datos && <p className="admin-loading">Cargando…</p>}
 
+      {/* El mapa va al final y no arriba: los escaneos son lo que cambia todos
+          los días y el mapa se mueve de a poco. Lo de arriba es lo que se mira
+          seguido. */}
       {datos && (
         <>
           <div className="admin-card">
@@ -405,6 +409,8 @@ export default function MarketingPanel() {
           )}
         </>
       )}
+
+      <MapaDensidad />
     </>
   );
 }
