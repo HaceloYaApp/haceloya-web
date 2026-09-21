@@ -4,6 +4,7 @@ import { auth } from '../firebase';
 import LedgerPage from './LedgerPage';
 import ModeracionPage from './ModeracionPage';
 import AdminPage from './AdminPage';
+import MarketingPanel from './MarketingPanel';
 import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 import './LedgerPage.css';
 import './AdminPage.css';
@@ -23,7 +24,7 @@ import './AdminPage.css';
 // donde hay alguien esperando una respuesta; el resumen y los administradores
 // se consultan, no urgen.
 
-type Pestana = 'moderacion' | 'resumen' | 'administradores';
+type Pestana = 'moderacion' | 'resumen' | 'marketing' | 'administradores';
 
 // CADA PESTAÑA CUELGA DE SU PERMISO (09/09/2026).
 //
@@ -45,6 +46,14 @@ const PESTANAS: Array<{ key: Pestana; label: string; bajada: string; puede: (p: 
     label: 'Resumen',
     bajada: 'El registro de todas las transacciones, por sección.',
     puede: (p) => p.resumen || p.mujer,
+  },
+  {
+    key: 'marketing',
+    label: 'Marketing',
+    bajada: 'De dónde viene la gente que escanea los QR impresos.',
+    // Va suelto: quien mira qué afiche rinde no necesita ver ni una operación
+    // ni un peso. `p.marketing` ya incluye a quien tiene resumen.
+    puede: (p) => p.marketing,
   },
   {
     key: 'administradores',
@@ -105,6 +114,7 @@ export default function AdministracionPage(
           desde otro lado tiene que desaparecer de la cola. */}
       {pestana === 'moderacion' && <ModeracionPage permisos={permisos} />}
       {pestana === 'resumen' && <LedgerPage permisos={permisos} />}
+      {pestana === 'marketing' && <MarketingPanel />}
       {pestana === 'administradores' && <AdminPage />}
     </div>
   );

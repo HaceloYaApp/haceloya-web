@@ -55,9 +55,14 @@ const PERMISOS: Array<{ key: string; titulo: string; detalle: string }> = [
     detalle: 'El registro completo con la plata: todas las operaciones, los pagos por aprobar y la facturación.',
   },
   {
+    key: 'marketing',
+    titulo: 'Marketing',
+    detalle: 'De dónde viene la gente que escanea los QR impresos. No muestra ninguna operación, ni plata, ni datos de nadie: es el acceso más chico que se puede dar.',
+  },
+  {
     key: 'admin',
     titulo: 'Todo',
-    detalle: 'Los tres de arriba y además sumar o sacar accesos. Es el único que reparte.',
+    detalle: 'Todos los de arriba y además sumar o sacar accesos. Es el único que reparte.',
   },
 ];
 

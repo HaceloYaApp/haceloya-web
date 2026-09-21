@@ -26,12 +26,21 @@ export type PermisosDeAdmin = {
   moderacion: boolean;
   mujer: boolean;
   resumen: boolean;
+  /**
+   * De dónde viene la gente: los escaneos de los QR impresos.
+   *
+   * Va suelto y no colgado de `resumen`: es el permiso más chico de todos —no
+   * muestra ni una operación, ni un peso, ni el dato de nadie— así que es
+   * justamente el que conviene poder dar solo.
+   */
+  marketing: boolean;
   /** Si tiene alguno: entra al panel. */
   alguno: boolean;
 };
 
 export const SIN_PERMISOS: PermisosDeAdmin = {
-  admin: false, moderacion: false, mujer: false, resumen: false, alguno: false,
+  admin: false, moderacion: false, mujer: false, resumen: false,
+  marketing: false, alguno: false,
 };
 
 /**
@@ -63,6 +72,7 @@ export async function misPermisosDeAdmin(): Promise<PermisosDeAdmin & { noSePudo
       moderacion: d.moderacion === true,
       mujer: d.mujer === true,
       resumen: d.resumen === true,
+      marketing: d.marketing === true,
       alguno: d.alguno === true,
     };
   } catch {
