@@ -9,12 +9,23 @@ import { mensajeDeError } from '../utils/erroresDeFirebase';
 // afiches —ése lo sabe el papel— es el que sirve para decidir dónde gastar en
 // publicidad y a qué barrio ir a buscar oficios.
 //
-// SIN MAPA DE FONDO, Y ES A PROPÓSITO. Poner calles pediría cargar mosaicos de
-// un servidor de terceros, y la CSP del sitio no lo permite (`img-src 'self'`):
-// habría que abrirla para que un tercero vea desde qué zonas mira el panel un
-// administrador. Las celdas solas igual muestran la forma de lo que hay —se
-// reconoce la mancha de la ciudad— y para ubicar una zona puntual está el link
-// que abre ese punto en Google Maps, que es más preciso que mirar un dibujito.
+// EL MAPA DE FONDO. Son mosaicos de OpenStreetMap pedidos derecho al servidor
+// de ellos: no hace falta ninguna librería de mapas, un
+// mosaico es una imagen de 256x256 y la cuenta de dónde va cada una es la misma
+// proyección que ya se necesita para poner las celdas. Leaflet pesaría 150 kB
+// para eso.
+//
+// HAY QUE DEJARLO PASAR EN LA CSP: `img-src` tiene que incluir
+// https://tile.openstreetmap.org, y esa cabecera la pone Cloudflare, no este
+// repo. Mientras no esté, las imágenes se bloquean y abajo aparece el aviso que
+// dice exactamente qué agregar — un mapa en blanco sin explicación es lo que
+// hizo falta averiguar a mano la primera vez.
+//
+// PROYECCIÓN DE VERDAD, NO UNA REGLA DE TRES. Antes las celdas se ubicaban
+// repartiendo lat y lon por igual sobre el cuadro, y a la latitud de Buenos
+// Aires un grado de longitud mide 0,82 de uno de latitud: el dibujo salía
+// estirado. Ahora va en Mercator, que es lo que usan los mosaicos, así que las
+// celdas caen sobre la calle que les toca.
 //
 // LAS CAPAS SE PRENDEN Y SE APAGAN SIN VOLVER A PREGUNTAR AL SERVIDOR. El
 // callable trae los conteos de todas las capas por celda de una sola vez, así
@@ -61,7 +72,47 @@ const OFRECEN: Capa[] = ['ventas', 'cursos'];
 const GENTE: Capa[] = ['disponibles', 'aprendices', 'particulares'];
 const TODAS: Capa[] = [...PIDEN, ...OFRECEN, ...GENTE];
 
-const LADO = 420;   // px del cuadro donde se dibuja
+const LADO = 420;      // px del cuadro donde se dibuja
+const MOSAICO = 256;   // px de lado de un mosaico, fijo por el estándar
+const ZOOM_MIN = 4;
+const ZOOM_MAX = 16;
+const TIERRA_M = 40075016.686;   // la vuelta al mundo en el ecuador
+
+/** Lat/lon a píxeles del mundo entero en ese zoom (Mercator esférica). */
+function proyectar(lat: number, lon: number, z: number) {
+  const n = MOSAICO * 2 ** z;
+  const s = Math.sin((lat * Math.PI) / 180);
+  return {
+    x: ((lon + 180) / 360) * n,
+    y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n,
+  };
+}
+
+/** El zoom más cerca posible que todavía entra todo en el cuadro. */
+function zoomQueEntra(minLat: number, maxLat: number, minLon: number, maxLon: number) {
+  for (let z = ZOOM_MAX; z > ZOOM_MIN; z--) {
+    const a = proyectar(maxLat, minLon, z);
+    const b = proyectar(minLat, maxLon, z);
+    // 0.8 deja aire en los bordes: una celda pegada al borde queda cortada al
+    // medio y no se entiende si sigue para afuera.
+    if (b.x - a.x <= LADO * 0.8 && b.y - a.y <= LADO * 0.8) return z;
+  }
+  return ZOOM_MIN;
+}
+
+// Los mosaicos de OpenStreetMap, que no piden clave de API.
+//
+// CARTO ERA LA PRIMERA OPCIÓN Y NO SIRVIÓ: desde su CDN los mosaicos siguen
+// devolviendo 200 y una imagen válida, pero con "API KEY REQUIRED" escrito
+// encima en diagonal. O sea que probarlo con curl daba bien y sólo se vio
+// abriéndolo en un navegador. Mismo aire que la trampa de la CSP.
+//
+// La política de uso de OSM permite esto —un panel que miran una o dos
+// personas— y pide atribución, que está abajo del mapa. Lo que prohíbe es el
+// uso masivo: si algún día esto lo abre mucha gente, hay que pasar a un
+// proveedor con plan.
+const MOSAICO_URL = (z: number, x: number, y: number) =>
+  `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 
 export default function MapaDensidad() {
   const [datos, setDatos] = useState<Datos | null>(null);
@@ -69,6 +120,10 @@ export default function MapaDensidad() {
   const [error, setError] = useState<string | null>(null);
   const [dias, setDias] = useState(90);
   const [prendidas, setPrendidas] = useState<Capa[]>(TODAS);
+  const [acercar, setAcercar] = useState(0);
+  // Si el primer mosaico no carga, casi seguro es la CSP: se avisa con la
+  // línea exacta que hay que agregar, en vez de dejar un cuadro en blanco.
+  const [fondoBloqueado, setFondoBloqueado] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true); setError(null);
@@ -98,22 +153,51 @@ export default function MapaDensidad() {
     // cuadraditos invisibles empujando el encuadre hacia zonas vacías.
     const cs = datos.celdas.filter((c) => cuenta(c, prendidas) > 0);
     const lats = cs.map((c) => c.lat), lons = cs.map((c) => c.lon);
-    const minLat = cs.length ? Math.min(...lats) : 0, maxLat = cs.length ? Math.max(...lats) : 0;
-    const minLon = cs.length ? Math.min(...lons) : 0, maxLon = cs.length ? Math.max(...lons) : 0;
-    // Un margen para que las celdas del borde no queden cortadas al medio, y la
-    // escala la manda el lado más grande: así no se deforma la ciudad.
-    const span = Math.max(
-      Math.max(maxLat - minLat, 0.01) * 1.1,
-      Math.max(maxLon - minLon, 0.01) * 1.1,
+    const minLat = cs.length ? Math.min(...lats) : -34.65, maxLat = cs.length ? Math.max(...lats) : -34.55;
+    const minLon = cs.length ? Math.min(...lons) : -58.55, maxLon = cs.length ? Math.max(...lons) : -58.35;
+    const z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomQueEntra(minLat, maxLat, minLon, maxLon) + acercar));
+    const centro = proyectar((minLat + maxLat) / 2, (minLon + maxLon) / 2, z);
+    // La esquina de arriba a la izquierda del cuadro, en píxeles del mundo:
+    // todo lo demás —mosaicos y celdas— se ubica restándole esto.
+    const origen = { x: centro.x - LADO / 2, y: centro.y - LADO / 2 };
+
+    // Los mosaicos que tocan el cuadro. En Mercator el mundo es cuadrado, así
+    // que a este zoom hay 2^z de lado; el módulo es para que no se pida un
+    // mosaico que no existe cerca del antimeridiano.
+    const lado2z = 2 ** z;
+    const mosaicos: Array<{ z: number; x: number; y: number; left: number; top: number }> = [];
+    for (let tx = Math.floor(origen.x / MOSAICO); tx <= Math.floor((origen.x + LADO) / MOSAICO); tx++) {
+      for (let ty = Math.floor(origen.y / MOSAICO); ty <= Math.floor((origen.y + LADO) / MOSAICO); ty++) {
+        if (ty < 0 || ty >= lado2z) continue;
+        mosaicos.push({
+          z,
+          x: ((tx % lado2z) + lado2z) % lado2z,
+          y: ty,
+          left: tx * MOSAICO - origen.x,
+          top: ty * MOSAICO - origen.y,
+        });
+      }
+    }
+
+    // El lado de una celda de la grilla, en píxeles de este zoom. En Mercator la
+    // escala se estira con la latitud, así que hay que dividir por el coseno —
+    // si no, a la altura de Buenos Aires las celdas salen 18% chicas y dejan
+    // huecos blancos entre una y otra.
+    const latMedia = (minLat + maxLat) / 2;
+    const lado = Math.max(
+      3,
+      (datos.grillaMetros * MOSAICO * lado2z) / TIERRA_M / Math.cos((latMedia * Math.PI) / 180),
     );
-    const cx = (minLat + maxLat) / 2, cy = (minLon + maxLon) / 2;
+
     return {
-      cs,
-      span, cx, cy,
+      cs, z, origen, lado, mosaicos,
       maxAct: cs.length ? Math.max(...cs.map((c) => cuenta(c, prendidas)), 1) : 1,
-      lado: Math.max(3, (datos.grillaMetros / 111_320 / span) * LADO),
+      punto: (c: Celda) => {
+        const q = proyectar(c.lat, c.lon, z);
+        return { left: q.x - origen.x, top: q.y - origen.y };
+      },
     };
-  }, [datos, prendidas, cuenta]);
+  }, [datos, prendidas, cuenta, acercar]);
 
   if (cargando && !datos) return <p className="admin-loading">Armando el mapa…</p>;
   if (error) return <p className="admin-error-inline">{error}</p>;
@@ -228,18 +312,19 @@ export default function MapaDensidad() {
       </div>
 
       <div className="admin-card">
-        <h3>El dibujo</h3>
+        <h3>El mapa</h3>
         <p className="admin-sub">
-          Sin calles de fondo a propósito: los mosaicos de un mapa los sirve un tercero y la
-          CSP del sitio no lo permite. Cada cuadrito es una celda de {datos.grillaMetros} m;
-          cuanto más fuerte, más movimiento de lo que esté prendido.
+          Cada cuadrito es una celda de {datos.grillaMetros} m; cuanto más fuerte, más
+          movimiento de lo que esté prendido.
           {pidenPrendidas.length > 0 && (
             <>
               {' '}Los <b style={{ color: '#E5007E' }}>rosas</b> son zonas donde se pide algo
               y no hay ningún profesional disponible.
             </>
           )}
+          {' '}Tocá uno para abrir esa esquina en Google Maps.
         </p>
+
         {!vista || vista.cs.length === 0 ? (
           <p className="admin-sub">
             No hay ninguna celda con lo que está prendido. Probá con otra capa o con una
@@ -247,16 +332,35 @@ export default function MapaDensidad() {
           </p>
         ) : (
           <>
+            <div className="mapa-atajos" style={{ marginTop: 10 }}>
+              <button type="button" className="mapa-capa" onClick={() => setAcercar((a) => a - 1)}>− Alejar</button>
+              <button type="button" className="mapa-capa" onClick={() => setAcercar((a) => a + 1)}>+ Acercar</button>
+              {acercar !== 0 && (
+                <button type="button" className="mapa-capa" onClick={() => setAcercar(0)}>Encuadrar todo</button>
+              )}
+              <span className="admin-sub">zoom {vista.z}</span>
+            </div>
+
             <div style={{
               position: 'relative', width: LADO, height: LADO, maxWidth: '100%',
-              border: '1px solid var(--borde, #ccc)', borderRadius: 4, marginTop: 12,
-              overflow: 'hidden',
+              border: '1px solid var(--borde, #ccc)', borderRadius: 6, marginTop: 10,
+              overflow: 'hidden', background: '#EAEAEA',
             }}
             >
+              {vista.mosaicos.map((m) => (
+                <img
+                  key={`${m.z}/${m.x}/${m.y}`}
+                  src={MOSAICO_URL(m.z, m.x, m.y)}
+                  alt=""
+                  width={MOSAICO}
+                  height={MOSAICO}
+                  draggable={false}
+                  onError={() => setFondoBloqueado(true)}
+                  style={{ position: 'absolute', left: m.left, top: m.top, userSelect: 'none' }}
+                />
+              ))}
               {vista.cs.map((c) => {
-                // La latitud crece hacia arriba y la pantalla hacia abajo: por eso va al revés.
-                const top = ((vista.cx + vista.span / 2 - c.lat) / vista.span) * LADO;
-                const left = ((c.lon - (vista.cy - vista.span / 2)) / vista.span) * LADO;
+                const { left, top } = vista.punto(c);
                 const hueco = pidenPrendidas.length > 0
                   && cuenta(c, pidenPrendidas) > 0 && !(c.n.disponibles || 0);
                 const fuerza = Math.min(1, cuenta(c, prendidas) / vista.maxAct);
@@ -269,18 +373,33 @@ export default function MapaDensidad() {
                     title={detalle(c)}
                     style={{
                       position: 'absolute',
-                      top: top - vista.lado / 2, left: left - vista.lado / 2,
-                      width: vista.lado, height: vista.lado, borderRadius: 1,
-                      background: hueco ? '#E5007E' : 'currentColor',
-                      opacity: hueco ? 0.9 : 0.25 + fuerza * 0.65,
+                      left: left - vista.lado / 2, top: top - vista.lado / 2,
+                      width: vista.lado, height: vista.lado, borderRadius: 2,
+                      // Encima del mapa el relleno solo se confunde con el gris
+                      // de las manzanas: el borde es lo que hace que una celda
+                      // con poco movimiento igual se vea.
+                      background: hueco ? '#E5007E' : '#14140F',
+                      border: `1px solid ${hueco ? '#8A004C' : '#FFFFFF'}`,
+                      opacity: hueco ? 0.85 : 0.3 + fuerza * 0.55,
                     }}
                   />
                 );
               })}
             </div>
+
             <p className="admin-sub" style={{ marginTop: 8 }}>
-              Tocá un cuadrito para abrir esa zona en Google Maps.
+              Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>{' '}
+              y sus colaboradores.
             </p>
+
+            {fondoBloqueado && (
+              <p className="admin-error-inline" style={{ marginTop: 8 }}>
+                El mapa de fondo está bloqueado por la CSP del sitio. En Cloudflare, en la
+                cabecera Content-Security-Policy, agregá{' '}
+                <code>https://tile.openstreetmap.org</code> a <code>img-src</code>. Las
+                celdas se siguen viendo igual mientras tanto.
+              </p>
+            )}
           </>
         )}
       </div>
