@@ -58,12 +58,32 @@
     } catch (e) { /* que falle la estadística nunca puede frenar el salto */ }
   }
 
-  // El ?ref= viaja a la tienda en el link de Apple (campaña de App Analytics)
-  // y queda igual en la URL de esta página, que es lo que cuenta Cloudflare.
+  // EL ?ref= VIAJA A LA TIENDA, Y CADA TIENDA LO PIDE DISTINTO.
+  //
+  // Apple lo lee de `ct=` (campaign token) y lo muestra en App Store Connect →
+  // Analytics → Adquisición. Google Play IGNORA `ct=` por completo: quiere
+  // `referrer=`, y adentro una cadena de UTM, ella misma codificada.
+  //
+  // Hasta el 22/09 las dos ramas usaban `ct=`, así que el día que Play saliera
+  // TODAS las instalaciones de Android habrían quedado sin atribuir: se sabría
+  // cuánta gente tocó cada anuncio o cada afiche, pero no cuántas de ésas
+  // instalaron. Y no se notaba: el link funciona igual, lleva a la ficha, la
+  // persona instala. Sólo falta el dato, que es lo que no se ve.
   var ref = (params.get('ref') || '').slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, '');
-  function conRef(url){
+  function unir(url, par){
+    return url + (url.indexOf('?') === -1 ? '?' : '&') + par;
+  }
+  function paraApple(url){
     if (!ref) return url;
-    return url + (url.indexOf('?') === -1 ? '?' : '&') + 'ct=' + encodeURIComponent(ref);
+    return unir(url, 'ct=' + encodeURIComponent(ref));
+  }
+  function paraPlay(url){
+    if (!ref) return url;
+    // El valor de `referrer` es una query string completa que se codifica
+    // entera: `utm_source=afiche-oficio-flu` viaja como
+    // `utm_source%3Dafiche-oficio-flu`. Si se manda sin codificar, Play corta
+    // en el primer `&` y se pierde todo lo que venga después.
+    return unir(url, 'referrer=' + encodeURIComponent('utm_source=' + ref + '&utm_medium=hacelo'));
   }
 
   function mostrar(id){ var el = document.getElementById(id); if (el) el.hidden = false; }
@@ -74,7 +94,7 @@
   avisar(ref);
 
   if (isIOS) {
-    var destino = conRef(APP_STORE);
+    var destino = paraApple(APP_STORE);
     document.getElementById('ios-link').href = destino;
     mostrar('v-ios');
     // Un respiro antes de saltar: sin él, el beacon de Cloudflare no llega a
@@ -82,7 +102,7 @@
     setTimeout(function(){ location.replace(destino); }, 900);
   } else if (isAndroid) {
     if (PLAY_LIVE) {
-      var d = conRef(PLAY_URL);
+      var d = paraPlay(PLAY_URL);
       document.getElementById('ios-link').href = d;
       mostrar('v-ios');
       setTimeout(function(){ location.replace(d); }, 900);
