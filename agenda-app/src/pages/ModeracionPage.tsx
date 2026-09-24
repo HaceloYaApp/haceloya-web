@@ -11,6 +11,7 @@ import ArrepentimientosPanel from './ArrepentimientosPanel';
 // en otro pedazo y sólo llegaba si alguien había entrado antes al registro.
 import './LedgerPage.css';
 import './AdminPage.css';
+import NotasInternas from '../components/NotasInternas';
 import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 
 // PAGOS, DENUNCIAS Y BLOQUEADOS, LAS TRES QUE FALTABAN.
@@ -339,6 +340,10 @@ function Denuncias() {
                   {c.accountStatus ? ` · ${c.accountStatus}` : ''}
                 </span>
                 <span className="admin-sub">{c.uid}</span>
+                {/* Lo que el equipo anotó sobre esta cuenta, acá mismo: el
+                    panel del celular lo tiene y la web tiene que tener lo
+                    mismo (hallazgo 26 del 23/09/2026). */}
+                <NotasInternas uid={c.uid} />
               </li>
             ))}
           </ul>

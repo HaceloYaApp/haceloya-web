@@ -43,6 +43,28 @@
 .admin-warn { font-size: 13px; opacity: 0.85; }
 .admin-ok { font-size: 13px; color: #1E7E45; margin-top: 10px; }
 .admin-error-inline { font-size: 12.5px; color: #C62828; }
+.admin-error { font-size: 12.5px; color: #C62828; margin: 6px 0 0; }
+
+/* NOTAS INTERNAS (hallazgo 26 del 23/09/2026). Lo que el equipo anota sobre
+   una cuenta: memoria entre turnos, que su dueño no lee. Recuadrado para que
+   se lea como algo aparte de los datos de la cuenta. */
+.notas-internas {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--borde, #000);
+  border-radius: 10px;
+}
+.notas-internas textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px;
+  border: 1px solid var(--borde, #000);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+.notas-internas .btn { margin-top: 6px; }
+.btn-sutil { align-self: flex-start; }
 
 .admin-label {
   display: block;
