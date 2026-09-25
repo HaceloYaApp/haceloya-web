@@ -6,7 +6,7 @@
 // alta. Sin esto, desde la web habría que escribir el nombre de la sección de
 // memoria y una letra distinta crearía una sección nueva sin querer.
 //
-// Son SÓLO los nombres de las secciones —48 en total—, no las 583 entradas
+// Son SÓLO los nombres de las secciones —49 en total—, no las 600 entradas
 // del catálogo: el panel necesita saber dónde poner algo, no la lista completa
 // de oficios.
 //
@@ -33,6 +33,7 @@ export const SECCIONES_DEL_CATALOGO: Record<string, string[]> = {
     "Otros",
   ],
   actividad: [
+    "Música",
     "Gimnasio y funcional",
     "Deportes de equipo",
     "Deportes de raqueta",
