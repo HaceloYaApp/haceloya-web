@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import AltaDeSeccionesPanel from './AltaDeSeccionesPanel';
+import MarcasYModelosPanel from './MarcasYModelosPanel';
 import ReclamosPanel from './ReclamosPanel';
 import AuditoriaPanel from './AuditoriaPanel';
 import ApelacionesPanel from './ApelacionesPanel';
@@ -26,7 +27,7 @@ import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 // misma que en el teléfono, pero una sesión de navegador abierta en una compu
 // compartida es más fácil de dejar olvidada que un teléfono en el bolsillo.
 
-type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'apelaciones' | 'arrepentimientos' | 'bloqueados' | 'auditoria' | 'alta_secciones';
+type Solapa = 'pagos' | 'reclamos' | 'denuncias' | 'apelaciones' | 'arrepentimientos' | 'bloqueados' | 'auditoria' | 'alta_secciones' | 'marcas';
 
 // CADA SOLAPA CUELGA DE SU PERMISO (09/09/2026), igual que en la app.
 //
@@ -54,6 +55,9 @@ const SOLAPAS: Array<{ key: Solapa; label: string; puede: (p: PermisosDeAdmin) =
   // Las sugerencias del catálogo y las categorías que creó la gente en el
   // market. Es decidir qué entra a la app, no mirar plata.
   { key: 'alta_secciones', label: 'Alta de secciones', puede: (p) => p.moderacion },
+  // Las marcas y modelos que carga la gente al publicar. Se ven acá para
+  // corregir los mal escritos y borrar los repetidos.
+  { key: 'marcas', label: 'Marca y modelo', puede: (p) => p.moderacion },
 ];
 
 const fecha = (ms: number | null) => (ms ? new Date(ms).toLocaleString('es-AR') : '—');
@@ -108,6 +112,7 @@ export default function ModeracionPage({ permisos }: { permisos: PermisosDeAdmin
       </div>
 
       {solapa === 'alta_secciones' && <AltaDeSeccionesPanel />}
+      {solapa === 'marcas' && <MarcasYModelosPanel />}
       {solapa === 'pagos' && <PagosPorAprobar />}
       {solapa === 'reclamos' && <ReclamosPanel />}
       {solapa === 'denuncias' && <Denuncias />}
