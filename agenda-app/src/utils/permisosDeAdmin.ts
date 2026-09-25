@@ -34,13 +34,21 @@ export type PermisosDeAdmin = {
    * justamente el que conviene poder dar solo.
    */
   marketing: boolean;
+  /**
+   * Darle (o sacarle) saldo a favor a una cuenta.
+   *
+   * NO lo implica `resumen`, y es la diferencia con `marketing`: aquél cuelga
+   * del registro porque es un subconjunto de MIRAR cómo va el negocio. Esto
+   * mueve plata que la persona puede gastar, así que se tilda aparte.
+   */
+  saldo: boolean;
   /** Si tiene alguno: entra al panel. */
   alguno: boolean;
 };
 
 export const SIN_PERMISOS: PermisosDeAdmin = {
   admin: false, moderacion: false, mujer: false, resumen: false,
-  marketing: false, alguno: false,
+  marketing: false, saldo: false, alguno: false,
 };
 
 /**
@@ -73,6 +81,7 @@ export async function misPermisosDeAdmin(): Promise<PermisosDeAdmin & { noSePudo
       mujer: d.mujer === true,
       resumen: d.resumen === true,
       marketing: d.marketing === true,
+      saldo: d.saldo === true,
       alguno: d.alguno === true,
     };
   } catch {

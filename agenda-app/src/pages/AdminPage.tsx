@@ -60,6 +60,11 @@ const PERMISOS: Array<{ key: string; titulo: string; detalle: string }> = [
     detalle: 'De dónde viene la gente que escanea los QR impresos. No muestra ninguna operación, ni plata, ni datos de nadie: es el acceso más chico que se puede dar.',
   },
   {
+    key: 'saldo',
+    titulo: 'Saldo a favor',
+    detalle: 'Buscar una cuenta y darle (o sacarle) saldo a favor, que es como se devuelve plata cuando algo sale mal. No viene con el Resumen: ver la plata y moverla son dos cosas distintas.',
+  },
+  {
     key: 'admin',
     titulo: 'Todo',
     detalle: 'Todos los de arriba y además sumar o sacar accesos. Es el único que reparte.',
