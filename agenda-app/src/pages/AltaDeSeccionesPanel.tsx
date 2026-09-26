@@ -26,6 +26,8 @@ import './LedgerPage.css';
 
 type Solicitud = {
   id: string; name: string; type: string; ambito: string;
+  /** Todas las listas pedidas. El primero es `type`. Puede faltar en las viejas. */
+  tipos?: string[];
   seccion: string | null; seccionNueva: string | null;
   notes: string | null; requesterEmail: string | null; createdAt: number;
 };
@@ -65,6 +67,12 @@ export default function AltaDeSeccionesPanel() {
   const [seccion, setSeccion] = useState('');
   const [seccionNueva, setSeccionNueva] = useState(false);
   const [tituloSeccion, setTituloSeccion] = useState('');
+  // EN DOS CATÁLOGOS DE UNA (26/09/2026, pedido suyo). Mismo criterio que el
+  // panel del celular: `tipo` es el principal y va siempre; esto son los
+  // extras. Kinesiología es un servicio a domicilio Y un turno de consultorio,
+  // y darlo de alta dos veces significaba dos claves que podían quedar
+  // distintas.
+  const [extras, setExtras] = useState<string[]>([]);
 
   const cargar = useCallback(async () => {
     setItems(null); setCategorias(null); setError(null);
@@ -88,6 +96,11 @@ export default function AltaDeSeccionesPanel() {
     if (abierta === s.id) { setAbierta(null); return; }
     setAbierta(s.id);
     setTipo(TIPOS_PROFESIONAL.some((t) => t.key === s.type) ? s.type : 'oficio');
+    // Precargado con lo que pidió quien sugirió: la app ahora deja marcar una
+    // segunda lista al enviar.
+    setExtras(Array.isArray(s.tipos)
+      ? s.tipos.filter((t) => t !== s.type && TIPOS_PROFESIONAL.some((x) => x.key === t))
+      : []);
     setTitulo(s.name || '');
     setClave(claveDesde(s.name || ''));
     setSeccion(s.seccion || '');
@@ -117,13 +130,14 @@ export default function AltaDeSeccionesPanel() {
     if (seccionNueva && !tituloSeccion.trim()) { setError('Falta el nombre de la sección nueva.'); return; }
     const claveSeccion = seccionNueva ? claveDesde(tituloSeccion) : seccion;
     const ok = window.confirm(
-      `Agregar "${titulo}" al catálogo.\n\nClave: ${clave}\nTipo: ${tipo}\n`
+      `Agregar "${titulo}" al catálogo.\n\nClave: ${clave}\nListas: ${[tipo, ...extras.filter((t) => t !== tipo)].join(' + ')}\n`
       + (seccionNueva ? `Sección NUEVA: ${tituloSeccion}` : `Sección: ${seccion || '(sin sección)'}`)
       + '\n\nLa clave no se va a poder cambiar después.',
     );
     if (!ok) return;
     resolver({
       id, accion: 'agregar', tipo, key: clave, title: titulo.trim(),
+      tipos: Array.from(new Set([tipo, ...extras])),
       rubro: claveSeccion || null,
       rubroNuevoTitulo: seccionNueva ? tituloSeccion.trim() : '',
     });
@@ -230,6 +244,24 @@ export default function AltaDeSeccionesPanel() {
                           ))}
                         </select>
                       </label>
+
+                      {/* Y SI VA EN DOS. Lo que se marque acá se agrega en la
+                          MISMA operación y con la MISMA clave. */}
+                      <fieldset style={{ border: 0, padding: 0, margin: '8px 0' }}>
+                        <legend style={{ fontSize: 13, opacity: 0.8 }}>Y también en (opcional)</legend>
+                        {TIPOS_PROFESIONAL.filter((t) => t.key !== tipo).map((t) => (
+                          <label key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 12 }}>
+                            <input
+                              type="checkbox"
+                              checked={extras.includes(t.key)}
+                              onChange={(e) => setExtras((v) => (
+                                e.target.checked ? [...v, t.key] : v.filter((x) => x !== t.key)
+                              ))}
+                            />
+                            {t.label}
+                          </label>
+                        ))}
+                      </fieldset>
 
                       <label>
                         Nombre que se muestra
