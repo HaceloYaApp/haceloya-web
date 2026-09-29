@@ -49,9 +49,24 @@
   // alguna vez se cambia de región o de proyecto, hay que tocarla también o
   // esto deja de contar SIN dar ningún error visible.
   var AVISAR = 'https://southamerica-east1-haceloyaapp-88e3d.cloudfunctions.net/registrarVisita';
+  // QUÉ SISTEMA ES, EN TRES VALORES Y NADA MÁS.
+  //
+  // Esta página ya lo sabe —lo necesita para elegir tienda— así que pasarlo al
+  // contador es gratis. Y sin él, un afiche con 50 escaneos puede haber traído
+  // 50 personas que pudieron instalar o 9, según cuántos fueran del sistema que
+  // todavía no está publicado. Son dos lecturas opuestas del mismo número.
+  //
+  // Va `ios`/`android`/`otro` y NO el user-agent: el user-agent dice versión de
+  // sistema, de navegador y a veces modelo, y eso sí empieza a identificar.
+  function sistema(){
+    if (isIOS) return 'ios';
+    if (isAndroid) return 'android';
+    return 'otro';
+  }
+
   function avisar(canal){
     if (!canal) return;
-    var u = AVISAR + '?ref=' + encodeURIComponent(canal);
+    var u = AVISAR + '?ref=' + encodeURIComponent(canal) + '&so=' + sistema();
     try {
       if (navigator.sendBeacon) { navigator.sendBeacon(u); return; }
       fetch(u, { method: 'POST', mode: 'no-cors', keepalive: true });

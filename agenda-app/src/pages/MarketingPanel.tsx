@@ -52,13 +52,31 @@ type Datos = {
   nombres: Record<string, string>;
   porDia: Array<{ dia: string; total: number; canales: Record<string, number> }>;
   porHora: number[];
+  sistemas: Record<string, number>;
+  sistemaPorCanal: Record<string, Record<string, number>>;
   porHoraSinFranja: number[];
   franja: { desde: number; hasta: number } | null;
   locales: Array<{ local: string; total: number }>;
-  eventos: Array<{ id: string; canal: string; local: string | null; ms: number | null }>;
+  eventos: Array<{ id: string; canal: string; local: string | null; sistema?: string; ms: number | null }>;
 };
 
 const HORAS = Array.from({ length: 24 }, (_, i) => i);
+
+/**
+ * { android: 41, ios: 8 } → 'Android 41 · iPhone 8'
+ *
+ * Los ceros no se escriben: "iPhone 0" ocupa lugar para decir nada. Y 'otro'
+ * sólo aparece si hay alguno — son escaneos de escritorio, o de antes del
+ * 29/09, cuando todavía no se guardaba el sistema.
+ */
+function reparto(m: Record<string, number> | undefined): string {
+  if (!m) return '';
+  const nombres: Record<string, string> = { android: 'Android', ios: 'iPhone', otro: 'otro' };
+  return ['android', 'ios', 'otro']
+    .filter((k) => (m[k] || 0) > 0)
+    .map((k) => `${nombres[k]} ${m[k]}`)
+    .join(' · ');
+}
 
 /** 'ferreteria-lopez' → 'Ferreteria lopez' */
 function legible(local: string): string {
@@ -321,6 +339,21 @@ export default function MarketingPanel() {
             </div>
           </div>
 
+          {reparto(datos.sistemas) && (
+            <div className="admin-card">
+              <h3>Con qué teléfono escanean</h3>
+              <p className="admin-sub">
+                {reparto(datos.sistemas)}. Sirve para leer bien los números: mientras una
+                de las dos tiendas no esté publicada, los escaneos de ese sistema no son
+                interesados, son rebotes.
+              </p>
+              <p className="admin-sub">
+                Se empezó a guardar el <b>29/09/2026</b>. Lo anterior figura como "otro"
+                porque no hay dato, no porque haya sido de escritorio.
+              </p>
+            </div>
+          )}
+
           {datos.truncado && (
             <p className="admin-error-inline">
               Hay más escaneos de los que se pueden leer de una. Achicá el período para
@@ -348,6 +381,11 @@ export default function MarketingPanel() {
                     </div>
                     {/* La barra se mide contra la pieza que más trajo, no contra
                         el total: lo que interesa es comparar una con otra. */}
+                    {reparto(datos.sistemaPorCanal?.[canal]) && (
+                      <div className="admin-sub" style={{ marginTop: 2 }}>
+                        {reparto(datos.sistemaPorCanal[canal])}
+                      </div>
+                    )}
                     <div style={{ height: 6, borderRadius: 3, background: 'rgba(127,127,127,.25)', marginTop: 6 }}>
                       <div style={{
                         height: 6, borderRadius: 3, background: 'var(--accent, #F2C94C)',
