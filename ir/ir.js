@@ -12,11 +12,12 @@
 
 (function(){
   var APP_STORE = 'https://apps.apple.com/ar/app/hacelo-ya/id6811084324';
-  // Cuando la app salga a producción en Google Play, poné acá la ficha real y
-  // descomentá PLAY_LIVE. Los QR ya impresos empiezan a mandar a Play solos:
-  // el destino vive en esta página, no en el papel.
+  // PLAY SALIÓ A PRODUCCIÓN EL 08/10/2026. Verificado abriendo la ficha con un
+  // navegador de verdad: carga, dice "Hacelo Ya" y tiene el botón Instalar.
+  // Desde este cambio, los QR ya impresos y pegados empiezan a mandar a Play
+  // solos — el destino vive en esta página, no en el papel.
   var PLAY_URL  = 'https://play.google.com/store/apps/details?id=com.bissi.haceloapp';
-  var PLAY_LIVE = false;
+  var PLAY_LIVE = true;
 
   var ua = navigator.userAgent || '';
   var isIOS = /iPad|iPhone|iPod/.test(ua) ||
