@@ -372,8 +372,14 @@ export default function MarketingPanel() {
                     badges enteros de las tiendas, como los afiches. El badge es
                     casi todo texto y entra bien donde hay lugar; el ícono suelto
                     rinde el doble de alto donde se compite por milímetros. */}
-                <a className="btn" href="/qr/historia-badges-9x16.png" download>
-                  Historia con badges (1080×1920)
+                {/* El suelto va primero: es el que más se usa, porque se
+                    apoya sobre cualquier foto o video sin arrastrar el fondo
+                    naranja de la pieza. */}
+                <a className="btn" href="/qr/suelto.png" download>
+                  Sólo el QR, sin fondo (PNG transparente)
+                </a>
+                <a className="btn btn-outline" href="/qr/historia-badges-9x16.png" download>
+                  Historia entera, con fondo naranja
                 </a>
                 <a className="btn btn-outline" href="/qr/historia-badges.png" download>
                   Sólo el QR con badges
