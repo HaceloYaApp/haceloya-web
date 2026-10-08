@@ -360,12 +360,29 @@ export default function MarketingPanel() {
                 height={190}
                 style={{ borderRadius: 10, border: '1px solid var(--borde, #d8d8d8)' }}
               />
+              <img
+                src="/qr/historia-badges.png"
+                alt="QR para historias, con los badges de las tiendas"
+                width={190}
+                height={190}
+                style={{ borderRadius: 10, border: '1px solid var(--borde, #d8d8d8)' }}
+              />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <a className="btn" href="/qr/historia-9x16.png" download>
-                  Bajar la historia entera (1080×1920)
+                {/* Dos versiones del mismo QR: con íconos sueltos y con los
+                    badges enteros de las tiendas, como los afiches. El badge es
+                    casi todo texto y entra bien donde hay lugar; el ícono suelto
+                    rinde el doble de alto donde se compite por milímetros. */}
+                <a className="btn" href="/qr/historia-badges-9x16.png" download>
+                  Historia con badges (1080×1920)
+                </a>
+                <a className="btn btn-outline" href="/qr/historia-badges.png" download>
+                  Sólo el QR con badges
+                </a>
+                <a className="btn btn-outline" href="/qr/historia-9x16.png" download>
+                  Historia con íconos (1080×1920)
                 </a>
                 <a className="btn btn-outline" href="/qr/historia.png" download>
-                  Bajar sólo el QR (1080×1080)
+                  Sólo el QR con íconos
                 </a>
                 <button
                   type="button"
