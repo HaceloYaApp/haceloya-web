@@ -339,6 +339,45 @@ export default function MarketingPanel() {
             </div>
           </div>
 
+          {/* EL QR SIEMPRE A MANO.
+              Vive acá y no en una carpeta porque el momento en que se necesita
+              es cuando estás por subir una historia, con el teléfono en la
+              mano. Apunta a /ir/?ref=ig-historia, así que no caduca: el día que
+              cambie el destino se toca esa página y este QR, ya publicado en
+              cien historias, sigue andando. */}
+          <div className="admin-card">
+            <h3>El QR para historias</h3>
+            <p className="admin-sub">
+              No caduca. Manda a <code>haceloya.com/ir/?ref=ig-historia</code>, que mira el
+              teléfono y lleva a la tienda que corresponde. Los escaneos aparecen abajo
+              como <b>Historia de Instagram</b>.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'flex-start', marginTop: 12 }}>
+              <img
+                src="/qr/historia.png"
+                alt="QR para historias"
+                width={190}
+                height={190}
+                style={{ borderRadius: 10, border: '1px solid var(--borde, #d8d8d8)' }}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a className="btn" href="/qr/historia-9x16.png" download>
+                  Bajar la historia entera (1080×1920)
+                </a>
+                <a className="btn btn-outline" href="/qr/historia.png" download>
+                  Bajar sólo el QR (1080×1080)
+                </a>
+                <button
+                  type="button"
+                  className="mapa-resultado"
+                  onClick={() => navigator.clipboard?.writeText('https://haceloya.com/ir/?ref=ig-historia')}
+                >
+                  Copiar el link
+                </button>
+              </div>
+            </div>
+          </div>
+
           {reparto(datos.sistemas) && (
             <div className="admin-card">
               <h3>Con qué teléfono escanean</h3>
