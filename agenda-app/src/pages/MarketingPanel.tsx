@@ -183,6 +183,18 @@ export default function MarketingPanel() {
   // la del registro pide 50, y "ver todos" sube a 2000. Lo que se LEE para los
   // totales no cambia: salen de los mismos eventos de siempre.
   const [expandido, setExpandido] = useState(false);
+  // EL REGISTRO COMPLETO, AFUERA DE LA PANTALLA.
+  //
+  // El panel dibuja de a 2000 renglones porque más que eso traba el navegador.
+  // Los escaneos no se borran nunca —están todos en la base desde el primer
+  // día— pero "están en la base" no es lo mismo que "los tengo": esto arma el
+  // CSV completo, lo guarda en el almacenamiento y lo manda a las mismas
+  // casillas que reciben las estadísticas.
+  const [exportando, setExportando] = useState(false);
+  const [exportado, setExportado] = useState<
+    { filas: number; truncado: boolean; tope: number; url: string | null; enviadoA: string[] } | null
+  >(null);
+  const [errorExport, setErrorExport] = useState<string | null>(null);
   const tope = solapa === 'registro' ? (expandido ? EXPANDIDO : MINIMIZADO) : 0;
 
   // EL FILTRO LO RESUELVE EL SERVIDOR, NO ESTA PANTALLA.
@@ -212,6 +224,24 @@ export default function MarketingPanel() {
       setCargando(false);
     }
   }, [tope]);
+
+  const exportar = useCallback(async () => {
+    setExportando(true); setErrorExport(null); setExportado(null);
+    try {
+      const r = await httpsCallable(functions, 'exportarEscaneos')({
+        canal: filtro || '',
+        desdeMillis: ventana?.desde,
+        hastaMillis: ventana?.hasta,
+        horaDesde,
+        horaHasta,
+      });
+      setExportado(r.data as never);
+    } catch (e) {
+      setErrorExport(mensajeDeError(e, 'No se pudo armar el archivo.'));
+    } finally {
+      setExportando(false);
+    }
+  }, [filtro, ventana, horaDesde, horaHasta]);
 
   // Los filtros vivos, en un ref: el efecto de abajo tiene que volver a pedir
   // CON LOS FILTROS PUESTOS cuando cambia el tope, sin volver a pedir también
@@ -602,7 +632,14 @@ export default function MarketingPanel() {
               <p className="admin-sub">
                 Entran los últimos <b>{expandido ? EXPANDIDO : MINIMIZADO}</b> del período
                 elegido arriba. Está minimizado a propósito: abrir Marketing no tiene por qué
-                traer y dibujar miles de renglones. "Ver todos" trae hasta {EXPANDIDO}.
+                traer y dibujar miles de renglones.
+              </p>
+              <p className="admin-sub">
+                <b>Ningún escaneo se borra nunca.</b> El tope de {EXPANDIDO} es cuántos DIBUJA
+                esta pantalla, no cuántos hay: están todos guardados desde el primer día. Para
+                tenerlos afuera, "Bajar TODO" arma el CSV completo, lo guarda en el
+                almacenamiento de la app y lo manda a las casillas que reciben las estadísticas.
+                Además, el mail de las 2:00 trae todos los escaneos del día anterior.
               </p>
               {/* LOS BOTONES SALEN DE LAS PIEZAS QUE YA TIENEN ESCANEOS, no de
                   las 18 que existen: un filtro que lleva a una lista vacía no es
@@ -650,6 +687,7 @@ export default function MarketingPanel() {
                   <div className="ledger-filtros" style={{ marginBottom: 10 }}>
                     <span className="admin-sub">
                       Mostrando <b>{lista.length}</b> de <b>{hay}</b>
+                      {hay <= lista.length ? ' — ya se ven todos los del período' : ''}
                     </span>
                     {(hay > lista.length || expandido) && (
                       <button
@@ -657,10 +695,42 @@ export default function MarketingPanel() {
                         className={`ledger-chip${expandido ? ' ledger-chip-activo' : ''}`}
                         onClick={() => setExpandido((v) => !v)}
                       >
-                        {expandido ? `Mostrar sólo los últimos ${MINIMIZADO}` : 'Ver todos'}
+                        {expandido ? `Mostrar sólo los últimos ${MINIMIZADO}` : `Ver todos (${hay})`}
                       </button>
                     )}
+                    <button
+                      type="button"
+                      className="ledger-chip"
+                      disabled={exportando}
+                      onClick={() => { void exportar(); }}
+                    >
+                      {exportando ? 'Armando el archivo…' : 'Bajar TODO y mandarlo por mail'}
+                    </button>
                   </div>
+                  {errorExport && <p className="admin-error-inline">{errorExport}</p>}
+                  {exportado && (
+                    <p className="admin-sub">
+                      Listo: <b>{exportado.filas}</b> escaneos en el archivo
+                      {exportado.enviadoA?.length
+                        ? `, mandado a ${exportado.enviadoA.join(', ')}`
+                        : ''}
+                      . Queda guardado en el almacenamiento de la app.
+                      {exportado.url && (
+                        <>
+                          {' '}
+                          <a href={exportado.url} target="_blank" rel="noreferrer">Descargarlo acá</a>
+                          {' (el enlace dura 24 h; el archivo no se borra).'}
+                        </>
+                      )}
+                      {exportado.truncado && (
+                        <>
+                          {' '}
+                          <b>Cortado en {exportado.tope}:</b> hay más. Pedilo por partes con el
+                          filtro de fechas.
+                        </>
+                      )}
+                    </p>
+                  )}
                   <ul className="admin-lista">
                     {/* El origen arriba y el cuándo abajo, uno debajo del otro:
                         el nombre de la pieza y la fecha completa no entran juntos
