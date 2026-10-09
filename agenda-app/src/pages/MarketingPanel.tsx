@@ -134,6 +134,11 @@ function cuando(ms: number | null): string {
   return `${dia} ${fecha} · ${hora}`;
 }
 
+const SOLAPAS = [
+  { key: 'escaneos' as const, label: 'Escaneos' },
+  { key: 'mapa' as const, label: 'Dónde pasa algo' },
+];
+
 export default function MarketingPanel() {
   const [datos, setDatos] = useState<Datos | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -148,6 +153,16 @@ export default function MarketingPanel() {
   // La franja horaria, las dos puntas incluidas. 0 y 23 es "todas".
   const [horaDesde, setHoraDesde] = useState(0);
   const [horaHasta, setHoraHasta] = useState(23);
+
+  // LAS DOS SOLAPAS.
+  //
+  // Son dos preguntas distintas que estaban una abajo de la otra en el mismo
+  // scroll: "de qué pieza vino la gente" y "en qué zonas está pasando algo".
+  // El filtro de día y de hora manda sobre la primera y no tiene nada que ver
+  // con la segunda, así que verlas pegadas invitaba a leer el mapa como si
+  // también estuviera filtrado. Son de segundo nivel —adentro de Marketing—,
+  // por eso chips y no pestañas, igual que las solapas de Moderación.
+  const [solapa, setSolapa] = useState<'escaneos' | 'mapa'>('escaneos');
 
   // EL FILTRO LO RESUELVE EL SERVIDOR, NO ESTA PANTALLA.
   //
@@ -185,410 +200,429 @@ export default function MarketingPanel() {
 
   return (
     <>
-      <p className="admin-sub" style={{ marginBottom: 12 }}>
-        Cuánta gente entró desde cada pieza impresa. Son escaneos de QR, no descargas:
-        la cuenta se corta cuando el teléfono salta a la tienda.
-      </p>
-
-      {/* El día o el rango, igual que en el registro de operaciones. Manda sobre
-          toda la pantalla: las cifras, el detalle por pieza, el registro y el
-          día por día. Un filtro que sólo afectara a una parte haría que dos
-          números de la misma pantalla contestaran preguntas distintas. */}
       <div className="ledger-filtros">
-        {ATAJOS.map((a) => (
+        {SOLAPAS.map((s) => (
           <button
-            key={a.key}
+            key={s.key}
             type="button"
-            className={`ledger-chip${a.key === atajo ? ' ledger-chip-activo' : ''}`}
-            onClick={() => {
-              setAtajo(a.key);
-              setDesdeIso('');
-              setHastaIso('');
-              const v = a.ventana();
-              setVentana(v);
-              void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
-            }}
+            className={`ledger-chip${s.key === solapa ? ' ledger-chip-activo' : ''}`}
+            onClick={() => setSolapa(s.key)}
           >
-            {a.label}
+            {s.label}
           </button>
         ))}
-        <span className="ledger-rango">
-          <input
-            type="date"
-            aria-label="Desde"
-            value={desdeIso}
-            max={hastaIso || fechaIso()}
-            onChange={(e) => {
-              const d = e.target.value;
-              setDesdeIso(d);
-              setAtajo('elegido');
-              // Con una sola punta cargada se muestra ESE día: esperar a que
-              // estén las dos dejaría la pantalla sin responder al primer
-              // cambio, como si el filtro no funcionara.
-              const v = d ? (hastaIso ? ventanaDelRango(d, hastaIso) : ventanaDeLaFecha(d)) : null;
-              setVentana(v);
-              void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
-            }}
-          />
-          <span className="ledger-rango-sep">a</span>
-          <input
-            type="date"
-            aria-label="Hasta"
-            value={hastaIso}
-            min={desdeIso || undefined}
-            max={fechaIso()}
-            onChange={(e) => {
-              const h = e.target.value;
-              setHastaIso(h);
-              setAtajo('elegido');
-              const v = desdeIso
-                ? (h ? ventanaDelRango(desdeIso, h) : ventanaDeLaFecha(desdeIso))
-                : (h ? ventanaDeLaFecha(h) : null);
-              setVentana(v);
-              void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
-            }}
-          />
-        </span>
-        {!!ventana && <span className="ledger-rango-lectura">{comoSeLee(ventana)}</span>}
       </div>
 
-      {/* LA FRANJA HORARIA, aparte de la fecha y no adentro.
-          "De 18 a 22" no es un rango de tiempo continuo: es una franja que se
-          repite todos los días del período. Mezclarla con el selector de fechas
-          haría creer que se elige "del lunes a las 18 al martes a las 22", que
-          es otra cosa. */}
-      <div className="ledger-filtros">
-        <span className="ledger-rango">
-          <span className="admin-sub">Entre las</span>
-          <select
-            aria-label="Desde la hora"
-            value={horaDesde}
-            onChange={(e) => {
-              const h = Number(e.target.value);
-              setHoraDesde(h);
-              void cargar(filtro, ventana, { desde: h, hasta: horaHasta });
-            }}
-          >
-            {HORAS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}</option>)}
-          </select>
-          <span className="ledger-rango-sep">y las</span>
-          <select
-            aria-label="Hasta la hora"
-            value={horaHasta}
-            onChange={(e) => {
-              const h = Number(e.target.value);
-              setHoraHasta(h);
-              void cargar(filtro, ventana, { desde: horaDesde, hasta: h });
-            }}
-          >
-            {HORAS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}:59</option>)}
-          </select>
-        </span>
-        {(horaDesde !== 0 || horaHasta !== 23) && (
-          <>
-            <button
-              type="button"
-              className="ledger-chip"
-              onClick={() => {
-                setHoraDesde(0); setHoraHasta(23);
-                void cargar(filtro, ventana, { desde: 0, hasta: 23 });
-              }}
-            >
-              Todo el día
-            </button>
-            <span className="ledger-rango-lectura">
-              {horaDesde > horaHasta
-                ? `de las ${String(horaDesde).padStart(2, '0')} a las ${String(horaHasta).padStart(2, '0')}:59 del día siguiente`
-                : `de las ${String(horaDesde).padStart(2, '0')} a las ${String(horaHasta).padStart(2, '0')}:59`}
-            </span>
-          </>
-        )}
-      </div>
-
-      {error && <p className="admin-error-inline">{error}</p>}
-      {cargando && !datos && <p className="admin-loading">Cargando…</p>}
-
-      {/* El mapa va al final y no arriba: los escaneos son lo que cambia todos
-          los días y el mapa se mueve de a poco. Lo de arriba es lo que se mira
-          seguido. */}
-      {datos && (
+      {solapa === 'escaneos' ? (
         <>
-          <div className="admin-card">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{datos.total}</div>
-                <div className="admin-sub">{ventana ? 'escaneos en el período' : 'escaneos en total'}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{datos.totalHistorico}</div>
-                <div className="admin-sub">desde siempre</div>
-              </div>
-              {/* LA QUE MÁS TRAJO, y no "cuántas piezas tuvieron al menos un
-                  escaneo", que es lo que decía antes. Aquel número contestaba
-                  una pregunta que nadie se hace: saber que 5 de 10 piezas
-                  funcionaron no dice cuál imprimir de nuevo. Éste sí. */}
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>
-                  {canales.length ? canales[0][1] : '—'}
-                </div>
-                <div className="admin-sub">
-                  {canales.length
-                    ? `la que más trajo: ${datos.nombres?.[canales[0][0]] || canales[0][0]}`
-                    : 'todavía ninguna pieza trajo gente'}
-                </div>
-              </div>
-            </div>
-          </div>
+          <p className="admin-sub" style={{ marginBottom: 12 }}>
+            Cuánta gente entró desde cada pieza impresa. Son escaneos de QR, no descargas:
+            la cuenta se corta cuando el teléfono salta a la tienda.
+          </p>
 
-          {reparto(datos.sistemas) && (
-            <div className="admin-card">
-              <h3>Con qué teléfono escanean</h3>
-              <p className="admin-sub">
-                {reparto(datos.sistemas)}. Sirve para leer bien los números: mientras una
-                de las dos tiendas no esté publicada, los escaneos de ese sistema no son
-                interesados, son rebotes.
-              </p>
-              <p className="admin-sub">
-                Se empezó a guardar el <b>29/09/2026</b>. Lo anterior figura como "otro"
-                porque no hay dato, no porque haya sido de escritorio.
-              </p>
-            </div>
-          )}
-
-          {datos.truncado && (
-            <p className="admin-error-inline">
-              Hay más escaneos de los que se pueden leer de una. Achicá el período para
-              que los números sean exactos.
-            </p>
-          )}
-
-          <div className="admin-card">
-            <h3>Por pieza</h3>
-            <p className="admin-sub">
-              Están TODAS las piezas, incluso las que no trajeron a nadie todavía: un cero
-              también es un dato — dice que ese QR no se usó, o que la tanda no salió.
-            </p>
-            {(datos.grupos || []).map((g) => (
-              <div key={g.titulo}>
-                <div className="admin-sub" style={{
-                  fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase',
-                  marginTop: 18, marginBottom: 6, fontSize: 11,
-                }}
-                >
-                  {g.titulo}
-                </div>
-                <ul className="admin-lista">
-                  {g.canales.map((canal) => {
-                    const n = datos.canales?.[canal] || 0;
-                    return (
-                      <li key={canal} style={{ display: 'block', opacity: n ? 1 : 0.45 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                          <span>{datos.nombres?.[canal] || canal}</span>
-                          <span>
-                            <strong>{n}</strong>
-                            <span className="admin-sub"> · {porcentaje(n, datos.total)}</span>
-                          </span>
-                        </div>
-                        {reparto(datos.sistemaPorCanal?.[canal]) && (
-                          <div className="admin-sub" style={{ marginTop: 2 }}>
-                            {reparto(datos.sistemaPorCanal[canal])}
-                          </div>
-                        )}
-                        {/* La barra se mide contra la pieza que más trajo, no contra
-                            el total: lo que interesa es comparar una con otra. */}
-                        <div style={{ height: 6, borderRadius: 3, background: 'rgba(127,127,127,.25)', marginTop: 6 }}>
-                          <div style={{
-                            height: 6, borderRadius: 3, background: 'var(--accent, #F2C94C)',
-                            width: `${mayor ? Math.max(n ? 3 : 0, (n / mayor) * 100) : 0}%`,
-                          }}
-                          />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {datos.locales?.length > 0 && (
-            <div className="admin-card">
-              <h3>Por local</h3>
-              <p className="admin-sub">
-                Los tótems con el nombre del comercio adentro del QR. Es el único número que
-                dice a qué mostrador volver con cinco más.
-              </p>
-              <ul className="admin-lista">
-                {datos.locales.map((l) => (
-                  <li key={l.local}>
-                    <span>{legible(l.local)}</span>
-                    <strong>{l.total}</strong>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="admin-card">
-            <h3>Registro de escaneos</h3>
-            <p className="admin-sub">
-              Cada escaneo con su origen, el día de la semana, la fecha y la hora, del más
-              nuevo al más viejo. No se guarda nada de quien escaneó: sólo qué QR y cuándo.
-            </p>
-            {/* LOS BOTONES SALEN DE LAS PIEZAS QUE YA TIENEN ESCANEOS, no de
-                las 18 que existen: un filtro que lleva a una lista vacía no es
-                un filtro. Mientras no haya ninguno quedaba sólo "Todos" y la
-                pantalla parecía rota, así que ahí se explica en vez de mostrar
-                el botón solo. */}
-            {canales.length === 0 ? (
-              <p className="admin-sub">
-                Todavía no hay ningún escaneo. Cuando los haya, acá van a aparecer los
-                botones para ver el registro de cada pieza por separado.
-              </p>
-            ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '10px 0 14px' }}>
+          {/* El día o el rango, igual que en el registro de operaciones. Manda sobre
+              toda la pantalla: las cifras, el detalle por pieza, el registro y el
+              día por día. Un filtro que sólo afectara a una parte haría que dos
+              números de la misma pantalla contestaran preguntas distintas. */}
+          <div className="ledger-filtros">
+            {ATAJOS.map((a) => (
               <button
+                key={a.key}
                 type="button"
-                className={`btn${filtro ? ' btn-outline' : ''}`}
-                onClick={() => { setFiltro(null); void cargar(null, ventana, { desde: horaDesde, hasta: horaHasta }); }}
+                className={`ledger-chip${a.key === atajo ? ' ledger-chip-activo' : ''}`}
+                onClick={() => {
+                  setAtajo(a.key);
+                  setDesdeIso('');
+                  setHastaIso('');
+                  const v = a.ventana();
+                  setVentana(v);
+                  void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
+                }}
               >
-                Todos
+                {a.label}
               </button>
-              {canales.map(([canal]) => (
+            ))}
+            <span className="ledger-rango">
+              <input
+                type="date"
+                aria-label="Desde"
+                value={desdeIso}
+                max={hastaIso || fechaIso()}
+                onChange={(e) => {
+                  const d = e.target.value;
+                  setDesdeIso(d);
+                  setAtajo('elegido');
+                  // Con una sola punta cargada se muestra ESE día: esperar a que
+                  // estén las dos dejaría la pantalla sin responder al primer
+                  // cambio, como si el filtro no funcionara.
+                  const v = d ? (hastaIso ? ventanaDelRango(d, hastaIso) : ventanaDeLaFecha(d)) : null;
+                  setVentana(v);
+                  void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
+                }}
+              />
+              <span className="ledger-rango-sep">a</span>
+              <input
+                type="date"
+                aria-label="Hasta"
+                value={hastaIso}
+                min={desdeIso || undefined}
+                max={fechaIso()}
+                onChange={(e) => {
+                  const h = e.target.value;
+                  setHastaIso(h);
+                  setAtajo('elegido');
+                  const v = desdeIso
+                    ? (h ? ventanaDelRango(desdeIso, h) : ventanaDeLaFecha(desdeIso))
+                    : (h ? ventanaDeLaFecha(h) : null);
+                  setVentana(v);
+                  void cargar(filtro, v, { desde: horaDesde, hasta: horaHasta });
+                }}
+              />
+            </span>
+            {!!ventana && <span className="ledger-rango-lectura">{comoSeLee(ventana)}</span>}
+          </div>
+
+          {/* LA FRANJA HORARIA, aparte de la fecha y no adentro.
+              "De 18 a 22" no es un rango de tiempo continuo: es una franja que se
+              repite todos los días del período. Mezclarla con el selector de fechas
+              haría creer que se elige "del lunes a las 18 al martes a las 22", que
+              es otra cosa. */}
+          <div className="ledger-filtros">
+            <span className="ledger-rango">
+              <span className="admin-sub">Entre las</span>
+              <select
+                aria-label="Desde la hora"
+                value={horaDesde}
+                onChange={(e) => {
+                  const h = Number(e.target.value);
+                  setHoraDesde(h);
+                  void cargar(filtro, ventana, { desde: h, hasta: horaHasta });
+                }}
+              >
+                {HORAS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}</option>)}
+              </select>
+              <span className="ledger-rango-sep">y las</span>
+              <select
+                aria-label="Hasta la hora"
+                value={horaHasta}
+                onChange={(e) => {
+                  const h = Number(e.target.value);
+                  setHoraHasta(h);
+                  void cargar(filtro, ventana, { desde: horaDesde, hasta: h });
+                }}
+              >
+                {HORAS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}:59</option>)}
+              </select>
+            </span>
+            {(horaDesde !== 0 || horaHasta !== 23) && (
+              <>
                 <button
-                  key={canal}
                   type="button"
-                  className={`btn${filtro === canal ? '' : ' btn-outline'}`}
-                  onClick={() => { setFiltro(canal); void cargar(canal, ventana, { desde: horaDesde, hasta: horaHasta }); }}
+                  className="ledger-chip"
+                  onClick={() => {
+                    setHoraDesde(0); setHoraHasta(23);
+                    void cargar(filtro, ventana, { desde: 0, hasta: 23 });
+                  }}
                 >
-                  {datos.nombres?.[canal] || canal}
+                  Todo el día
                 </button>
-              ))}
-            </div>
+                <span className="ledger-rango-lectura">
+                  {horaDesde > horaHasta
+                    ? `de las ${String(horaDesde).padStart(2, '0')} a las ${String(horaHasta).padStart(2, '0')}:59 del día siguiente`
+                    : `de las ${String(horaDesde).padStart(2, '0')} a las ${String(horaHasta).padStart(2, '0')}:59`}
+                </span>
+              </>
             )}
-            {(() => {
-              const lista = datos.eventos || [];
-              if (lista.length === 0) {
-                return filtro
-                  ? <p className="admin-sub">Esta pieza todavía no tuvo ningún escaneo.</p>
-                  : null;
-              }
-              return (
-                <ul className="admin-lista">
-                  {/* El origen arriba y el cuándo abajo, uno debajo del otro:
-                      el nombre de la pieza y la fecha completa no entran juntos
-                      en una pantalla angosta sin que uno se corte. */}
-                  {lista.map((e) => (
-                    <li key={e.id} style={{ display: 'block' }}>
-                      <div>
-                        {datos.nombres?.[e.canal] || e.canal}
-                        {e.local ? ` · ${legible(e.local)}` : ''}
-                      </div>
-                      <div className="admin-sub">{cuando(e.ms)}</div>
-                    </li>
-                  ))}
-                </ul>
-              );
-            })()}
           </div>
 
-          {/* A QUÉ HORA ESCANEAN.
-              Es el dato que decide a qué hora pegar y a qué hora publicar, y no
-              se puede sacar de ninguna otra pantalla. Un afiche que junta
-              escaneos a las 8 está en un camino al trabajo; uno que los junta
-              el sábado a las 21 está en una salida. Son dos afiches distintos
-              aunque digan lo mismo. */}
-          <div className="admin-card">
-            <h3>A qué hora escanean</h3>
-            <p className="admin-sub">
-              Las 24 horas del día, en hora de Buenos Aires, sumando todos los días del
-              período. El gráfico muestra el día entero aunque haya una franja elegida: si
-              se filtrara a sí mismo no se podría ver dónde está el pico de verdad.
-            </p>
-            {(() => {
-              const horas = datos.porHoraSinFranja || [];
-              const pico = Math.max(...horas, 1);
-              const total = horas.reduce((a, b) => a + b, 0);
-              const dentro = (h: number) => (
-                horaDesde <= horaHasta
-                  ? h >= horaDesde && h <= horaHasta
-                  : h >= horaDesde || h <= horaHasta
-              );
-              if (!total) {
-                return <p className="admin-sub">Todavía no hay ningún escaneo en este período.</p>;
-              }
-              const mejor = horas.indexOf(pico);
-              return (
-                <>
-                  <div className="horas-grafico">
-                    {horas.map((n, h) => (
-                      <button
-                        key={h}
-                        type="button"
-                        className={`horas-barra${dentro(h) ? '' : ' horas-barra-apagada'}`}
-                        title={`${String(h).padStart(2, '0')}:00 — ${n} escaneo${n === 1 ? '' : 's'}`}
-                        onClick={() => {
-                          // Tocar una hora la elige como franja de una sola
-                          // hora; tocarla de nuevo vuelve al día entero.
-                          const sola = horaDesde === h && horaHasta === h;
-                          const d = sola ? 0 : h, t = sola ? 23 : h;
-                          setHoraDesde(d); setHoraHasta(t);
-                          void cargar(filtro, ventana, { desde: d, hasta: t });
-                        }}
-                      >
-                        <span className="horas-valor" style={{ height: `${Math.round((n / pico) * 100)}%` }} />
-                        <span className="horas-rotulo">{h % 3 === 0 ? String(h).padStart(2, '0') : ''}</span>
-                      </button>
-                    ))}
+          {error && <p className="admin-error-inline">{error}</p>}
+          {cargando && !datos && <p className="admin-loading">Cargando…</p>}
+
+          {/* El mapa va al final y no arriba: los escaneos son lo que cambia todos
+              los días y el mapa se mueve de a poco. Lo de arriba es lo que se mira
+              seguido. */}
+          {datos && (
+            <>
+              <div className="admin-card">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
+                  <div>
+                    <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{datos.total}</div>
+                    <div className="admin-sub">{ventana ? 'escaneos en el período' : 'escaneos en total'}</div>
                   </div>
-                  <p className="admin-sub">
-                    La hora más fuerte es las <b>{String(mejor).padStart(2, '0')}:00</b>, con{' '}
-                    {pico} de {total} ({porcentaje(pico, total)}). Tocá una barra para ver sólo
-                    esa hora en toda la pantalla.
-                  </p>
-                </>
-              );
-            })()}
-          </div>
+                  <div>
+                    <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{datos.totalHistorico}</div>
+                    <div className="admin-sub">desde siempre</div>
+                  </div>
+                  {/* LA QUE MÁS TRAJO, y no "cuántas piezas tuvieron al menos un
+                      escaneo", que es lo que decía antes. Aquel número contestaba
+                      una pregunta que nadie se hace: saber que 5 de 10 piezas
+                      funcionaron no dice cuál imprimir de nuevo. Éste sí. */}
+                  <div>
+                    <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>
+                      {canales.length ? canales[0][1] : '—'}
+                    </div>
+                    <div className="admin-sub">
+                      {canales.length
+                        ? `la que más trajo: ${datos.nombres?.[canales[0][0]] || canales[0][0]}`
+                        : 'todavía ninguna pieza trajo gente'}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          {datos.porDia?.length > 0 && (
-            <div className="admin-card">
-              <h3>Día por día</h3>
-              <p className="admin-sub">
-                El total de cada día y de dónde salió. Los porcentajes son sobre ese día,
-                no sobre el total de la campaña.
-              </p>
-              <ul className="admin-lista">
-                {datos.porDia.map((d) => {
-                  const delDia = Object.entries(d.canales || {})
-                    .filter(([, n]) => n > 0)
-                    .sort((x, y) => y[1] - x[1]);
+              {reparto(datos.sistemas) && (
+                <div className="admin-card">
+                  <h3>Con qué teléfono escanean</h3>
+                  <p className="admin-sub">
+                    {reparto(datos.sistemas)}. Sirve para leer bien los números: mientras una
+                    de las dos tiendas no esté publicada, los escaneos de ese sistema no son
+                    interesados, son rebotes.
+                  </p>
+                  <p className="admin-sub">
+                    Se empezó a guardar el <b>29/09/2026</b>. Lo anterior figura como "otro"
+                    porque no hay dato, no porque haya sido de escritorio.
+                  </p>
+                </div>
+              )}
+
+              {datos.truncado && (
+                <p className="admin-error-inline">
+                  Hay más escaneos de los que se pueden leer de una. Achicá el período para
+                  que los números sean exactos.
+                </p>
+              )}
+
+              <div className="admin-card">
+                <h3>Por pieza</h3>
+                <p className="admin-sub">
+                  Están TODAS las piezas, incluso las que no trajeron a nadie todavía: un cero
+                  también es un dato — dice que ese QR no se usó, o que la tanda no salió.
+                </p>
+                {(datos.grupos || []).map((g) => (
+                  <div key={g.titulo}>
+                    <div className="admin-sub" style={{
+                      fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase',
+                      marginTop: 18, marginBottom: 6, fontSize: 11,
+                    }}
+                    >
+                      {g.titulo}
+                    </div>
+                    <ul className="admin-lista">
+                      {g.canales.map((canal) => {
+                        const n = datos.canales?.[canal] || 0;
+                        return (
+                          <li key={canal} style={{ display: 'block', opacity: n ? 1 : 0.45 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                              <span>{datos.nombres?.[canal] || canal}</span>
+                              <span>
+                                <strong>{n}</strong>
+                                <span className="admin-sub"> · {porcentaje(n, datos.total)}</span>
+                              </span>
+                            </div>
+                            {reparto(datos.sistemaPorCanal?.[canal]) && (
+                              <div className="admin-sub" style={{ marginTop: 2 }}>
+                                {reparto(datos.sistemaPorCanal[canal])}
+                              </div>
+                            )}
+                            {/* La barra se mide contra la pieza que más trajo, no contra
+                                el total: lo que interesa es comparar una con otra. */}
+                            <div style={{ height: 6, borderRadius: 3, background: 'rgba(127,127,127,.25)', marginTop: 6 }}>
+                              <div style={{
+                                height: 6, borderRadius: 3, background: 'var(--accent, #F2C94C)',
+                                width: `${mayor ? Math.max(n ? 3 : 0, (n / mayor) * 100) : 0}%`,
+                              }}
+                              />
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              {datos.locales?.length > 0 && (
+                <div className="admin-card">
+                  <h3>Por local</h3>
+                  <p className="admin-sub">
+                    Los tótems con el nombre del comercio adentro del QR. Es el único número que
+                    dice a qué mostrador volver con cinco más.
+                  </p>
+                  <ul className="admin-lista">
+                    {datos.locales.map((l) => (
+                      <li key={l.local}>
+                        <span>{legible(l.local)}</span>
+                        <strong>{l.total}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="admin-card">
+                <h3>Registro de escaneos</h3>
+                <p className="admin-sub">
+                  Cada escaneo con su origen, el día de la semana, la fecha y la hora, del más
+                  nuevo al más viejo. No se guarda nada de quien escaneó: sólo qué QR y cuándo.
+                </p>
+                {/* LOS BOTONES SALEN DE LAS PIEZAS QUE YA TIENEN ESCANEOS, no de
+                    las 18 que existen: un filtro que lleva a una lista vacía no es
+                    un filtro. Mientras no haya ninguno quedaba sólo "Todos" y la
+                    pantalla parecía rota, así que ahí se explica en vez de mostrar
+                    el botón solo. */}
+                {canales.length === 0 ? (
+                  <p className="admin-sub">
+                    Todavía no hay ningún escaneo. Cuando los haya, acá van a aparecer los
+                    botones para ver el registro de cada pieza por separado.
+                  </p>
+                ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '10px 0 14px' }}>
+                  <button
+                    type="button"
+                    className={`btn${filtro ? ' btn-outline' : ''}`}
+                    onClick={() => { setFiltro(null); void cargar(null, ventana, { desde: horaDesde, hasta: horaHasta }); }}
+                  >
+                    Todos
+                  </button>
+                  {canales.map(([canal]) => (
+                    <button
+                      key={canal}
+                      type="button"
+                      className={`btn${filtro === canal ? '' : ' btn-outline'}`}
+                      onClick={() => { setFiltro(canal); void cargar(canal, ventana, { desde: horaDesde, hasta: horaHasta }); }}
+                    >
+                      {datos.nombres?.[canal] || canal}
+                    </button>
+                  ))}
+                </div>
+                )}
+                {(() => {
+                  const lista = datos.eventos || [];
+                  if (lista.length === 0) {
+                    return filtro
+                      ? <p className="admin-sub">Esta pieza todavía no tuvo ningún escaneo.</p>
+                      : null;
+                  }
                   return (
-                    <li key={d.dia} style={{ display: 'block' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                        <strong>{diaLargo(d.dia)}</strong>
-                        <strong>{d.total}</strong>
-                      </div>
-                      {delDia.map(([canal, n]) => (
-                        <div
-                          key={canal}
-                          className="admin-sub"
-                          style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}
-                        >
-                          <span>{datos.nombres?.[canal] || canal}</span>
-                          <span>{n} · {porcentaje(n, d.total)}</span>
-                        </div>
+                    <ul className="admin-lista">
+                      {/* El origen arriba y el cuándo abajo, uno debajo del otro:
+                          el nombre de la pieza y la fecha completa no entran juntos
+                          en una pantalla angosta sin que uno se corte. */}
+                      {lista.map((e) => (
+                        <li key={e.id} style={{ display: 'block' }}>
+                          <div>
+                            {datos.nombres?.[e.canal] || e.canal}
+                            {e.local ? ` · ${legible(e.local)}` : ''}
+                          </div>
+                          <div className="admin-sub">{cuando(e.ms)}</div>
+                        </li>
                       ))}
-                    </li>
+                    </ul>
                   );
-                })}
-              </ul>
-            </div>
+                })()}
+              </div>
+
+              {/* A QUÉ HORA ESCANEAN.
+                  Es el dato que decide a qué hora pegar y a qué hora publicar, y no
+                  se puede sacar de ninguna otra pantalla. Un afiche que junta
+                  escaneos a las 8 está en un camino al trabajo; uno que los junta
+                  el sábado a las 21 está en una salida. Son dos afiches distintos
+                  aunque digan lo mismo. */}
+              <div className="admin-card">
+                <h3>A qué hora escanean</h3>
+                <p className="admin-sub">
+                  Las 24 horas del día, en hora de Buenos Aires, sumando todos los días del
+                  período. El gráfico muestra el día entero aunque haya una franja elegida: si
+                  se filtrara a sí mismo no se podría ver dónde está el pico de verdad.
+                </p>
+                {(() => {
+                  const horas = datos.porHoraSinFranja || [];
+                  const pico = Math.max(...horas, 1);
+                  const total = horas.reduce((a, b) => a + b, 0);
+                  const dentro = (h: number) => (
+                    horaDesde <= horaHasta
+                      ? h >= horaDesde && h <= horaHasta
+                      : h >= horaDesde || h <= horaHasta
+                  );
+                  if (!total) {
+                    return <p className="admin-sub">Todavía no hay ningún escaneo en este período.</p>;
+                  }
+                  const mejor = horas.indexOf(pico);
+                  return (
+                    <>
+                      <div className="horas-grafico">
+                        {horas.map((n, h) => (
+                          <button
+                            key={h}
+                            type="button"
+                            className={`horas-barra${dentro(h) ? '' : ' horas-barra-apagada'}`}
+                            title={`${String(h).padStart(2, '0')}:00 — ${n} escaneo${n === 1 ? '' : 's'}`}
+                            onClick={() => {
+                              // Tocar una hora la elige como franja de una sola
+                              // hora; tocarla de nuevo vuelve al día entero.
+                              const sola = horaDesde === h && horaHasta === h;
+                              const d = sola ? 0 : h, t = sola ? 23 : h;
+                              setHoraDesde(d); setHoraHasta(t);
+                              void cargar(filtro, ventana, { desde: d, hasta: t });
+                            }}
+                          >
+                            <span className="horas-valor" style={{ height: `${Math.round((n / pico) * 100)}%` }} />
+                            <span className="horas-rotulo">{h % 3 === 0 ? String(h).padStart(2, '0') : ''}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="admin-sub">
+                        La hora más fuerte es las <b>{String(mejor).padStart(2, '0')}:00</b>, con{' '}
+                        {pico} de {total} ({porcentaje(pico, total)}). Tocá una barra para ver sólo
+                        esa hora en toda la pantalla.
+                      </p>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {datos.porDia?.length > 0 && (
+                <div className="admin-card">
+                  <h3>Día por día</h3>
+                  <p className="admin-sub">
+                    El total de cada día y de dónde salió. Los porcentajes son sobre ese día,
+                    no sobre el total de la campaña.
+                  </p>
+                  <ul className="admin-lista">
+                    {datos.porDia.map((d) => {
+                      const delDia = Object.entries(d.canales || {})
+                        .filter(([, n]) => n > 0)
+                        .sort((x, y) => y[1] - x[1]);
+                      return (
+                        <li key={d.dia} style={{ display: 'block' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                            <strong>{diaLargo(d.dia)}</strong>
+                            <strong>{d.total}</strong>
+                          </div>
+                          {delDia.map(([canal, n]) => (
+                            <div
+                              key={canal}
+                              className="admin-sub"
+                              style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}
+                            >
+                              <span>{datos.nombres?.[canal] || canal}</span>
+                              <span>{n} · {porcentaje(n, d.total)}</span>
+                            </div>
+                          ))}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
         </>
+      ) : (
+        // Se monta y se desmonta con la solapa, a propósito: así volver al mapa
+        // trae lo de ahora y no lo que había cuando se salió.
+        <MapaDensidad />
       )}
-
-      <MapaDensidad />
     </>
   );
 }
