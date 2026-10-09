@@ -33,10 +33,11 @@ type Capa =
   | 'disponibles' | 'aprendices' | 'particulares';
 
 type Celda = { lat: number; lon: number; n: Partial<Record<Capa, number>> };
-type Datos = {
+export type Datos = {
   celdas: Celda[];
   grillaMetros: number;
-  dias: number;
+  /** La ventana con la que se armó. No la usa el dibujo: la muestra el selector. */
+  dias?: number;
   truncado: boolean;
   zonas: number;
   totales: Record<Capa, number>;
@@ -92,6 +93,33 @@ const OFRECEN: Capa[] = ['ventas', 'cursos'];
 const GENTE: Capa[] = ['disponibles', 'aprendices', 'particulares'];
 const TODAS: Capa[] = [...PIDEN, ...OFRECEN, ...GENTE];
 
+// EL MISMO MAPA, DOS PREGUNTAS (09/10/2026).
+//
+// La pestaña "Qué falta" necesita un mapa de calor de los pedidos que están por
+// vencer. Es el mismo mapa —mosaicos, arrastre, zoom, buscador de zonas, el
+// anillo de "piden y no hay nadie"— con otros datos adentro. Por eso se
+// parametriza en vez de copiarse: un segundo mapa de 650 líneas se desincroniza
+// del primero en la primera corrección.
+//
+// CON `datos` NO PIDE NADA. "Qué falta" trae sus celdas en la misma consulta
+// que la lista de pedidos y el padrón de rubros, así que el mapa recibe lo que
+// ya está cargado. Si pidiera por su cuenta habría dos consultas y, peor, dos
+// selectores de ventana en la misma pantalla contestando cosas distintas.
+//
+// Sin props es exactamente el mapa de densidad de siempre. Igual que en la app
+// (src/screens/panel/MapaDensidad.tsx).
+export type PropsDelMapa = {
+  /** Las celdas ya cargadas. Sin esto, el mapa las pide por su cuenta. */
+  datos?: Datos | null;
+  cargando?: boolean;
+  titulo?: string;
+  ayuda?: string;
+  /** Qué capas se pueden prender. Las que no están no se dibujan ni se nombran. */
+  capasVisibles?: Capa[];
+  /** Cuáles arrancan prendidas. */
+  capasIniciales?: Capa[];
+};
+
 const MOSAICO = 256;   // px de lado de un mosaico, fijo por el estándar
 const ZOOM_MIN = 4;
 const ZOOM_MAX = 18;
@@ -145,12 +173,30 @@ const MOSAICO_URL = (z: number, x: number, y: number) =>
 
 type Camara = { lat: number; lon: number; z: number };
 
-export default function MapaDensidad() {
-  const [datos, setDatos] = useState<Datos | null>(null);
-  const [cargando, setCargando] = useState(true);
+export default function MapaDensidad({
+  datos: datosDeAfuera,
+  cargando: cargandoDeAfuera,
+  titulo = 'Dónde está pasando algo',
+  ayuda,
+  capasVisibles = TODAS,
+  capasIniciales = capasVisibles,
+}: PropsDelMapa = {}) {
+  const propio = datosDeAfuera === undefined;
+  const [datosPropios, setDatos] = useState<Datos | null>(null);
+  const [cargandoPropio, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const datos = propio ? datosPropios : datosDeAfuera;
+  const cargando = propio ? cargandoPropio : !!cargandoDeAfuera;
   const [dias, setDias] = useState(90);
-  const [prendidas, setPrendidas] = useState<Capa[]>(TODAS);
+  const [prendidas, setPrendidas] = useState<Capa[]>(capasIniciales);
+  // Las familias de chips, sin lo que esta pantalla no muestra. Se filtran y no
+  // se reciben por props: el reparto piden / ofrecen / gente es del dato, no de
+  // la pantalla, y una capa nueva en el backend tiene que caer sola en su
+  // familia como ya pasa hoy.
+  const piden = useMemo(() => PIDEN.filter((c) => capasVisibles.includes(c)), [capasVisibles]);
+  const ofrecen = useMemo(() => OFRECEN.filter((c) => capasVisibles.includes(c)), [capasVisibles]);
+  const gente = useMemo(() => GENTE.filter((c) => capasVisibles.includes(c)), [capasVisibles]);
+  const todas = useMemo(() => [...piden, ...ofrecen, ...gente], [piden, ofrecen, gente]);
   // `null` = encuadrado automático sobre los datos. Se llena la primera vez que
   // se arrastra, se hace zoom o se busca una zona, y el botón "Encuadrar todo"
   // la vuelve a poner en null.
@@ -165,6 +211,7 @@ export default function MapaDensidad() {
   const arrastre = useRef<{ x: number; y: number; movido: boolean } | null>(null);
 
   const cargar = useCallback(async () => {
+    if (!propio) return;
     setCargando(true); setError(null);
     try {
       const r = await httpsCallable(functions, 'verMapaDeDensidad')({ dias });
@@ -173,7 +220,7 @@ export default function MapaDensidad() {
       setError(mensajeDeError(e, 'No se pudo armar el mapa.'));
       setDatos(null);
     } finally { setCargando(false); }
-  }, [dias]);
+  }, [propio, dias]);
 
   useEffect(() => { void cargar(); }, [cargar]);
 
@@ -318,7 +365,7 @@ export default function MapaDensidad() {
   const alternar = (c: Capa) => setPrendidas((p) => (
     p.includes(c) ? p.filter((x) => x !== c) : [...p, c]
   ));
-  const pidenPrendidas = PIDEN.filter((c) => prendidas.includes(c));
+  const pidenPrendidas = piden.filter((c) => prendidas.includes(c));
   const esHueco = (c: Celda) => pidenPrendidas.length > 0
     && cuenta(c, pidenPrendidas) > 0 && !(c.n.disponibles || 0);
   // Un "hueco" es una celda donde alguien pide algo de lo que está mirándose y
@@ -330,7 +377,7 @@ export default function MapaDensidad() {
     : [];
   const zonas = vista ? [...vista.cs].sort((a, b) => cuenta(b, prendidas) - cuenta(a, prendidas)) : [];
   const mapa = (c: Celda) => `https://www.google.com/maps?q=${c.lat},${c.lon}`;
-  const detalle = (c: Celda) => TODAS
+  const detalle = (c: Celda) => todas
     .filter((k) => prendidas.includes(k) && (c.n[k] || 0) > 0)
     .map((k) => `${c.n[k]} ${NOMBRE[k].toLowerCase()}`)
     .join(' · ');
@@ -484,60 +531,79 @@ export default function MapaDensidad() {
   return (
     <>
       <div className="admin-card">
-        <h3>Dónde está pasando algo</h3>
+        <h3>{titulo}</h3>
         <p className="admin-sub">
-          Todo lo que tiene una ubicación adentro de la app, sobre la grilla de{' '}
-          {datos.grillaMetros} m. Es el mapa que sirve para decidir dónde poner publicidad
-          y a qué barrio ir a buscar oficios. Prendé y apagá capas para cruzarlas: lo que
-          se pide contra quién hay para hacerlo.
+          {ayuda || `Todo lo que tiene una ubicación adentro de la app, sobre la grilla de ${datos.grillaMetros} m. `
+            + 'Es el mapa que sirve para decidir dónde poner publicidad y a qué barrio ir a buscar oficios. '
+            + 'Prendé y apagá capas para cruzarlas: lo que se pide contra quién hay para hacerlo.'}
         </p>
 
         <div className="mapa-familias">
-          <div>
-            <div className="mapa-familia-titulo">Lo que piden</div>
-            <div className="mapa-capas">{PIDEN.map(boton)}</div>
-          </div>
-          <div>
-            <div className="mapa-familia-titulo">Lo que ofrecen</div>
-            <div className="mapa-capas">{OFRECEN.map(boton)}</div>
-          </div>
-          <div>
-            <div className="mapa-familia-titulo">La gente anotada</div>
-            <div className="mapa-capas">{GENTE.map(boton)}</div>
-          </div>
+          {piden.length > 0 && (
+            <div>
+              <div className="mapa-familia-titulo">Lo que piden</div>
+              <div className="mapa-capas">{piden.map(boton)}</div>
+            </div>
+          )}
+          {ofrecen.length > 0 && (
+            <div>
+              <div className="mapa-familia-titulo">Lo que ofrecen</div>
+              <div className="mapa-capas">{ofrecen.map(boton)}</div>
+            </div>
+          )}
+          {gente.length > 0 && (
+            <div>
+              <div className="mapa-familia-titulo">La gente anotada</div>
+              <div className="mapa-capas">{gente.map(boton)}</div>
+            </div>
+          )}
         </div>
 
         <div className="mapa-atajos">
-          <button type="button" className="mapa-capa" onClick={() => setPrendidas(TODAS)}>Todo</button>
-          <button type="button" className="mapa-capa" onClick={() => setPrendidas(PIDEN)}>Sólo lo que piden</button>
-          <button type="button" className="mapa-capa" onClick={() => setPrendidas(OFRECEN)}>Sólo lo que ofrecen</button>
-          <button type="button" className="mapa-capa" onClick={() => setPrendidas(['disponibles'])}>Sólo profesionales</button>
-          <button type="button" className="mapa-capa" onClick={() => setPrendidas([...PIDEN, 'disponibles'])}>Piden vs. profesionales</button>
-          <span className="admin-sub" style={{ marginLeft: 'auto' }}>
-            Publicado en los últimos{' '}
-            <select value={dias} onChange={(e) => setDias(Number(e.target.value))}>
-              <option value={7}>7 días</option>
-              <option value={30}>30 días</option>
-              <option value={90}>90 días</option>
-              <option value={180}>180 días</option>
-              <option value={365}>365 días</option>
-            </select>
-          </span>
+          <button type="button" className="mapa-capa" onClick={() => setPrendidas(todas)}>Todo</button>
+          {piden.length > 0 && (
+            <button type="button" className="mapa-capa" onClick={() => setPrendidas(piden)}>Sólo lo que piden</button>
+          )}
+          {ofrecen.length > 0 && (
+            <button type="button" className="mapa-capa" onClick={() => setPrendidas(ofrecen)}>Sólo lo que ofrecen</button>
+          )}
+          {gente.includes('disponibles') && (
+            <button type="button" className="mapa-capa" onClick={() => setPrendidas(['disponibles'])}>Sólo profesionales</button>
+          )}
+          {piden.length > 0 && gente.includes('disponibles') && (
+            <button type="button" className="mapa-capa" onClick={() => setPrendidas([...piden, 'disponibles'])}>Piden vs. profesionales</button>
+          )}
+          {propio && (
+            <span className="admin-sub" style={{ marginLeft: 'auto' }}>
+              Publicado en los últimos{' '}
+              <select value={dias} onChange={(e) => setDias(Number(e.target.value))}>
+                {[7, 30, 90, 180, 365].map((v) => (
+                  <option key={v} value={v}>{v} días</option>
+                ))}
+              </select>
+            </span>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 26, marginTop: 16 }}>
-          <div>
-            <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{suma(PIDEN)}</div>
-            <div className="admin-sub">cosas que se pidieron</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{suma(OFRECEN)}</div>
-            <div className="admin-sub">cosas publicadas para dar</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{datos.totales.disponibles}</div>
-            <div className="admin-sub">profesionales disponibles</div>
-          </div>
+          {piden.length > 0 && (
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{suma(piden)}</div>
+              <div className="admin-sub">cosas que se pidieron</div>
+            </div>
+          )}
+          {ofrecen.length > 0 && (
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{suma(ofrecen)}</div>
+              <div className="admin-sub">cosas publicadas para dar</div>
+            </div>
+          )}
+          {gente.includes('disponibles') && (
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{datos.totales.disponibles ?? 0}</div>
+              <div className="admin-sub">profesionales disponibles</div>
+            </div>
+          )}
           <div>
             <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{vista?.cs.length ?? 0}</div>
             <div className="admin-sub">zonas con algo prendido</div>
@@ -550,7 +616,7 @@ export default function MapaDensidad() {
 
         <p className="admin-sub" style={{ marginTop: 12 }}>
           Las cuentas y las publicaciones sin dirección cargada no entran en el mapa:{' '}
-          {TODAS.filter((k) => (datos.sinUbicacion[k] || 0) > 0)
+          {todas.filter((k) => (datos.sinUbicacion[k] || 0) > 0)
             .map((k) => `${datos.sinUbicacion[k]} ${NOMBRE[k].toLowerCase()}`)
             .join(', ') || 'ninguna, están todas ubicadas'}.
           {datos.truncado && ' El mapa está recortado: hay más de 5000 documentos en alguna capa.'}
@@ -561,7 +627,7 @@ export default function MapaDensidad() {
         <h3>El mapa</h3>
 
         <div className="mapa-referencias">
-          {TODAS.filter((k) => prendidas.includes(k)).map((k) => (
+          {todas.filter((k) => prendidas.includes(k)).map((k) => (
             <span key={k} className="mapa-referencia">
               <span className="mapa-muestra" style={{ background: COLOR[k] }} aria-hidden="true" />
               {NOMBRE[k]}

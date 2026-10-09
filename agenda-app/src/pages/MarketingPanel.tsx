@@ -7,6 +7,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import MapaDensidad from './MapaDensidad';
+import QueFalta from './QueFalta';
 import './LedgerPage.css';
 
 // DE DÓNDE VIENE LA GENTE.
@@ -137,6 +138,7 @@ function cuando(ms: number | null): string {
 const SOLAPAS = [
   { key: 'escaneos' as const, label: 'Escaneos' },
   { key: 'mapa' as const, label: 'Dónde pasa algo' },
+  { key: 'falta' as const, label: 'Qué falta' },
 ];
 
 export default function MarketingPanel() {
@@ -162,7 +164,7 @@ export default function MarketingPanel() {
   // con la segunda, así que verlas pegadas invitaba a leer el mapa como si
   // también estuviera filtrado. Son de segundo nivel —adentro de Marketing—,
   // por eso chips y no pestañas, igual que las solapas de Moderación.
-  const [solapa, setSolapa] = useState<'escaneos' | 'mapa'>('escaneos');
+  const [solapa, setSolapa] = useState<'escaneos' | 'mapa' | 'falta'>('escaneos');
 
   // EL FILTRO LO RESUELVE EL SERVIDOR, NO ESTA PANTALLA.
   //
@@ -213,7 +215,7 @@ export default function MarketingPanel() {
         ))}
       </div>
 
-      {solapa === 'escaneos' ? (
+      {solapa === 'escaneos' && (
         <>
           <p className="admin-sub" style={{ marginBottom: 12 }}>
             Cuánta gente entró desde cada pieza impresa. Son escaneos de QR, no descargas:
@@ -618,11 +620,12 @@ export default function MarketingPanel() {
             </>
           )}
         </>
-      ) : (
-        // Se monta y se desmonta con la solapa, a propósito: así volver al mapa
-        // trae lo de ahora y no lo que había cuando se salió.
-        <MapaDensidad />
       )}
+
+      {/* Se montan y se desmontan con la solapa, a propósito: así volver trae
+          lo de ahora y no lo que había cuando se salió. */}
+      {solapa === 'mapa' && <MapaDensidad />}
+      {solapa === 'falta' && <QueFalta />}
     </>
   );
 }
