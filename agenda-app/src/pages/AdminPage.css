@@ -465,3 +465,34 @@
   margin-right: 6px;
   vertical-align: baseline;
 }
+
+/* EL DETALLE DE UN CUADRO DEL MAPA (09/10/2026).
+   Flota por encima de todo y no va abajo del mapa en el scroll: el mapa dibuja
+   sus controles, su leyenda y dos listas más, así que una tarjeta "abajo del
+   mapa" caía dos pantallas más abajo y tocar una celda parecía no hacer nada.
+   El z-index está arriba de .mapa-encima (1000) para que también se vea con el
+   mapa en pantalla completa, que es justo donde más se toca una celda. */
+.cuadro-detalle {
+  position: fixed;
+  z-index: 1100;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  width: min(560px, calc(100vw - 28px));
+  max-height: min(60vh, 520px);
+  overflow: auto;
+  padding: 14px 16px;
+  border: 2px solid var(--ink, #14140F);
+  border-radius: 14px;
+  background: var(--bg, #FFFFFF);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.cuadro-detalle h3 { margin: 0 0 4px 0; }
+
+.cuadro-detalle-cabeza {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}

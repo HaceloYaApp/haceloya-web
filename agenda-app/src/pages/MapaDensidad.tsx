@@ -462,18 +462,36 @@ export default function MapaDensidad({
         className="mapa-lienzo"
         onPointerDown={(e) => {
           arrastre.current = { x: e.clientX, y: e.clientY, movido: false };
-          e.currentTarget.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
           const a = arrastre.current;
           if (!a) return;
           const dx = e.clientX - a.x, dy = e.clientY - a.y;
           if (!a.movido && Math.abs(dx) + Math.abs(dy) < 4) return;
-          a.movido = true; a.x = e.clientX; a.y = e.clientY;
+          // LA CAPTURA SE TOMA RECIÉN ACÁ, CUANDO YA HAY ARRASTRE (09/10/2026).
+          //
+          // Estaba en `onPointerDown`, y eso se comía el click de las celdas:
+          // con la captura puesta, el `pointerup` —y con él el `mouseup`— se
+          // redirigen al lienzo, así que el `click` termina disparándose en el
+          // ancestro común y nunca en la celda. Se notó cuando la celda dejó de
+          // ser un link a Google Maps y pasó a tener que abrir el detalle del
+          // cuadro: el enlace "funcionaba" porque el navegador lo activaba por
+          // otro camino, el onClick no.
+          //
+          // La captura sigue haciendo falta para no perder el arrastre cuando
+          // el puntero se va del lienzo; lo que no hacía falta es tomarla antes
+          // de saber si hay arrastre.
+          if (!a.movido) {
+            a.movido = true;
+            try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* sin captura, el arrastre se corta en el borde */ }
+          }
+          a.x = e.clientX; a.y = e.clientY;
           correr(dx, dy);
         }}
         onPointerUp={(e) => {
-          e.currentTarget.releasePointerCapture(e.pointerId);
+          if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+          }
           // Se limpia en el próximo cuadro: el click de la celda llega DESPUÉS
           // del pointerup, y sin esto arrastrar sobre una celda abriría Google
           // Maps al soltar.

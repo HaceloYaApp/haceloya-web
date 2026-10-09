@@ -147,6 +147,15 @@ const SOLAPAS = [
 
 type Solapa = (typeof SOLAPAS)[number]['key'];
 
+/**
+ * Qué NO se borra al limpiar, por más que esté en el archivo.
+ *
+ * Todo lo que dibuja esta pestaña —el total del período, el detalle por pieza,
+ * a qué hora escanean, el día por día— se calcula de los eventos, no de los
+ * contadores. Borrar los de ayer deja la pantalla en cero para ayer.
+ */
+const CONSERVAR_DIAS = 90;
+
 /** Cuántos escaneos trae el registro cerrado, y cuántos al expandirlo. */
 const MINIMIZADO = 50;
 const EXPANDIDO = 2000;
@@ -191,9 +200,11 @@ export default function MarketingPanel() {
   // CSV completo, lo guarda en el almacenamiento y lo manda a las mismas
   // casillas que reciben las estadísticas.
   const [exportando, setExportando] = useState(false);
-  const [exportado, setExportado] = useState<
-    { filas: number; truncado: boolean; tope: number; url: string | null; enviadoA: string[] } | null
-  >(null);
+  const [exportado, setExportado] = useState<{
+    filas: number; truncado: boolean; tope: number; url: string | null; enviadoA: string[];
+    limpiar?: boolean; conservarDias?: number; borrados?: number; conservados?: number;
+    noSeBorroPorElMail?: boolean;
+  } | null>(null);
   const [errorExport, setErrorExport] = useState<string | null>(null);
   const tope = solapa === 'registro' ? (expandido ? EXPANDIDO : MINIMIZADO) : 0;
 
@@ -225,7 +236,17 @@ export default function MarketingPanel() {
     }
   }, [tope]);
 
-  const exportar = useCallback(async () => {
+  const exportar = useCallback(async (limpiar: boolean) => {
+    // LA LIMPIEZA SE PREGUNTA, porque borra documentos de producción y no se
+    // puede deshacer. El texto dice exactamente qué se va y qué se queda: sin
+    // eso, "limpiar" se lee como "ordenar la pantalla".
+    if (limpiar && !window.confirm(
+      `Se va a guardar el archivo, mandarlo por mail y DESPUÉS borrar de la base los escaneos`
+      + ` de más de ${CONSERVAR_DIAS} días que entren en él.\n\n`
+      + `Los de los últimos ${CONSERVAR_DIAS} días no se tocan: con ellos esta pestaña dibuja`
+      + ` los totales, el detalle por pieza y a qué hora escanean.\n\n`
+      + 'Si el mail no sale, no se borra nada. ¿Seguimos?',
+    )) return;
     setExportando(true); setErrorExport(null); setExportado(null);
     try {
       const r = await httpsCallable(functions, 'exportarEscaneos')({
@@ -234,6 +255,8 @@ export default function MarketingPanel() {
         hastaMillis: ventana?.hasta,
         horaDesde,
         horaHasta,
+        limpiar,
+        conservarDias: CONSERVAR_DIAS,
       });
       setExportado(r.data as never);
     } catch (e) {
@@ -702,9 +725,17 @@ export default function MarketingPanel() {
                       type="button"
                       className="ledger-chip"
                       disabled={exportando}
-                      onClick={() => { void exportar(); }}
+                      onClick={() => { void exportar(false); }}
                     >
                       {exportando ? 'Armando el archivo…' : 'Bajar TODO y mandarlo por mail'}
+                    </button>
+                    <button
+                      type="button"
+                      className="ledger-chip"
+                      disabled={exportando}
+                      onClick={() => { void exportar(true); }}
+                    >
+                      …y limpiar lo de más de {CONSERVAR_DIAS} días
                     </button>
                   </div>
                   {errorExport && <p className="admin-error-inline">{errorExport}</p>}
@@ -727,6 +758,16 @@ export default function MarketingPanel() {
                           {' '}
                           <b>Cortado en {exportado.tope}:</b> hay más. Pedilo por partes con el
                           filtro de fechas.
+                        </>
+                      )}
+                      {exportado.limpiar && (
+                        <>
+                          {' '}
+                          {exportado.noSeBorroPorElMail
+                            ? 'NO se borró nada: el mail no salió.'
+                            : `Borrados de la base: ${exportado.borrados ?? 0}.`
+                              + ` Quedan ${exportado.conservados ?? 0} en la base, los de los`
+                              + ` últimos ${exportado.conservarDias} días.`}
                         </>
                       )}
                     </p>

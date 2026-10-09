@@ -261,9 +261,19 @@ export default function QueFalta() {
             alTocarCelda={setCelda}
           />
 
+          {/* FLOTA POR ENCIMA DEL MAPA, no abajo en el scroll: el mapa dibuja
+              sus controles, su leyenda y dos listas más, así que una tarjeta
+              "abajo del mapa" caía dos pantallas más abajo y tocar una celda
+              parecía no hacer nada. Y así también se ve con el mapa en pantalla
+              completa, que es donde más se toca una celda. */}
           {celda && (
-            <div className="admin-card">
-              <h3>Qué se está pidiendo en ese cuadro</h3>
+            <div className="cuadro-detalle" role="dialog" aria-label="Qué se está pidiendo en ese cuadro">
+              <div className="cuadro-detalle-cabeza">
+                <h3>Qué se está pidiendo en ese cuadro</h3>
+                <button type="button" className="ledger-chip" onClick={() => setCelda(null)}>
+                  Cerrar ✕
+                </button>
+              </div>
               <p className="admin-sub">
                 {celda.lat.toFixed(4)}, {celda.lon.toFixed(4)} — un cuadro de{' '}
                 {datos.grillaMetros} m.{' '}
@@ -274,10 +284,6 @@ export default function QueFalta() {
                 >
                   verlo en el mapa
                 </a>
-                {' · '}
-                <button type="button" className="ledger-chip" onClick={() => setCelda(null)}>
-                  Cerrar
-                </button>
               </p>
               {delCuadro.length === 0 ? (
                 <p className="admin-sub">
