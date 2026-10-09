@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   comoSeLee, fechaIso, ventanaDeLaFecha, ventanaDeLosUltimos, ventanaDelRango,
   type Ventana,
@@ -60,6 +60,9 @@ type Datos = {
   franja: { desde: number; hasta: number } | null;
   locales: Array<{ local: string; total: number }>;
   eventos: Array<{ id: string; canal: string; local: string | null; sistema?: string; ms: number | null }>;
+  // Cuántos escaneos hay en la ventana, aunque hayan viajado menos: es lo que
+  // deja decir "mostrando 50 de 1.312" en vez de mentir con el largo de la lista.
+  eventosEnLaVentana?: number;
 };
 
 const HORAS = Array.from({ length: 24 }, (_, i) => i);
@@ -137,9 +140,16 @@ function cuando(ms: number | null): string {
 
 const SOLAPAS = [
   { key: 'escaneos' as const, label: 'Escaneos' },
+  { key: 'registro' as const, label: 'Registro' },
   { key: 'mapa' as const, label: 'Dónde pasa algo' },
   { key: 'falta' as const, label: 'Qué falta' },
 ];
+
+type Solapa = (typeof SOLAPAS)[number]['key'];
+
+/** Cuántos escaneos trae el registro cerrado, y cuántos al expandirlo. */
+const MINIMIZADO = 50;
+const EXPANDIDO = 2000;
 
 export default function MarketingPanel() {
   const [datos, setDatos] = useState<Datos | null>(null);
@@ -164,7 +174,16 @@ export default function MarketingPanel() {
   // con la segunda, así que verlas pegadas invitaba a leer el mapa como si
   // también estuviera filtrado. Son de segundo nivel —adentro de Marketing—,
   // por eso chips y no pestañas, igual que las solapas de Moderación.
-  const [solapa, setSolapa] = useState<'escaneos' | 'mapa' | 'falta'>('escaneos');
+  const [solapa, setSolapa] = useState<Solapa>('escaneos');
+
+  // CUÁNTOS ESCANEOS VIAJAN (09/10/2026, pedido suyo).
+  //
+  // El registro traía 300 escaneos siempre, también cuando la pantalla no lo
+  // estaba mostrando. Ahora la pestaña de escaneos pide 0 —no dibuja la lista—,
+  // la del registro pide 50, y "ver todos" sube a 2000. Lo que se LEE para los
+  // totales no cambia: salen de los mismos eventos de siempre.
+  const [expandido, setExpandido] = useState(false);
+  const tope = solapa === 'registro' ? (expandido ? EXPANDIDO : MINIMIZADO) : 0;
 
   // EL FILTRO LO RESUELVE EL SERVIDOR, NO ESTA PANTALLA.
   //
@@ -183,6 +202,7 @@ export default function MarketingPanel() {
         hastaMillis: v?.hasta,
         horaDesde: franja?.desde ?? 0,
         horaHasta: franja?.hasta ?? 23,
+        topeDeEventos: tope,
       });
       setDatos((r.data || null) as Datos | null);
     } catch (e) {
@@ -191,9 +211,21 @@ export default function MarketingPanel() {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [tope]);
 
-  useEffect(() => { void cargar(null, null); }, [cargar]);
+  // Los filtros vivos, en un ref: el efecto de abajo tiene que volver a pedir
+  // CON LOS FILTROS PUESTOS cuando cambia el tope, sin volver a pedir también
+  // cada vez que se toca un filtro —eso ya lo hace el control que se tocó—.
+  const puestos = useRef<{ canal: string | null; v: Ventana; franja: { desde: number; hasta: number } }>({
+    canal: null, v: null, franja: { desde: 0, hasta: 23 },
+  });
+  puestos.current = { canal: filtro, v: ventana, franja: { desde: horaDesde, hasta: horaHasta } };
+
+  // Al abrir, y cada vez que cambia cuántos escaneos hay que traer.
+  useEffect(() => {
+    const p = puestos.current;
+    void cargar(p.canal, p.v, p.franja);
+  }, [cargar]);
 
   const canales = Object.entries(datos?.canales || {})
     .filter(([, n]) => n > 0)
@@ -215,11 +247,14 @@ export default function MarketingPanel() {
         ))}
       </div>
 
-      {solapa === 'escaneos' && (
+      {(solapa === 'escaneos' || solapa === 'registro') && (
         <>
           <p className="admin-sub" style={{ marginBottom: 12 }}>
-            Cuánta gente entró desde cada pieza impresa. Son escaneos de QR, no descargas:
-            la cuenta se corta cuando el teléfono salta a la tienda.
+            {solapa === 'registro'
+              ? 'Escaneo por escaneo, del más nuevo al más viejo. El día y la franja de acá '
+                + 'abajo mandan sobre la lista.'
+              : 'Cuánta gente entró desde cada pieza impresa. Son escaneos de QR, no descargas: '
+                + 'la cuenta se corta cuando el teléfono salta a la tienda.'}
           </p>
 
           {/* El día o el rango, igual que en el registro de operaciones. Manda sobre
@@ -343,7 +378,7 @@ export default function MarketingPanel() {
           {/* El mapa va al final y no arriba: los escaneos son lo que cambia todos
               los días y el mapa se mueve de a poco. Lo de arriba es lo que se mira
               seguido. */}
-          {datos && (
+          {datos && solapa === 'escaneos' && (
             <>
               <div className="admin-card">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
@@ -461,69 +496,6 @@ export default function MarketingPanel() {
                 </div>
               )}
 
-              <div className="admin-card">
-                <h3>Registro de escaneos</h3>
-                <p className="admin-sub">
-                  Cada escaneo con su origen, el día de la semana, la fecha y la hora, del más
-                  nuevo al más viejo. No se guarda nada de quien escaneó: sólo qué QR y cuándo.
-                </p>
-                {/* LOS BOTONES SALEN DE LAS PIEZAS QUE YA TIENEN ESCANEOS, no de
-                    las 18 que existen: un filtro que lleva a una lista vacía no es
-                    un filtro. Mientras no haya ninguno quedaba sólo "Todos" y la
-                    pantalla parecía rota, así que ahí se explica en vez de mostrar
-                    el botón solo. */}
-                {canales.length === 0 ? (
-                  <p className="admin-sub">
-                    Todavía no hay ningún escaneo. Cuando los haya, acá van a aparecer los
-                    botones para ver el registro de cada pieza por separado.
-                  </p>
-                ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '10px 0 14px' }}>
-                  <button
-                    type="button"
-                    className={`btn${filtro ? ' btn-outline' : ''}`}
-                    onClick={() => { setFiltro(null); void cargar(null, ventana, { desde: horaDesde, hasta: horaHasta }); }}
-                  >
-                    Todos
-                  </button>
-                  {canales.map(([canal]) => (
-                    <button
-                      key={canal}
-                      type="button"
-                      className={`btn${filtro === canal ? '' : ' btn-outline'}`}
-                      onClick={() => { setFiltro(canal); void cargar(canal, ventana, { desde: horaDesde, hasta: horaHasta }); }}
-                    >
-                      {datos.nombres?.[canal] || canal}
-                    </button>
-                  ))}
-                </div>
-                )}
-                {(() => {
-                  const lista = datos.eventos || [];
-                  if (lista.length === 0) {
-                    return filtro
-                      ? <p className="admin-sub">Esta pieza todavía no tuvo ningún escaneo.</p>
-                      : null;
-                  }
-                  return (
-                    <ul className="admin-lista">
-                      {/* El origen arriba y el cuándo abajo, uno debajo del otro:
-                          el nombre de la pieza y la fecha completa no entran juntos
-                          en una pantalla angosta sin que uno se corte. */}
-                      {lista.map((e) => (
-                        <li key={e.id} style={{ display: 'block' }}>
-                          <div>
-                            {datos.nombres?.[e.canal] || e.canal}
-                            {e.local ? ` · ${legible(e.local)}` : ''}
-                          </div>
-                          <div className="admin-sub">{cuando(e.ms)}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  );
-                })()}
-              </div>
-
               {/* A QUÉ HORA ESCANEAN.
                   Es el dato que decide a qué hora pegar y a qué hora publicar, y no
                   se puede sacar de ninguna otra pantalla. Un afiche que junta
@@ -618,6 +590,95 @@ export default function MarketingPanel() {
                 </div>
               )}
             </>
+          )}
+
+          {datos && solapa === 'registro' && (
+            <div className="admin-card">
+              <h3>Registro de escaneos</h3>
+              <p className="admin-sub">
+                Cada escaneo con su origen, el día de la semana, la fecha y la hora, del más
+                nuevo al más viejo. No se guarda nada de quien escaneó: sólo qué QR y cuándo.
+              </p>
+              <p className="admin-sub">
+                Entran los últimos <b>{expandido ? EXPANDIDO : MINIMIZADO}</b> del período
+                elegido arriba. Está minimizado a propósito: abrir Marketing no tiene por qué
+                traer y dibujar miles de renglones. "Ver todos" trae hasta {EXPANDIDO}.
+              </p>
+              {/* LOS BOTONES SALEN DE LAS PIEZAS QUE YA TIENEN ESCANEOS, no de
+                  las 18 que existen: un filtro que lleva a una lista vacía no es
+                  un filtro. Mientras no haya ninguno quedaba sólo "Todos" y la
+                  pantalla parecía rota, así que ahí se explica en vez de mostrar
+                  el botón solo. */}
+              {canales.length === 0 ? (
+                <p className="admin-sub">
+                  Todavía no hay ningún escaneo. Cuando los haya, acá van a aparecer los
+                  botones para ver el registro de cada pieza por separado.
+                </p>
+              ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '10px 0 14px' }}>
+                <button
+                  type="button"
+                  className={`btn${filtro ? ' btn-outline' : ''}`}
+                  onClick={() => { setFiltro(null); void cargar(null, ventana, { desde: horaDesde, hasta: horaHasta }); }}
+                >
+                  Todos
+                </button>
+                {canales.map(([canal]) => (
+                  <button
+                    key={canal}
+                    type="button"
+                    className={`btn${filtro === canal ? '' : ' btn-outline'}`}
+                    onClick={() => { setFiltro(canal); void cargar(canal, ventana, { desde: horaDesde, hasta: horaHasta }); }}
+                  >
+                    {datos.nombres?.[canal] || canal}
+                  </button>
+                ))}
+              </div>
+              )}
+              {(() => {
+                const lista = datos.eventos || [];
+                if (lista.length === 0) {
+                  return filtro
+                    ? <p className="admin-sub">Esta pieza todavía no tuvo ningún escaneo.</p>
+                    : null;
+                }
+                const hay = datos.eventosEnLaVentana ?? lista.length;
+                return (
+                  <>
+                  {/* CUÁNTOS SE ESTÁN VIENDO DE CUÁNTOS. Sin esto, una lista de
+                      50 renglones se lee como "hubo 50 escaneos". */}
+                  <div className="ledger-filtros" style={{ marginBottom: 10 }}>
+                    <span className="admin-sub">
+                      Mostrando <b>{lista.length}</b> de <b>{hay}</b>
+                    </span>
+                    {(hay > lista.length || expandido) && (
+                      <button
+                        type="button"
+                        className={`ledger-chip${expandido ? ' ledger-chip-activo' : ''}`}
+                        onClick={() => setExpandido((v) => !v)}
+                      >
+                        {expandido ? `Mostrar sólo los últimos ${MINIMIZADO}` : 'Ver todos'}
+                      </button>
+                    )}
+                  </div>
+                  <ul className="admin-lista">
+                    {/* El origen arriba y el cuándo abajo, uno debajo del otro:
+                        el nombre de la pieza y la fecha completa no entran juntos
+                        en una pantalla angosta sin que uno se corte. */}
+                    {lista.map((e) => (
+                      <li key={e.id} style={{ display: 'block' }}>
+                        <div>
+                          {datos.nombres?.[e.canal] || e.canal}
+                          {e.local ? ` · ${legible(e.local)}` : ''}
+                        </div>
+                        <div className="admin-sub">{cuando(e.ms)}</div>
+                      </li>
+                    ))}
+                  </ul>
+                  </>
+                );
+              })()}
+            </div>
           )}
         </>
       )}
