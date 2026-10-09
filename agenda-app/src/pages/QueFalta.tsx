@@ -25,6 +25,9 @@ type Pedido = {
   rubro: string; seccion: string; restanMin: number;
   lat: number | null; lon: number | null;
   presupuestos: number | null; ofrecen: number;
+  // Cuánta gente que ofrece ESE rubro vive a 1 km y a 2 km del pedido. Las dos
+  // puntas están redondeadas a la grilla de 400 m, así que son aproximados.
+  cerca1km: number; cerca2km: number;
 };
 
 type Rubro = {
@@ -65,6 +68,10 @@ export default function QueFalta() {
   const [error, setError] = useState<string | null>(null);
   const [filtro, setFiltro] = useState('');
   const [soloSinNadie, setSoloSinNadie] = useState(false);
+  // La celda que se tocó en el mapa. Las coordenadas vienen redondeadas a la
+  // grilla, las mismas con las que viene cada pedido, así que alcanzan como
+  // identidad del cuadro.
+  const [celda, setCelda] = useState<{ lat: number; lon: number } | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true); setError(null);
@@ -83,6 +90,16 @@ export default function QueFalta() {
   // Los que no tenían ninguna chance: nadie anotado en ese rubro en todo el
   // país. No es un pedido que no se contestó, es uno que no se podía contestar.
   const sinNadie = (datos?.pedidos || []).filter((p) => p.ofrecen === 0);
+
+  // Lo que se está pidiendo en el cuadro que se tocó. Sale de los pedidos que
+  // ya están cargados: la celda y el pedido traen la misma coordenada.
+  const mismoLugar = (a: number, b: number) => Math.abs(a - b) < 0.00001;
+  const delCuadro = celda
+    ? (datos?.pedidos || []).filter((p) => (
+      p.lat != null && p.lon != null
+        && mismoLugar(p.lat, celda.lat) && mismoLugar(p.lon, celda.lon)
+    ))
+    : [];
 
   const rubros = useMemo(() => {
     const t = filtro.trim().toLowerCase();
@@ -237,11 +254,74 @@ export default function QueFalta() {
             datos={datos}
             cargando={cargando}
             titulo="Dónde se están venciendo"
-            ayuda={`Los pedidos que vencen en menos de ${horas} h, sobre la grilla de ${datos.grillaMetros} m, `
-              + 'contra los profesionales anotados. El anillo rosa es una zona donde se pidió algo '
-              + 'y no hay ningún profesional cerca: ahí hay que ir.'}
-            capasVisibles={['pedidos', 'actividades', 'turnos', 'disponibles']}
+            ayuda={`Sólo lo que está por vencer, sobre la grilla de ${datos.grillaMetros} m: `
+              + 'servicios, actividades y turnos que nadie está contestando. Tocá un cuadro '
+              + 'para ver QUÉ se está pidiendo ahí y cuánta gente hay para hacerlo a 1 y 2 km.'}
+            capasVisibles={['pedidos', 'actividades', 'turnos']}
+            alTocarCelda={setCelda}
           />
+
+          {celda && (
+            <div className="admin-card">
+              <h3>Qué se está pidiendo en ese cuadro</h3>
+              <p className="admin-sub">
+                {celda.lat.toFixed(4)}, {celda.lon.toFixed(4)} — un cuadro de{' '}
+                {datos.grillaMetros} m.{' '}
+                <a
+                  href={`https://www.google.com/maps?q=${celda.lat},${celda.lon}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  verlo en el mapa
+                </a>
+                {' · '}
+                <button type="button" className="ledger-chip" onClick={() => setCelda(null)}>
+                  Cerrar
+                </button>
+              </p>
+              {delCuadro.length === 0 ? (
+                <p className="admin-sub">
+                  Ahí no quedó ninguna publicación por vencer con la ventana de {horas} h.
+                  Probá con una ventana más grande.
+                </p>
+              ) : (
+                <ul className="admin-lista">
+                  {delCuadro.map((p) => (
+                    <li key={p.id} style={{ display: 'block' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                        <span>
+                          <strong>{p.rubro}</strong>
+                          <span className="admin-sub"> · {FAMILIA[p.tipo]}</span>
+                        </span>
+                        <span style={{ color: p.restanMin <= 0 ? '#D7263D' : undefined }}>
+                          {enCuanto(p.restanMin)}
+                        </span>
+                      </div>
+                      <div className="admin-sub" style={{ marginTop: 2 }}>{p.titulo}</div>
+                      {/* LA PREGUNTA QUE CONTESTA ESTE BLOQUE: si no hay nadie a
+                          2 km, falta gente y hay que ir a buscarla; si hay diez y
+                          ninguno presupuestó, lo que falta es que contesten, que
+                          es otro problema con otra solución. */}
+                      <div className="admin-sub" style={{ marginTop: 2 }}>
+                        {p.presupuestos === null
+                          ? 'presupuestos: no se contaron'
+                          : `${p.presupuestos} presupuesto${p.presupuestos === 1 ? '' : 's'}`}
+                        {' · lo ofrecen '}
+                        <strong style={{ color: p.cerca1km === 0 ? '#E5007E' : undefined }}>
+                          {p.cerca1km}
+                        </strong>
+                        {' a 1 km · '}
+                        <strong style={{ color: p.cerca2km === 0 ? '#E5007E' : undefined }}>
+                          {p.cerca2km}
+                        </strong>
+                        {` a 2 km · ${p.ofrecen} en todo el país`}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           <div className="admin-card">
             <h3>Todos los rubros y quién hay anotado</h3>

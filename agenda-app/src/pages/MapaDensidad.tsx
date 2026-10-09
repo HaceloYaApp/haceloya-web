@@ -111,6 +111,14 @@ const TODAS: Capa[] = [...PIDEN, ...OFRECEN, ...GENTE];
 export type PropsDelMapa = {
   /** Las celdas ya cargadas. Sin esto, el mapa las pide por su cuenta. */
   datos?: Datos | null;
+  /**
+   * Qué hacer al tocar una celda. Sin esto se abre en Google Maps, que es lo
+   * único que se puede hacer con una celda del mapa de densidad. "Qué falta"
+   * pasa una función: ahí tocar una celda tiene que contar qué se está pidiendo
+   * en ese cuadro y cuánta gente hay para hacerlo, que es la pregunta de esa
+   * pantalla.
+   */
+  alTocarCelda?: (celda: { lat: number; lon: number }) => void;
   cargando?: boolean;
   titulo?: string;
   ayuda?: string;
@@ -175,6 +183,7 @@ type Camara = { lat: number; lon: number; z: number };
 
 export default function MapaDensidad({
   datos: datosDeAfuera,
+  alTocarCelda,
   cargando: cargandoDeAfuera,
   titulo = 'Dónde está pasando algo',
   ayuda,
@@ -366,13 +375,18 @@ export default function MapaDensidad({
     p.includes(c) ? p.filter((x) => x !== c) : [...p, c]
   ));
   const pidenPrendidas = piden.filter((c) => prendidas.includes(c));
-  const esHueco = (c: Celda) => pidenPrendidas.length > 0
+  // SIN LA CAPA DE PROFESIONALES NO HAY HUECOS QUE MARCAR, y es la diferencia
+  // entre "acá nadie puede hacerlo" y "acá no sé". Sin este guardia, un mapa que
+  // sólo trae demanda —el de "Qué falta"— pintaba TODAS las celdas de rosa: cero
+  // profesionales en el dato se leía como cero profesionales en la zona.
+  const hayProfesionales = capasVisibles.includes('disponibles');
+  const esHueco = (c: Celda) => hayProfesionales && pidenPrendidas.length > 0
     && cuenta(c, pidenPrendidas) > 0 && !(c.n.disponibles || 0);
   // Un "hueco" es una celda donde alguien pide algo de lo que está mirándose y
   // no hay ni un profesional que pueda contestarlo. Se recalcula con lo que esté
   // prendido, así que "turnos sin nadie cerca" y "pedidos sin nadie cerca" son
   // dos preguntas distintas que se contestan con los mismos datos.
-  const huecos = pidenPrendidas.length > 0
+  const huecos = hayProfesionales && pidenPrendidas.length > 0
     ? datos.celdas.filter(esHueco).sort((a, b) => cuenta(b, pidenPrendidas) - cuenta(a, pidenPrendidas))
     : [];
   const zonas = vista ? [...vista.cs].sort((a, b) => cuenta(b, prendidas) - cuenta(a, prendidas)) : [];
@@ -487,13 +501,15 @@ export default function MapaDensidad({
           return (
             <a
               key={`${c.lat},${c.lon}`}
-              href={mapa(c)}
-              target="_blank"
-              rel="noreferrer"
+              href={alTocarCelda ? undefined : mapa(c)}
+              target={alTocarCelda ? undefined : '_blank'}
+              rel={alTocarCelda ? undefined : 'noreferrer'}
               title={detalle(c)}
               draggable={false}
               onClick={(e) => {
-                if (lienzo.current?.dataset.arrastrado) e.preventDefault();
+                // Arrastrar el mapa no es tocar una celda.
+                if (lienzo.current?.dataset.arrastrado) { e.preventDefault(); return; }
+                if (alTocarCelda) { e.preventDefault(); alTocarCelda({ lat: c.lat, lon: c.lon }); }
               }}
               style={{
                 position: 'absolute',
@@ -608,10 +624,12 @@ export default function MapaDensidad({
             <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{vista?.cs.length ?? 0}</div>
             <div className="admin-sub">zonas con algo prendido</div>
           </div>
-          <div>
-            <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1, color: ROSA }}>{huecos.length}</div>
-            <div className="admin-sub">zonas que piden y sin nadie</div>
-          </div>
+          {hayProfesionales && (
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1, color: ROSA }}>{huecos.length}</div>
+              <div className="admin-sub">zonas que piden y sin nadie</div>
+            </div>
+          )}
         </div>
 
         <p className="admin-sub" style={{ marginTop: 12 }}>
@@ -633,7 +651,7 @@ export default function MapaDensidad({
               {NOMBRE[k]}
             </span>
           ))}
-          {pidenPrendidas.length > 0 && (
+          {hayProfesionales && pidenPrendidas.length > 0 && (
             <span className="mapa-referencia">
               <span
                 className="mapa-muestra"
@@ -667,7 +685,7 @@ export default function MapaDensidad({
         ) : elMapa}
       </div>
 
-      {pidenPrendidas.length > 0 && (
+      {hayProfesionales && pidenPrendidas.length > 0 && (
         <div className="admin-card">
           <h3>Piden {nombresDe(pidenPrendidas)} y no hay nadie cerca</h3>
           <p className="admin-sub">
