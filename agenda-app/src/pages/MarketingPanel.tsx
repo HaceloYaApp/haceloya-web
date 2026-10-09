@@ -54,6 +54,8 @@ type Datos = {
   porHora: number[];
   sistemas: Record<string, number>;
   sistemaPorCanal: Record<string, Record<string, number>>;
+  grupos: Array<{ titulo: string; canales: string[] }>;
+  cortos: Record<string, string>;
   porHoraSinFranja: number[];
   franja: { desde: number; hasta: number } | null;
   locales: Array<{ local: string; total: number }>;
@@ -180,7 +182,12 @@ export default function MarketingPanel() {
   const canales = Object.entries(datos?.canales || {})
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1]);
-  const mayor = canales.length ? canales[0][1] : 0;
+  // El grupo que más trajo, para que las barras comparen pieza contra pieza.
+  const mayor = Math.max(
+    0,
+    ...(datos?.grupos || []).map((g) =>
+      g.canales.reduce((a, c) => a + (datos?.canales?.[c] || 0), 0)),
+  );
 
   return (
     <>
@@ -363,6 +370,10 @@ export default function MarketingPanel() {
 
           <div className="admin-card">
             <h3>Por pieza</h3>
+            <p className="admin-sub">
+              Agrupadas por pieza, y adentro por color. Lo que se decide mirando esto es
+              cuál reimprimir, y ésa es una decisión por pieza: el color viene después.
+            </p>
             {canales.length === 0 ? (
               <p className="admin-sub">
                 Todavía no hay ningún escaneo. Va a aparecer acá en cuanto alguien apunte
@@ -370,31 +381,48 @@ export default function MarketingPanel() {
               </p>
             ) : (
               <ul className="admin-lista">
-                {canales.map(([canal, n]) => (
-                  <li key={canal} style={{ display: 'block' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                      <span>{datos.nombres?.[canal] || canal}</span>
-                      <span>
-                        <strong>{n}</strong>
-                        <span className="admin-sub"> · {porcentaje(n, datos.total)}</span>
-                      </span>
-                    </div>
-                    {/* La barra se mide contra la pieza que más trajo, no contra
-                        el total: lo que interesa es comparar una con otra. */}
-                    {reparto(datos.sistemaPorCanal?.[canal]) && (
-                      <div className="admin-sub" style={{ marginTop: 2 }}>
-                        {reparto(datos.sistemaPorCanal[canal])}
+                {(datos.grupos || []).map((g) => {
+                  // Sólo los colores con al menos un escaneo: una lista llena de
+                  // ceros esconde lo que sí pasó.
+                  const filas = g.canales
+                    .map((c) => [c, datos.canales?.[c] || 0] as const)
+                    .filter(([, n]) => n > 0);
+                  if (filas.length === 0) return null;
+                  const total = filas.reduce((a, [, n]) => a + n, 0);
+                  return (
+                    <li key={g.titulo} style={{ display: 'block' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                        <strong>{g.titulo}</strong>
+                        <span>
+                          <strong>{total}</strong>
+                          <span className="admin-sub"> · {porcentaje(total, datos.total)}</span>
+                        </span>
                       </div>
-                    )}
-                    <div style={{ height: 6, borderRadius: 3, background: 'rgba(127,127,127,.25)', marginTop: 6 }}>
-                      <div style={{
-                        height: 6, borderRadius: 3, background: 'var(--accent, #F2C94C)',
-                        width: `${mayor ? Math.max(3, (n / mayor) * 100) : 0}%`,
-                      }}
-                      />
-                    </div>
-                  </li>
-                ))}
+                      {/* La barra se mide contra la pieza que más trajo, no contra
+                          el total: lo que interesa es comparar una con otra. */}
+                      <div style={{ height: 6, borderRadius: 3, background: 'rgba(127,127,127,.25)', margin: '6px 0 4px' }}>
+                        <div style={{
+                          height: 6, borderRadius: 3, background: 'var(--accent, #F2C94C)',
+                          width: `${mayor ? Math.max(3, (total / mayor) * 100) : 0}%`,
+                        }}
+                        />
+                      </div>
+                      {filas.map(([c, n]) => (
+                        <div
+                          key={c}
+                          className="admin-sub"
+                          style={{ display: 'flex', justifyContent: 'space-between', gap: 12, paddingLeft: 12 }}
+                        >
+                          <span>
+                            {datos.cortos?.[c] || datos.nombres?.[c] || c}
+                            {reparto(datos.sistemaPorCanal?.[c]) ? ` — ${reparto(datos.sistemaPorCanal[c])}` : ''}
+                          </span>
+                          <span>{n}</span>
+                        </div>
+                      ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
