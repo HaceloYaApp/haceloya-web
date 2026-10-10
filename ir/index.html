@@ -79,7 +79,22 @@
     </div>
   </section>
 
-  <!-- Android -->
+  <!-- Android, con Play publicado. SECCIÓN PROPIA Y NO LA DE iOS: hasta el
+       09/10/2026 la rama de Android reusaba #v-ios, así que mientras el
+       teléfono saltaba a Google Play la pantalla decía "Te llevamos a la App
+       Store" con el logo de Apple. -->
+  <section id="v-play" hidden>
+    <h1>Te llevamos a Google Play</h1>
+    <p class="sub"><span class="spin"></span>Si no arranca solo, tocá el botón.</p>
+    <div class="actions">
+      <a class="btn store" id="play-link" href="https://play.google.com/store/apps/details?id=com.bissi.haceloapp">
+        <img src="/assets/google-play-badge.png" alt="Disponible en Google Play">
+      </a>
+    </div>
+  </section>
+
+  <!-- Android SIN Play publicado. Queda como respaldo: si alguna vez hay que
+       bajar la ficha de Play, se apaga PLAY_LIVE y esto vuelve a aparecer. -->
   <section id="v-android" hidden>
     <h1>En Android falta poquito</h1>
     <p class="sub">Está en la última etapa de prueba de Google Play. Seguinos y te avisamos el día que salga.</p>
@@ -97,13 +112,13 @@
   <!-- Escritorio / desconocido -->
   <section id="v-desktop" hidden>
     <h1>Bajá Hacelo Ya</h1>
-    <p class="sub">Servicios, oficios, changas y cursos cerca tuyo. Ya disponible para iPhone.</p>
+    <p class="sub">Servicios, oficios, changas y cursos cerca tuyo. Para iPhone y para Android.</p>
     <div class="actions">
-      <a class="btn store" href="https://apps.apple.com/ar/app/hacelo-ya/id6811084324">
+      <a class="btn store" id="desktop-apple" href="https://apps.apple.com/ar/app/hacelo-ya/id6811084324">
         <img src="/assets/app-store-badge.svg" alt="Descargar en la App Store">
       </a>
-      <a class="btn primary" href="https://www.instagram.com/haceloyaapp" target="_blank" rel="noopener">
-        Android: avisame por Instagram
+      <a class="btn store" id="desktop-play" href="https://play.google.com/store/apps/details?id=com.bissi.haceloapp">
+        <img src="/assets/google-play-badge.png" alt="Disponible en Google Play">
       </a>
       <a class="btn" href="/">Ver de qué se trata</a>
     </div>
@@ -135,6 +150,6 @@
        viaja en ese rato: ?v=2 es OTRA dirección y el navegador la baja de nuevo.
 
        SUBIR EL NÚMERO CADA VEZ QUE SE TOQUE ir.js. Si no, no se entera nadie. -->
-  <script src="ir.js?v=5" defer></script>
+  <script src="ir.js?v=6" defer></script>
 </body>
 </html>

@@ -119,8 +119,11 @@
   } else if (isAndroid) {
     if (PLAY_LIVE) {
       var d = paraPlay(PLAY_URL);
-      document.getElementById('ios-link').href = d;
-      mostrar('v-ios');
+      // SU PROPIA PANTALLA, no la de iOS (09/10/2026): esta rama mostraba
+      // `v-ios`, así que el teléfono saltaba a Google Play mientras la pantalla
+      // decía "Te llevamos a la App Store" con el logo de Apple.
+      document.getElementById('play-link').href = d;
+      mostrar('v-play');
       setTimeout(function(){ location.replace(d); }, 900);
     } else {
       mostrar('v-android');
@@ -128,6 +131,14 @@
       if (ref) m.href = m.href + '&body=' + encodeURIComponent('(vengo de: ' + ref + ')');
     }
   } else {
+    // DESDE LA COMPU TAMBIÉN SE ATRIBUYE. Las dos tiendas llevan el `ref` como
+    // en las otras ramas: alguien que ve el QR en una historia y lo abre en la
+    // compu para bajarla al rato cuenta igual, y sin esto esa instalación
+    // quedaba sin canal.
+    var apple = document.getElementById('desktop-apple');
+    var play = document.getElementById('desktop-play');
+    if (apple) apple.href = paraApple(APP_STORE);
+    if (play) play.href = paraPlay(PLAY_URL);
     mostrar('v-desktop');
   }
 })();
