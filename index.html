@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hacelo Ya — Encontrá al profesional que necesitás</title>
-<meta name="description" content="Hacelo Ya conecta a personas que necesitan un servicio con profesionales verificados: electricidad, plomería, construcción y más de 50 oficios en Argentina.">
+<meta name="description" content="Hacelo Ya conecta a personas que necesitan un servicio con profesionales verificados: electricidad, plomería, construcción y más de 150 oficios en Argentina.">
 <meta name="theme-color" content="#14140F">
 <link rel="canonical" href="https://haceloya.com/">
 
@@ -647,20 +647,25 @@
     <div class="container">
       <span class="kicker">Ya está</span>
       <h2>Descargá Hacelo Ya</h2>
-      <p>Disponible para iPhone. La versión de Android está en la última etapa de prueba de Google Play.</p>
-      <!-- El badge de Apple SÍ es un enlace: la app está publicada desde el
-           15/09/2026 (id 6811084324). El de Google Play NO puede usarse todavía
-           —las normas de marca de Google prohíben que su badge lleve a un lugar
-           que no sea la ficha de Play—, así que hasta que la app salga a
-           producción va un botón propio que lleva a Instagram, que es donde se
-           avisa. Cuando Play esté vivo: acá vuelve el badge, enlazado a la
-           ficha, y en /ir/index.html se pone PLAY_LIVE = true. -->
+      <p>Disponible para iPhone y para Android.</p>
+      <!-- LAS DOS TIENDAS ESTÁN VIVAS (corregido el 04/11/2026). Apple desde el
+           15/09/2026 (id 6811084324) y Google Play en producción —ficha pública
+           verificada: play.google.com/store/apps/details?id=com.bissi.haceloapp.
+           Hasta hoy esta sección seguía diciendo "Android está en la última
+           etapa de prueba" y el badge de Play estaba reemplazado por un botón
+           que mandaba a Instagram a "avisame cuando salga": o sea que a todo el
+           que entraba desde un Android la portada le decía que todavía no podía
+           bajarla. Era el error más caro de la página.
+
+           Los dos badges van a /ir/, que no es un destino cualquiera: es el
+           router de tiendas, su única función es mandar a cada teléfono a la
+           ficha que le corresponde. Así el click queda contado por canal. -->
       <div class="store-badges">
         <a href="/ir/?ref=web-lanzamiento" class="store-badge-link">
           <img src="assets/app-store-badge.svg" alt="Descargar en la App Store" class="store-badge store-badge-apple">
         </a>
-        <a href="https://www.instagram.com/haceloyaapp" target="_blank" rel="noopener" class="btn-android-aviso">
-          <span aria-hidden="true">🤖</span> Android: avisame cuando salga
+        <a href="/ir/?ref=web-lanzamiento" class="store-badge-link">
+          <img src="assets/google-play-badge.png" alt="Disponible en Google Play" class="store-badge store-badge-android">
         </a>
       </div>
     </div>
@@ -746,12 +751,12 @@
         <span>Hacelo Ya</span>
       </div>
       <nav>
-        <a href="https://haceloyaapp-88e3d.web.app/privacidad.html" class="footer-privacy-link">Política de privacidad</a>
-        <a href="https://haceloyaapp-88e3d.web.app/terminos.html" class="footer-privacy-link">Términos y condiciones</a>
+        <a href="/privacidad/" class="footer-privacy-link">Política de privacidad</a>
+        <a href="/terminos/" class="footer-privacy-link">Términos y condiciones</a>
         <a href="/eliminar-cuenta/" class="footer-privacy-link">Eliminar mi cuenta</a>
         <!-- La Res. 424/2020 pide que el botón de arrepentimiento esté visible
              y accesible. Hallazgo H-T6-04. -->
-        <a href="https://haceloyaapp-88e3d.web.app/terminos.html#arrepentimiento" class="footer-privacy-link">Botón de arrepentimiento</a>
+        <a href="/terminos/#arrepentimiento" class="footer-privacy-link">Botón de arrepentimiento</a>
       </nav>
     </div>
     <div class="footer-bottom">
