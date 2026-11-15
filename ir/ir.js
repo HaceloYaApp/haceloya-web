@@ -107,7 +107,15 @@
   // Se avisa SIEMPRE, en las tres ramas: quien cae en la pantalla de Android
   // sin Play todavía vivo también escaneó el papel, y ese escaneo cuenta igual
   // para saber si la pieza funciona.
-  avisar(ref);
+  //
+  // LA ÚNICA EXCEPCIÓN: `contado=1` (15/11/2026). Lo pone la portada en los
+  // badges de descarga cuando la persona llegó a `haceloya.com/?ref=<canal>`
+  // desde un mensaje de la campaña: ahí la llegada YA se anotó en
+  // `assets/portada.js`, y volver a anotarla acá contaría dos veces a la misma
+  // persona con el mismo ref. El ref se sigue usando para armar los links de
+  // las tiendas (`ct=` y `referrer=`), que es lo que atribuye la instalación;
+  // eso no se duplica porque lo cuenta la tienda, no nosotros.
+  if (params.get('contado') !== '1') avisar(ref);
 
   if (isIOS) {
     var destino = paraApple(APP_STORE);

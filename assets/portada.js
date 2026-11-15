@@ -52,7 +52,74 @@
     if (panel) panel.classList.add('active');
   }
 
+  // DE DÓNDE VINO EL QUE ENTRÓ A LA PORTADA (15/11/2026).
+  //
+  // Los mensajes de la campaña directa llevan DOS links: uno acá
+  // (`haceloya.com/?ref=wpp-web`) y otro al router de tiendas
+  // (`/ir/?ref=wpp-app`). Hasta hoy esta página IGNORABA el `?ref=`, así que
+  // del primero de los dos no quedaba ningún rastro.
+  //
+  // Y los dos badges estaban fijos en `?ref=web-lanzamiento`: alguien que
+  // llegaba desde un mail y después bajaba la app se contaba como "vino de la
+  // web". El origen se perdía justo en el paso que importa.
+  //
+  // El endpoint es el mismo que usa `/ir/ir.js`, así que el dominio ya está en
+  // el `connect-src` de la CSP. Si alguna vez se cambia de región o de
+  // proyecto hay que tocar la política también, o esto deja de contar sin dar
+  // ningún error visible.
+  var AVISAR = 'https://southamerica-east1-haceloyaapp-88e3d.cloudfunctions.net/registrarVisita';
+
+  function refDeLaUrl() {
+    try {
+      var r = new URLSearchParams(location.search).get('ref') || '';
+      // Mismo recorte y misma limpieza que en `/ir/`: 40 caracteres, y sólo
+      // letras, números, guión y guión bajo.
+      return r.slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, '');
+    } catch (e) { return ''; }
+  }
+
+  // Igual que en `/ir/`: tres valores y nada más. El user-agent completo dice
+  // versión de sistema, de navegador y a veces modelo, y eso ya identifica.
+  function sistema() {
+    var ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+    if (/Android/.test(ua)) return 'android';
+    return 'otro';
+  }
+
+  function medirOrigen() {
+    var ref = refDeLaUrl();
+    if (!ref) return;   // visita directa: los badges quedan como estaban
+
+    // 1. Se cuenta la llegada a la portada.
+    //
+    // sendBeacon y no fetch por lo mismo que en `/ir/`: sobrevive a que la
+    // página se vaya. Acá la persona se queda leyendo, así que es menos
+    // crítico, pero el que entra y toca descargar enseguida es justo el caso
+    // en que fetch se cancelaría.
+    try {
+      var u = AVISAR + '?ref=' + encodeURIComponent(ref) + '&so=' + sistema();
+      if (navigator.sendBeacon) { navigator.sendBeacon(u); }
+      else { fetch(u, { method: 'POST', mode: 'no-cors', keepalive: true }); }
+    } catch (e) { /* que falle la estadística no puede romper la página */ }
+
+    // 2. Los badges arrastran el MISMO ref, con `contado=1`.
+    //
+    // `contado=1` le dice a `/ir/` que no lo vuelva a anotar: esta persona ya
+    // quedó registrada en el punto 1, y contarla dos veces convertiría "cuánta
+    // gente entró" en un número inflado que nadie podría interpretar.
+    //
+    // El ref igual viaja a Apple (`ct=`) y a Play (`referrer=`), que es lo que
+    // después dice cuántas INSTALACIONES trajo cada canal. Eso no se duplica:
+    // lo cuenta la tienda, no nosotros.
+    document.querySelectorAll('.store-badge-link').forEach(function (a) {
+      a.href = '/ir/?ref=' + encodeURIComponent(ref) + '&contado=1';
+    });
+  }
+
   function enchufar() {
+    medirOrigen();
+
     document.querySelectorAll('.menu-toggle').forEach(function (b) {
       b.addEventListener('click', toggleMobileMenu);
     });
