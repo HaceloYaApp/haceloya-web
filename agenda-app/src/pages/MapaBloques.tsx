@@ -231,12 +231,26 @@ export default function MapaBloques() {
           cursor: 'grab', touchAction: 'none', marginTop: 10,
         }}
       >
+        {!vista && (
+          <p className="admin-sub" style={{ padding: 16 }}>
+            No pude medir el recuadro del mapa todavía. Si esto no cambia al
+            cambiar de solapa y volver, avisame.
+          </p>
+        )}
         {vista && (
           <svg
             width={vista.ancho}
             height={vista.alto}
             style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
           >
+            {/* EL CENTRO, marcado. Sin calles de fondo no hay ninguna otra
+                referencia de dónde está parado uno. */}
+            <circle
+              cx={(proyectar(centro![0], centro![1], vista.z).x - vista.origen.x)}
+              cy={(proyectar(centro![0], centro![1], vista.z).y - vista.origen.y)}
+              r={4}
+              fill="var(--ink)"
+            />
             {piezas.map(({ b, d, p }) => (
               <path
                 key={b.nombre}
