@@ -60,6 +60,15 @@ type Datos = {
 };
 type Camara = { lat: number; lon: number; z: number };
 
+// LOS COLORES VAN LITERALES, NO COMO var(--ink). Un `var()` dentro de un
+// ATRIBUTO de presentación de SVG (fill="var(--x)") no resuelve en todos los
+// navegadores: el atributo se parsea como valor SVG, no como valor CSS, y el
+// gajo termina sin relleno ni borde. El recuadro queda gris y no hay ningún
+// error en la consola. Son los mismos valores que theme.css.
+const TINTA = '#14140F';
+const AMARILLO = '#FFC800';
+const AMARILLO_HONDO = '#E0AC00';
+
 /** Las esquinas de un bloque, en lat/lon. Un gajo o el círculo del núcleo. */
 function contorno(b: Bloque, cla: number, clo: number) {
   const pts: Array<{ lat: number; lon: number }> = [];
@@ -249,16 +258,16 @@ export default function MapaBloques() {
               cx={(proyectar(centro![0], centro![1], vista.z).x - vista.origen.x)}
               cy={(proyectar(centro![0], centro![1], vista.z).y - vista.origen.y)}
               r={4}
-              fill="var(--ink)"
+              fill={TINTA}
             />
             {piezas.map(({ b, d, p }) => (
               <path
                 key={b.nombre}
                 d={d}
-                fill={p > 0 ? 'var(--yellow)' : 'var(--ink)'}
-                fillOpacity={p > 0 ? 0.25 + p * 0.6 : 0.06}
-                stroke={encima?.nombre === b.nombre ? 'var(--ink)' : 'var(--yellow-deep)'}
-                strokeWidth={encima?.nombre === b.nombre ? 2.5 : 0.8}
+                fill={p > 0 ? AMARILLO : TINTA}
+                fillOpacity={p > 0 ? 0.25 + p * 0.6 : 0.07}
+                stroke={encima?.nombre === b.nombre ? TINTA : AMARILLO_HONDO}
+                strokeWidth={encima?.nombre === b.nombre ? 2.5 : 0.9}
                 style={{ pointerEvents: 'auto', cursor: 'pointer' }}
                 onPointerEnter={() => setEncima(b)}
                 onPointerLeave={() => setEncima((x) => (x?.nombre === b.nombre ? null : x))}
@@ -291,8 +300,12 @@ export default function MapaBloques() {
       </div>
 
       <p className="admin-sub" style={{ marginTop: 6 }}>
-        Arrastrá para moverte, pasá por encima de un gajo para ver qué barrios
-        toca. El norte es arriba y el centro sos vos.
+        {/* Qué está dibujando. Si algo no se ve, este renglón dice si el
+            problema son los datos, la medida del recuadro o el dibujo. */}
+        {datos.bloques.length} bloques · recuadro {caja.ancho}×{caja.alto} ·
+        {' '}{vista ? `zoom ${vista.z}` : 'sin encuadre'} · {piezas.length} dibujados.
+        {' '}Arrastrá para moverte, pasá por encima de un gajo para ver qué
+        barrios toca. El norte es arriba y el centro sos vos.
         {datos.actualizado
           ? ` Datos de ${hace(datos.actualizado)}.`
           : ' Sin fecha de actualización.'}
