@@ -9,6 +9,7 @@ import { mensajeDeError } from '../utils/erroresDeFirebase';
 import MapaDensidad from './MapaDensidad';
 import QueFalta from './QueFalta';
 import TextosCampana from './TextosCampana';
+import Difusion from './Difusion';
 import './LedgerPage.css';
 
 // DE DÓNDE VIENE LA GENTE.
@@ -144,6 +145,9 @@ const SOLAPAS = [
   { key: 'registro' as const, label: 'Registro' },
   { key: 'mapa' as const, label: 'Dónde pasa algo' },
   { key: 'falta' as const, label: 'Qué falta' },
+  // QUÉ MENSAJE GANA EN CADA PLATAFORMA. Va antes que "Textos" porque sí se
+  // consulta para decidir: cuál de los textos conviene seguir mandando.
+  { key: 'difusion' as const, label: 'Difusión' },
   // Los textos de la campaña directa. Va último porque no se consulta todos
   // los días: se lee cuando hay que copiar un mensaje, no para decidir nada.
   { key: 'textos' as const, label: 'Textos' },
@@ -802,6 +806,7 @@ export default function MarketingPanel() {
           lo de ahora y no lo que había cuando se salió. */}
       {solapa === 'mapa' && <MapaDensidad />}
       {solapa === 'falta' && <QueFalta />}
+      {solapa === 'difusion' && <Difusion />}
       {solapa === 'textos' && <TextosCampana />}
     </>
   );
