@@ -3,8 +3,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import {
-  MOSAICO, ZOOM_MIN, ZOOM_MAX, proyectar, desproyectar, zoomQueEntra,
-  puntoDesde, MOSAICO_URL,
+  ZOOM_MIN, ZOOM_MAX, proyectar, desproyectar, zoomQueEntra, puntoDesde,
 } from '../utils/mercator';
 
 // EL MAPA DE LA CAMPAÑA: cuánto se mandó en cada pedazo de ciudad.
@@ -27,12 +26,27 @@ import {
 // `scripts/subir-bloques.mjs`. Por eso arriba dice de cuándo es: un mapa que
 // se presenta como actual y es de hace tres días miente.
 //
+// NO HAY MAPA DE CALLES DE FONDO, Y NO ES UNA OMISIÓN. Los servidores de
+// mosaicos de OpenStreetMap devuelven 418 "Access blocked" en cuanto la
+// petición llega con un Referer de un sitio web: su política de uso no permite
+// que una aplicación los use, y bajarle el Referer al navegador para esquivar
+// ese bloqueo sería evadir justo lo que ellos ponen a propósito.
+//
+// Lo que ocupa su lugar es mejor para lo que hace falta acá: cada bloque dice
+// QUÉ BARRIOS toca, sacado de la zona que ya trae cada contacto. Para decidir
+// a dónde ir a pegar afiches, "Anillo 1 · NNO = General San Martín" resuelve
+// más que una calle dibujada.
+//
+// Los gajos siguen proyectados de verdad —en Mercator, desde metros y rumbos—
+// así que la forma, el tamaño relativo y la orientación son los reales.
+//
 // Es la misma pantalla que la del celular (src/screens/panel/MapaBloques.tsx).
 
 type Bloque = {
   nombre: string; anillo: number; gajo: number; gajos: number;
   r0: number; r1: number; desde: number; hasta: number;
   total: number; enviados: number;
+  barrios?: Array<{ zona: string; n: number }>;
 };
 type Datos = {
   hay: boolean;
@@ -131,18 +145,7 @@ export default function MapaBloques() {
     const { ancho, alto } = caja;
     const p = proyectar(camara.lat, camara.lon, camara.z);
     const origen = { x: p.x - ancho / 2, y: p.y - alto / 2 };
-    const lado = 2 ** camara.z;
-    const mosaicos: Array<{ x: number; y: number; left: number; top: number }> = [];
-    for (let tx = Math.floor(origen.x / MOSAICO); tx <= Math.floor((origen.x + ancho) / MOSAICO); tx++) {
-      for (let ty = Math.floor(origen.y / MOSAICO); ty <= Math.floor((origen.y + alto) / MOSAICO); ty++) {
-        if (ty < 0 || ty >= lado) continue;
-        mosaicos.push({
-          x: ((tx % lado) + lado) % lado, y: ty,
-          left: tx * MOSAICO - origen.x, top: ty * MOSAICO - origen.y,
-        });
-      }
-    }
-    return { origen, mosaicos, ancho, alto, z: camara.z };
+    return { origen, ancho, alto, z: camara.z };
   }, [camara, centro, caja]);
 
   const piezas = useMemo(() => {
@@ -228,18 +231,6 @@ export default function MapaBloques() {
           cursor: 'grab', touchAction: 'none', marginTop: 10,
         }}
       >
-        {vista?.mosaicos.map((m) => (
-          <img
-            key={`${vista.z}-${m.x}-${m.y}`}
-            src={MOSAICO_URL(vista.z, m.x, m.y)}
-            alt=""
-            draggable={false}
-            style={{
-              position: 'absolute', left: m.left, top: m.top,
-              width: MOSAICO, height: MOSAICO, userSelect: 'none',
-            }}
-          />
-        ))}
         {vista && (
           <svg
             width={vista.ancho}
@@ -276,14 +267,18 @@ export default function MapaBloques() {
               {encima.enviados} de {encima.total} · de {(encima.r0 / 1000).toFixed(1)} a
               {' '}{(encima.r1 / 1000).toFixed(1)} km
             </div>
+            {!!encima.barrios?.length && (
+              <div className="admin-sub">
+                {encima.barrios.map((x) => x.zona).join(' · ')}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       <p className="admin-sub" style={{ marginTop: 6 }}>
-        Mapa de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
-          OpenStreetMap
-        </a>. Arrastrá para moverte.
+        Arrastrá para moverte, pasá por encima de un gajo para ver qué barrios
+        toca. El norte es arriba y el centro sos vos.
         {datos.actualizado
           ? ` Datos de ${hace(datos.actualizado)}.`
           : ' Sin fecha de actualización.'}
@@ -307,6 +302,9 @@ export default function MapaBloques() {
                 {' '}de {b.total} · anillo {b.anillo} · de {(b.r0 / 1000).toFixed(1)} a
                 {' '}{(b.r1 / 1000).toFixed(1)} km
               </span>
+              {!!b.barrios?.length && (
+                <div className="admin-sub">{b.barrios.map((x) => x.zona).join(' · ')}</div>
+              )}
             </li>
           ))}
         </ul>
