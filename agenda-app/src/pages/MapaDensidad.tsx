@@ -2,6 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
+// La proyección y los mosaicos viven en utils/mercator.ts: los comparte con el
+// mapa de bloques de la campaña.
+import {
+  MOSAICO, ZOOM_MIN, ZOOM_MAX, TIERRA_M, proyectar, desproyectar, zoomQueEntra,
+  MOSAICO_URL,
+} from '../utils/mercator';
 
 // DÓNDE ESTÁ PASANDO ALGO, POR CAPAS.
 //
@@ -127,57 +133,6 @@ export type PropsDelMapa = {
   /** Cuáles arrancan prendidas. */
   capasIniciales?: Capa[];
 };
-
-const MOSAICO = 256;   // px de lado de un mosaico, fijo por el estándar
-const ZOOM_MIN = 4;
-const ZOOM_MAX = 18;
-const TIERRA_M = 40075016.686;   // la vuelta al mundo en el ecuador
-
-/** Lat/lon a píxeles del mundo entero en ese zoom (Mercator esférica). */
-function proyectar(lat: number, lon: number, z: number) {
-  const n = MOSAICO * 2 ** z;
-  const s = Math.sin((lat * Math.PI) / 180);
-  return {
-    x: ((lon + 180) / 360) * n,
-    y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n,
-  };
-}
-
-/** Y la vuelta: píxeles del mundo a lat/lon. Es lo que hace posible arrastrar. */
-function desproyectar(x: number, y: number, z: number) {
-  const n = MOSAICO * 2 ** z;
-  const lon = (x / n) * 360 - 180;
-  const lat = (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n))) * 180) / Math.PI;
-  return { lat, lon };
-}
-
-/** El zoom más cerca posible que todavía entra todo en el cuadro. */
-function zoomQueEntra(
-  minLat: number, maxLat: number, minLon: number, maxLon: number, ancho: number, alto: number,
-) {
-  for (let z = ZOOM_MAX; z > ZOOM_MIN; z--) {
-    const a = proyectar(maxLat, minLon, z);
-    const b = proyectar(minLat, maxLon, z);
-    // 0.8 deja aire en los bordes: una celda pegada al borde queda cortada al
-    // medio y no se entiende si sigue para afuera.
-    if (b.x - a.x <= ancho * 0.8 && b.y - a.y <= alto * 0.8) return z;
-  }
-  return ZOOM_MIN;
-}
-
-// Los mosaicos de OpenStreetMap, que no piden clave de API.
-//
-// CARTO ERA LA PRIMERA OPCIÓN Y NO SIRVIÓ: desde su CDN los mosaicos siguen
-// devolviendo 200 y una imagen válida, pero con "API KEY REQUIRED" escrito
-// encima en diagonal. O sea que probarlo con curl daba bien y sólo se vio
-// abriéndolo en un navegador. Mismo aire que la trampa de la CSP.
-//
-// La política de uso de OSM permite esto —un panel que miran una o dos
-// personas— y pide atribución, que está abajo del mapa. Lo que prohíbe es el
-// uso masivo: si algún día esto lo abre mucha gente, hay que pasar a un
-// proveedor con plan.
-const MOSAICO_URL = (z: number, x: number, y: number) =>
-  `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 
 type Camara = { lat: number; lon: number; z: number };
 

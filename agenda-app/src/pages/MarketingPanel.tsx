@@ -10,6 +10,7 @@ import MapaDensidad from './MapaDensidad';
 import QueFalta from './QueFalta';
 import TextosCampana from './TextosCampana';
 import Difusion from './Difusion';
+import MapaBloques from './MapaBloques';
 import './LedgerPage.css';
 
 // DE DÓNDE VIENE LA GENTE.
@@ -148,6 +149,11 @@ const SOLAPAS = [
   // QUÉ MENSAJE GANA EN CADA PLATAFORMA. Va antes que "Textos" porque sí se
   // consulta para decidir: cuál de los textos conviene seguir mandando.
   { key: 'difusion' as const, label: 'Difusión' },
+  // POR DÓNDE VA LA CAMPAÑA, en pedazos de ciudad del tamaño de Devoto. Va
+  // pegada a Difusión porque las dos responden lo mismo desde dos lados: una
+  // qué mensaje funciona, la otra en qué barrio ya se mandó y dónde tocan los
+  // afiches.
+  { key: 'bloques' as const, label: 'Mapa de la campaña' },
   // Los textos de la campaña directa. Va último porque no se consulta todos
   // los días: se lee cuando hay que copiar un mensaje, no para decidir nada.
   { key: 'textos' as const, label: 'Textos' },
@@ -807,6 +813,7 @@ export default function MarketingPanel() {
       {solapa === 'mapa' && <MapaDensidad />}
       {solapa === 'falta' && <QueFalta />}
       {solapa === 'difusion' && <Difusion />}
+      {solapa === 'bloques' && <MapaBloques />}
       {solapa === 'textos' && <TextosCampana />}
     </>
   );
