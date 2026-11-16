@@ -3,7 +3,8 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { mensajeDeError } from '../utils/erroresDeFirebase';
 import {
-  ZOOM_MIN, ZOOM_MAX, proyectar, desproyectar, zoomQueEntra, puntoDesde,
+  MOSAICO, ZOOM_MIN, ZOOM_MAX, proyectar, desproyectar, zoomQueEntra,
+  puntoDesde, MOSAICO_URL,
 } from '../utils/mercator';
 
 // EL MAPA DE LA CAMPAÑA: cuánto se mandó en cada pedazo de ciudad.
@@ -26,19 +27,23 @@ import {
 // `scripts/subir-bloques.mjs`. Por eso arriba dice de cuándo es: un mapa que
 // se presenta como actual y es de hace tres días miente.
 //
-// NO HAY MAPA DE CALLES DE FONDO, Y NO ES UNA OMISIÓN. Los servidores de
-// mosaicos de OpenStreetMap devuelven 418 "Access blocked" en cuanto la
-// petición llega con un Referer de un sitio web: su política de uso no permite
-// que una aplicación los use, y bajarle el Referer al navegador para esquivar
-// ese bloqueo sería evadir justo lo que ellos ponen a propósito.
+// EL FONDO SON MOSAICOS DE OPENSTREETMAP, los mismos que "Dónde pasa algo".
 //
-// Lo que ocupa su lugar es mejor para lo que hace falta acá: cada bloque dice
-// QUÉ BARRIOS toca, sacado de la zona que ya trae cada contacto. Para decidir
-// a dónde ir a pegar afiches, "Anillo 1 · NNO = General San Martín" resuelve
-// más que una calle dibujada.
+// SE SACARON UN RATO POR UN DIAGNÓSTICO MAL HECHO (16/11). Al ver un cartel de
+// "Access blocked" probé pedir un mosaico con un Referer inventado, me lo
+// bloquearon, y concluí que OSM bloqueaba el sitio. No era evidencia sobre
+// este dominio: "Dónde pasa algo" venía andando con los mismos mosaicos. El
+// bloqueo que apareció fue casi seguro un corte temporal por IP, de pedir
+// muchos mosaicos seguidos probando. La lección es vieja: una prueba con datos
+// que no son los de producción no prueba nada sobre producción.
 //
-// Los gajos siguen proyectados de verdad —en Mercator, desde metros y rumbos—
-// así que la forma, el tamaño relativo y la orientación son los reales.
+// Lo que SÍ quedó de esa vuelta y se gana: cada bloque dice además QUÉ BARRIOS
+// toca, sacado de la zona que ya trae cada contacto. Para decidir a dónde ir a
+// pegar afiches, "Anillo 1 · NNO = General San Martín" dice algo que el mapa
+// de calles no dice.
+//
+// Los gajos van proyectados de verdad —en Mercator, desde metros y rumbos— así
+// que caen sobre la calle que les toca.
 //
 // Es la misma pantalla que la del celular (src/screens/panel/MapaBloques.tsx).
 
@@ -154,7 +159,18 @@ export default function MapaBloques() {
     const { ancho, alto } = caja;
     const p = proyectar(camara.lat, camara.lon, camara.z);
     const origen = { x: p.x - ancho / 2, y: p.y - alto / 2 };
-    return { origen, ancho, alto, z: camara.z };
+    const lado = 2 ** camara.z;
+    const mosaicos: Array<{ x: number; y: number; left: number; top: number }> = [];
+    for (let tx = Math.floor(origen.x / MOSAICO); tx <= Math.floor((origen.x + ancho) / MOSAICO); tx++) {
+      for (let ty = Math.floor(origen.y / MOSAICO); ty <= Math.floor((origen.y + alto) / MOSAICO); ty++) {
+        if (ty < 0 || ty >= lado) continue;
+        mosaicos.push({
+          x: ((tx % lado) + lado) % lado, y: ty,
+          left: tx * MOSAICO - origen.x, top: ty * MOSAICO - origen.y,
+        });
+      }
+    }
+    return { origen, mosaicos, ancho, alto, z: camara.z };
   }, [camara, centro, caja]);
 
   const piezas = useMemo(() => {
@@ -240,6 +256,18 @@ export default function MapaBloques() {
           cursor: 'grab', touchAction: 'none', marginTop: 10,
         }}
       >
+        {vista?.mosaicos.map((m) => (
+          <img
+            key={`${vista.z}-${m.x}-${m.y}`}
+            src={MOSAICO_URL(vista.z, m.x, m.y)}
+            alt=""
+            draggable={false}
+            style={{
+              position: 'absolute', left: m.left, top: m.top,
+              width: MOSAICO, height: MOSAICO, userSelect: 'none',
+            }}
+          />
+        ))}
         {!vista && (
           <p className="admin-sub" style={{ padding: 16 }}>
             No pude medir el recuadro del mapa todavía. Si esto no cambia al
@@ -304,8 +332,11 @@ export default function MapaBloques() {
             problema son los datos, la medida del recuadro o el dibujo. */}
         {datos.bloques.length} bloques · recuadro {caja.ancho}×{caja.alto} ·
         {' '}{vista ? `zoom ${vista.z}` : 'sin encuadre'} · {piezas.length} dibujados.
-        {' '}Arrastrá para moverte, pasá por encima de un gajo para ver qué
-        barrios toca. El norte es arriba y el centro sos vos.
+        {' '}Mapa de{' '}
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+          OpenStreetMap
+        </a>. Arrastrá para moverte, pasá por encima de un gajo para ver qué
+        barrios toca. El centro sos vos.
         {datos.actualizado
           ? ` Datos de ${hace(datos.actualizado)}.`
           : ' Sin fecha de actualización.'}
