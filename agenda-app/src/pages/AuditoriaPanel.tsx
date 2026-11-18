@@ -36,9 +36,9 @@ const ACCION_LEGIBLE: Record<string, string> = {
   // Desde el 09/09/2026 una reseña se tapa, no se borra: es reversible,
   // auditable y explicable. La acción vieja sigue acá porque el registro
   // guarda lo que pasó, no lo que hoy se puede hacer.
-  borrar_resena: 'Borró una reseña',
-  ocultar_resena: 'Tapó una reseña',
-  mostrar_resena: 'Volvió a mostrar una reseña',
+  borrar_resena: 'Borró una opinión',
+  ocultar_resena: 'Tapó una opinión',
+  mostrar_resena: 'Volvió a mostrar una opinión',
 };
 
 const nombreDe = (uid: string, nombres: Record<string, string>) => {

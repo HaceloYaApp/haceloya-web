@@ -30,6 +30,8 @@ export const SECCIONES_DEL_CATALOGO: Record<string, string[]> = {
     "Educación",
     "Costura y calzado",
     "Changas y mandados",
+    "Inmobiliaria y alquileres",
+    "Industria y servicios industriales",
     "Otros",
   ],
   actividad: [
