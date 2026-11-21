@@ -6,6 +6,7 @@ import ModeracionPage from './ModeracionPage';
 import AdminPage from './AdminPage';
 import MarketingPanel from './MarketingPanel';
 import SaldoPanel from './SaldoPanel';
+import CuponesPanel from './CuponesPanel';
 import type { PermisosDeAdmin } from '../utils/permisosDeAdmin';
 import './LedgerPage.css';
 import './AdminPage.css';
@@ -51,7 +52,7 @@ const PESTANAS: Array<{ key: Pestana; label: string; bajada: string; puede: (p: 
   {
     key: 'saldo',
     label: 'Saldo a favor',
-    bajada: 'Buscar una cuenta y darle (o sacarle) saldo a favor.',
+    bajada: 'Darle (o sacarle) saldo a favor a una cuenta, y los cupones de descuento.',
     // Su propio permiso, que NO viene con el Resumen: ver el registro es
     // mirar, esto mueve plata. El backend exige lo mismo (exigirSaldo).
     puede: (p) => p.saldo,
@@ -123,7 +124,14 @@ export default function AdministracionPage(
           desde otro lado tiene que desaparecer de la cola. */}
       {pestana === 'moderacion' && <ModeracionPage permisos={permisos} />}
       {pestana === 'resumen' && <LedgerPage permisos={permisos} />}
+      {/* LAS DOS COSAS BAJO LA MISMA PESTAÑA, igual que en el celular: allá
+          "Saldo a favor" y "Cupones" son dos píldoras del MISMO grupo
+          (ver src/utils/gruposDelPanel.ts en la app). Abrir una sexta
+          pestaña acá desarmaría esa correspondencia, que es justo lo que la
+          regla de "la web igual que el panel del cel" pide mantener.
+          Las dos piden el permiso `saldo`: las dos regalan plata. */}
       {pestana === 'saldo' && <SaldoPanel />}
+      {pestana === 'saldo' && <CuponesPanel />}
       {pestana === 'marketing' && <MarketingPanel />}
       {pestana === 'administradores' && <AdminPage />}
     </div>
