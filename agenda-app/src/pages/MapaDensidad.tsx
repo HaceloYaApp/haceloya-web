@@ -38,10 +38,29 @@ type Capa =
   | 'ventas' | 'cursos'
   | 'disponibles' | 'aprendices' | 'particulares';
 
-type Celda = { lat: number; lon: number; n: Partial<Record<Capa, number>> };
+type Celda = {
+  lat: number; lon: number;
+  n: Partial<Record<Capa, number>>;
+  /**
+   * Qué rubro se pide acá y quién lo hace, con la clave compuesta del catálogo
+   * (`oficio:plomeria`). Los manda el backend podados a 6. Pueden no venir: el
+   * panel abierto contra una versión vieja del backend no los trae.
+   */
+  piden?: Record<string, number>;
+  hacen?: Record<string, number>;
+  /** Las publicaciones más nuevas del cuadro: qué se publicó y cuándo. */
+  publicaciones?: { capa: Capa; titulo: string; ms: number }[];
+};
 export type Datos = {
   celdas: Celda[];
   grillaMetros: number;
+  /**
+   * El nombre que se lee de cada rubro, por clave compuesta. Lo manda el
+   * backend porque acá NO está el catálogo: el panel web sólo tiene los nombres
+   * de las secciones (utils/seccionesDelCatalogo.ts), así que sin esto el
+   * cuadro mostraría `oficio:costruccion_en_seco` tal cual.
+   */
+  nombresDeRubros?: Record<string, string>;
   /** La ventana con la que se armó. No la usa el dibujo: la muestra el selector. */
   dias?: number;
   truncado: boolean;
@@ -91,6 +110,22 @@ const COLOR: Record<Capa, string> = {
 
 const ROSA = '#E5007E';   // el anillo de "acá piden y no hay nadie"
 
+/**
+ * Cuánto hace que pasó algo, en palabras. Lo que se quiere saber de una
+ * publicación no es la fecha exacta: es si es de hoy o de hace tres meses.
+ * Misma función que en la app (src/screens/panel/MapaDensidad.tsx).
+ */
+function haceCuanto(ms?: number | null): string | null {
+  if (typeof ms !== 'number' || !Number.isFinite(ms) || ms <= 0) return null;
+  const min = Math.round((Date.now() - ms) / 60000);
+  if (min < 1) return 'recién';
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h} h`;
+  const d = Math.floor(h / 24);
+  return `hace ${d} día${d === 1 ? '' : 's'}`;
+}
+
 // La oferta laboral está en `piden` aunque se llame "oferta": quien publica ahí
 // está buscando a alguien que trabaje, o sea que le falta una persona. Lo mismo
 // que un pedido, con otro nombre.
@@ -118,11 +153,11 @@ export type PropsDelMapa = {
   /** Las celdas ya cargadas. Sin esto, el mapa las pide por su cuenta. */
   datos?: Datos | null;
   /**
-   * Qué hacer al tocar una celda. Sin esto se abre en Google Maps, que es lo
-   * único que se puede hacer con una celda del mapa de densidad. "Qué falta"
-   * pasa una función: ahí tocar una celda tiene que contar qué se está pidiendo
-   * en ese cuadro y cuánta gente hay para hacerlo, que es la pregunta de esa
-   * pantalla.
+   * Qué hacer al tocar una celda. Sin esto se abre la ficha del cuadro —qué se
+   * publicó ahí, qué se pide y quién hay— que es la pregunta del mapa de
+   * densidad. "Qué falta" pasa una función: ahí tocar una celda tiene que
+   * contar qué se está pidiendo en ese cuadro y cuánta gente hay para hacerlo a
+   * 1 y 2 km, que es la pregunta de esa pantalla.
    */
   alTocarCelda?: (celda: { lat: number; lon: number }) => void;
   cargando?: boolean;
@@ -168,6 +203,10 @@ export default function MapaDensidad({
   const [grande, setGrande] = useState(false);
   const [caja, setCaja] = useState({ ancho: 420, alto: 420 });
   const [fondoBloqueado, setFondoBloqueado] = useState(false);
+  // El cuadro que se tocó, con su ficha. Reemplaza al salto a Google Maps.
+  const [cuadro, setCuadro] = useState<Celda | null>(null);
+  const [direccion, setDireccion] = useState<string | null>(null);
+  const [buscandoDireccion, setBuscandoDireccion] = useState(false);
   const [texto, setTexto] = useState('');
   const [lugares, setLugares] = useState<Lugar[] | null>(null);
   const [buscando, setBuscando] = useState(false);
@@ -200,14 +239,37 @@ export default function MapaDensidad({
     return () => ro.disconnect();
   }, [grande, datos]);
 
-  // Escape sale de pantalla completa: es lo que hace todo lo demás que se abre
-  // encima de la página.
+  // Escape cierra lo de arriba: primero la ficha del cuadro, y si no hay ficha
+  // abierta, la pantalla completa. Al revés, cerrar el mapa dejaría la ficha
+  // flotando sobre la página.
   useEffect(() => {
-    if (!grande) return;
-    const salir = (e: KeyboardEvent) => { if (e.key === 'Escape') setGrande(false); };
+    if (!grande && !cuadro) return;
+    const salir = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (cuadro) setCuadro(null);
+      else setGrande(false);
+    };
     window.addEventListener('keydown', salir);
     return () => window.removeEventListener('keydown', salir);
-  }, [grande]);
+  }, [grande, cuadro]);
+
+  // LA DIRECCIÓN SE BUSCA AL ABRIR EL CUADRO, no con el mapa: son cientos de
+  // celdas y haría cientos de llamadas al geocodificador para leer una.
+  //
+  // Es la esquina del centro del cuadro: las coordenadas ya vienen redondeadas
+  // a la grilla de 400 m, así que nunca es la puerta de nadie.
+  useEffect(() => {
+    if (!cuadro) { setDireccion(null); return; }
+    let vivo = true;
+    setDireccion(null);
+    setBuscandoDireccion(true);
+    httpsCallable(functions, 'direccionAproximada')({ lat: cuadro.lat, lon: cuadro.lon })
+      .then((r) => { if (vivo) setDireccion(((r.data as any)?.direccion as string) || null); })
+      // Sin dirección la ficha sigue sirviendo: muestra las coordenadas.
+      .catch(() => { if (vivo) setDireccion(null); })
+      .finally(() => { if (vivo) setBuscandoDireccion(false); });
+    return () => { vivo = false; };
+  }, [cuadro]);
 
   const cuenta = useCallback(
     (c: Celda, capas: Capa[]) => capas.reduce((s, k) => s + (c.n[k] || 0), 0),
@@ -345,7 +407,6 @@ export default function MapaDensidad({
     ? datos.celdas.filter(esHueco).sort((a, b) => cuenta(b, pidenPrendidas) - cuenta(a, pidenPrendidas))
     : [];
   const zonas = vista ? [...vista.cs].sort((a, b) => cuenta(b, prendidas) - cuenta(a, prendidas)) : [];
-  const mapa = (c: Celda) => `https://www.google.com/maps?q=${c.lat},${c.lon}`;
   const detalle = (c: Celda) => todas
     .filter((k) => prendidas.includes(k) && (c.n[k] || 0) > 0)
     .map((k) => `${c.n[k]} ${NOMBRE[k].toLowerCase()}`)
@@ -368,6 +429,111 @@ export default function MapaDensidad({
       <span className="mapa-punto" style={{ background: COLOR[c] }} aria-hidden="true" />
       {NOMBRE[c]} <b>{datos.totales[c] ?? 0}</b>
     </button>
+  );
+
+  // DE LA CLAVE COMPUESTA AL NOMBRE QUE SE LEE. El backend manda
+  // `oficio:plomeria` porque es la clave con la que se guarda, y manda aparte
+  // el nombre de cada una. Si falta (backend viejo, o un rubro dado de alta
+  // desde el panel que todavía no está en el catálogo compilado), se muestra la
+  // clave sin el prefijo y con los guiones bajos cambiados por espacios: es
+  // feo, pero legible, y no un hueco.
+  const nombreDelRubro = (k: string) => {
+    const v = datos.nombresDeRubros?.[k];
+    if (v) return v;
+    const corte = String(k || '').indexOf(':');
+    const pelada = corte >= 0 ? String(k).slice(corte + 1) : String(k || '');
+    return pelada.replace(/_/g, ' ') || 'Sin rubro';
+  };
+
+  // LA FICHA DEL CUADRO: lo que reemplaza al salto a Google Maps. Qué se
+  // publicó acá y cuánto hace, qué se pide, quién hay para hacerlo y dónde
+  // queda. Igual que en la app.
+  const fichaDelCuadro = cuadro && (
+    <div className="cuadro-detalle" role="dialog" aria-label="Qué pasa en este cuadro">
+      <div className="cuadro-detalle-cabeza">
+        <h3>Qué pasa en este cuadro</h3>
+        <button type="button" className="ledger-chip" onClick={() => setCuadro(null)}>
+          Cerrar ✕
+        </button>
+      </div>
+      <p className="admin-sub">
+        Un cuadro de {datos.grillaMetros} m.{' '}
+        {direccion || (buscandoDireccion
+          ? 'Buscando la dirección…'
+          : `${cuadro.lat.toFixed(4)}, ${cuadro.lon.toFixed(4)}`)}
+      </p>
+
+      <div className="mapa-familia-titulo">Qué se publicó acá</div>
+      {(cuadro.publicaciones || []).length === 0 ? (
+        <p className="admin-sub">
+          Ninguna publicación en esta ventana de tiempo.
+        </p>
+      ) : (
+        <ul className="admin-lista">
+          {(cuadro.publicaciones || []).map((p, i) => (
+            <li key={`pub${i}`} style={{ display: 'block' }}>
+              <strong>{p.titulo}</strong>
+              <div className="admin-sub">
+                {NOMBRE[p.capa] || p.capa}
+                {haceCuanto(p.ms) ? ` · ${haceCuanto(p.ms)}` : ''}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {(cuadro.publicaciones || []).length >= 5 && (
+        <p className="admin-sub">Las 5 más nuevas. El total del cuadro está abajo.</p>
+      )}
+
+      <div className="mapa-familia-titulo">Qué se pide acá</div>
+      {Object.keys(cuadro.piden || {}).length === 0 ? (
+        <p className="admin-sub">Nada pedido en esta ventana de tiempo.</p>
+      ) : (
+        <ul className="admin-lista">
+          {Object.entries(cuadro.piden || {})
+            .sort((a, b) => b[1] - a[1])
+            .map(([k, n]) => {
+              const hay = (cuadro.hacen || {})[k] || 0;
+              return (
+                <li key={`p${k}`} style={{ display: 'block' }}>
+                  <strong>{nombreDelRubro(k)}</strong>
+                  <div className="admin-sub">
+                    {n} {n === 1 ? 'busca' : 'buscan'} ·{' '}
+                    <span style={hay === 0 ? { color: ROSA, fontWeight: 800 } : undefined}>
+                      {hay} hay
+                    </span>
+                    {hay === 0 && ' — nadie anotado acá para hacerlo: esto es lo que falta captar.'}
+                  </div>
+                </li>
+              );
+            })}
+        </ul>
+      )}
+
+      <div className="mapa-familia-titulo">Quién hay acá</div>
+      {Object.keys(cuadro.hacen || {}).length === 0 ? (
+        <p className="admin-sub">Ningún profesional con rubro declarado en este cuadro.</p>
+      ) : (
+        <ul className="admin-lista">
+          {Object.entries(cuadro.hacen || {})
+            .sort((a, b) => b[1] - a[1])
+            .map(([k, n]) => (
+              <li key={`h${k}`}>
+                <strong>{nombreDelRubro(k)}</strong>
+                <span className="admin-sub">{n} {n === 1 ? 'persona' : 'personas'}</span>
+              </li>
+            ))}
+        </ul>
+      )}
+
+      <div className="mapa-familia-titulo">El total del cuadro</div>
+      <p className="admin-sub">
+        {todas
+          .filter((k) => (cuadro.n[k] || 0) > 0)
+          .map((k) => `${cuadro.n[k]} ${NOMBRE[k].toLowerCase()}`)
+          .join(' · ') || 'Sin nada contado.'}
+      </p>
+    </div>
   );
 
   const elMapa = (
@@ -472,19 +638,31 @@ export default function MapaDensidad({
           const hueco = esHueco(c);
           const fuerza = Math.min(1, cuenta(c, prendidas) / vista.maxAct);
           return (
-            <a
+            // TOCAR UN CUADRO NUNCA ABRE GOOGLE MAPS (23/11/2026).
+            //
+            // Esto era un <a> a maps.google.com con las coordenadas. Maps
+            // contesta "dónde", que es lo único que el mapa YA está mostrando,
+            // y encima saca a la persona del panel. Lo que no se podía ver era
+            // QUÉ pasa en el cuadro. En la app se arregló el 17/11; acá quedó
+            // igual hasta que lo volvió a decir: "aprieto los cuadros en el
+            // mapa y me abre el maps... eso ya lo había dicho y sigue igual".
+            <button
+              type="button"
               key={`${c.lat},${c.lon}`}
-              href={alTocarCelda ? undefined : mapa(c)}
-              target={alTocarCelda ? undefined : '_blank'}
-              rel={alTocarCelda ? undefined : 'noreferrer'}
               title={detalle(c)}
+              aria-label={`Ver qué pasa en ${c.lat.toFixed(4)}, ${c.lon.toFixed(4)}`}
               draggable={false}
-              onClick={(e) => {
+              onClick={() => {
                 // Arrastrar el mapa no es tocar una celda.
-                if (lienzo.current?.dataset.arrastrado) { e.preventDefault(); return; }
-                if (alTocarCelda) { e.preventDefault(); alTocarCelda({ lat: c.lat, lon: c.lon }); }
+                if (lienzo.current?.dataset.arrastrado) return;
+                if (alTocarCelda) alTocarCelda({ lat: c.lat, lon: c.lon });
+                else setCuadro(c);
               }}
               style={{
+                appearance: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
                 position: 'absolute',
                 left: left - vista.lado / 2, top: top - vista.lado / 2,
                 width: vista.lado, height: vista.lado, borderRadius: 2,
@@ -501,11 +679,13 @@ export default function MapaDensidad({
       </div>
 
       <p className="admin-sub" style={{ marginTop: 8 }}>
-        Arrastrá para moverte, rueda del mouse para el zoom. Tocá una celda para abrir esa
-        esquina en Google Maps. Mapa ©{' '}
+        Arrastrá para moverte, rueda del mouse para el zoom. Tocá una celda para ver qué pasa
+        en ese cuadro: qué se publicó y cuánto hace, qué se pide y quién hay. Mapa ©{' '}
         <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>{' '}
         y sus colaboradores.
       </p>
+
+      {fichaDelCuadro}
 
       {fondoBloqueado && (
         <p className="admin-error-inline" style={{ marginTop: 8 }}>
