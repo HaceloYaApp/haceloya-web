@@ -187,6 +187,13 @@ export default function MapaDensidad({
   const datos = propio ? datosPropios : datosDeAfuera;
   const cargando = propio ? cargandoPropio : !!cargandoDeAfuera;
   const [dias, setDias] = useState(90);
+  // LO QUE SIGUE LISTADO, O TODO LO PUBLICADO (23/11/2026, pedido suyo).
+  //
+  // Por defecto el mapa muestra lo que alguien ve si abre la app ahora: un
+  // pedido que se pausó solo a las 48 h pintaba el cuadro igual que uno de
+  // esta mañana, y para decidir dónde ir eso no es demanda, es historia.
+  // Nada se borra: el histórico es un clic, y la ventana de días lo recorta.
+  const [historico, setHistorico] = useState(false);
   const [prendidas, setPrendidas] = useState<Capa[]>(capasIniciales);
   // Las familias de chips, sin lo que esta pantalla no muestra. Se filtran y no
   // se reciben por props: el reparto piden / ofrecen / gente es del dato, no de
@@ -217,13 +224,13 @@ export default function MapaDensidad({
     if (!propio) return;
     setCargando(true); setError(null);
     try {
-      const r = await httpsCallable(functions, 'verMapaDeDensidad')({ dias });
+      const r = await httpsCallable(functions, 'verMapaDeDensidad')({ dias, historico });
       setDatos((r.data || null) as Datos | null);
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudo armar el mapa.'));
       setDatos(null);
     } finally { setCargando(false); }
-  }, [propio, dias]);
+  }, [propio, dias, historico]);
 
   useEffect(() => { void cargar(); }, [cargar]);
 
@@ -707,6 +714,15 @@ export default function MapaDensidad({
             + 'Prendé y apagá capas para cruzarlas: lo que se pide contra quién hay para hacerlo.'}
         </p>
 
+        <p className="admin-sub">
+          {historico
+            ? 'Mostrando TODO lo publicado en la ventana, incluso lo que ya se pausó, '
+              + 'se vendió o se cerró: sirve para ver el histórico, no para decidir a '
+              + 'dónde ir hoy.'
+            : 'Mostrando sólo lo que alguien ve si abre la app ahora. Un pedido se pausa '
+              + 'solo a las 48 h: contarlo pintaría demanda que ya no existe.'}
+        </p>
+
         <div className="mapa-familias">
           {piden.length > 0 && (
             <div>
@@ -744,7 +760,15 @@ export default function MapaDensidad({
           )}
           {propio && (
             <span className="admin-sub" style={{ marginLeft: 'auto' }}>
-              Publicado en los últimos{' '}
+              Contar{' '}
+              <select
+                value={historico ? 'todo' : 'listado'}
+                onChange={(e) => setHistorico(e.target.value === 'todo')}
+              >
+                <option value="listado">lo que sigue listado</option>
+                <option value="todo">todo lo publicado</option>
+              </select>
+              {', publicado en los últimos'}{' '}
               <select value={dias} onChange={(e) => setDias(Number(e.target.value))}>
                 {[7, 30, 90, 180, 365].map((v) => (
                   <option key={v} value={v}>{v} días</option>
