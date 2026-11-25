@@ -138,6 +138,33 @@
 
 .ledger-total-num { font-size: 19px; font-weight: 800; line-height: 1.1; }
 .ledger-total-lbl { font-size: 12px; opacity: 0.7; }
+
+/* EL PORCENTAJE DE CANCELACIÓN ES UN BOTÓN (24/11/2026).
+   Tiene que verse igual que los otros cuadritos de total —si pareciera un
+   botón, los cinco parecerían botones y sólo uno lo es— así que se le saca
+   todo lo que el navegador le pone y queda sólo el cursor y el subrayado del
+   rótulo, que es lo que dice "esto se puede tocar". */
+.ledger-total-boton {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ledger-total-boton .ledger-total-lbl { text-decoration: underline dotted; }
+.ledger-total-boton:disabled { cursor: default; opacity: 0.55; }
+.ledger-total-boton:disabled .ledger-total-lbl { text-decoration: none; }
+/* Prendido: el cuadrito queda marcado para que no se confunda un 66% filtrado
+   con el 66% de toda la sección. */
+.ledger-total-activo {
+  outline: 2px solid var(--acento, #F2B705);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
 .ledger-cobrado { color: #1E7E45; }
 .ledger-adeudado { color: #C62828; }
 

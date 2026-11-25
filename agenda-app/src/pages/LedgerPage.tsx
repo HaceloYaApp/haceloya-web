@@ -56,6 +56,25 @@ const TABS: Array<{ key: Bucket; label: string }> = [
 // teléfono daba dos fotos distintas de la misma plata. Decisión del 19/08/2026.
 type LedgerItem = {
   id: string;
+  /**
+   * LAS TRES CLAVES QUE EL DETALLE NECESITA (24/11/2026).
+   *
+   * `listarRegistro` las devuelve desde siempre y esta pantalla las tiraba: el
+   * mapeo se quedaba con diez campos de los trece. Como `DetalleDeOperacion`
+   * recibe esta misma fila, abría `verOperacion` con refPath y uid VACÍOS, así
+   * que el callable contestaba `{operacion: null, ofrece: null, busca: null}` y
+   * el detalle mostraba dos veces "Este asiento no guarda quién fue esta parte"
+   * y nada más. No era un problema de los asientos: era que la pregunta iba sin
+   * datos. Se ve en la bitácora de auditoría: cada `ver_datos_de_contacto` de
+   * la web quedó anotado con `sobreUid` vacío y "sin operación".
+   *
+   * Con esto, abrir una fila trae el email, el teléfono y el domicilio de las
+   * dos partes, que es para lo que la pantalla existe — y, en "Nuevos
+   * usuarios", los datos de quien se registró.
+   */
+  refPath: string | null;
+  ofreceUid: string | null;
+  buscaUid: string | null;
   detalle: string;
   precio: number;
   comision: number;
@@ -150,6 +169,16 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
   // dependencias.
   const filtroRef = useRef<Filtro>('todos');
   useEffect(() => { filtroRef.current = filtro; }, [filtro]);
+  // SÓLO LAS CANCELADAS (pedido suyo, 24/11/2026).
+  //
+  // La pantalla mostraba "66,7% se cancelan · 2 de 3" y no había forma de ver
+  // CUÁLES: el número avisaba del problema y escondía el caso. El backend ya
+  // sabía filtrar por resultado —es lo que separa las etapas de oferta
+  // laboral— así que acá sólo faltaba poder pedirlo. El porcentaje de arriba es
+  // además el botón que lo prende, que es donde uno lo busca.
+  const [soloCanceladas, setSoloCanceladas] = useState(false);
+  const soloCanceladasRef = useRef(false);
+  useEffect(() => { soloCanceladasRef.current = soloCanceladas; }, [soloCanceladas]);
   // La ventana de fechas, con el mismo truco de la ref que el filtro.
   const [ventana, setVentana] = useState<Ventana>(null);
   const [atajo, setAtajo] = useState('todo');
@@ -160,8 +189,21 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
 
   const load = useCallback(async (targetBucket: Bucket, cursorMillis?: number) => {
     const call = httpsCallable(functions, 'listarRegistro');
+    // LA PESTAÑA COMPUESTA SE PARTE ACÁ (24/11/2026).
+    //
+    // Las tres pestañas de las etapas de oferta laboral tienen la clave
+    // `oferta_laboral:postulado`, que es una sección Y un resultado juntos.
+    // Se mandaba tal cual como `seccion`, y `listarRegistro` valida la sección
+    // contra una lista cerrada: las tres contestaban "Sección inválida" desde
+    // el día que se agregaron. En el teléfono andaban porque allá son dos
+    // props separadas (seccion + resultado).
+    const [seccionPedida, etapa] = String(targetBucket).split(':');
+    // El corte por resultado es uno solo: si la pestaña ya es una etapa, ese
+    // resultado manda; si no, el que haya elegido con "Sólo canceladas".
+    const resultadoPedido = etapa || (soloCanceladasRef.current ? 'cancelado' : '');
     const resp: any = await call({
-      seccion: targetBucket,
+      seccion: seccionPedida,
+      resultado: resultadoPedido || undefined,
       filtro: filtroRef.current,
       cursorMillis,
       // Recortan también los totales, no sólo la lista.
@@ -174,6 +216,9 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
     const crudos: any[] = resp?.data?.items || [];
     const newItems: LedgerItem[] = crudos.map((v) => ({
       id: String(v.id || ''),
+      refPath: v.refPath || null,
+      ofreceUid: v.ofreceUid || null,
+      buscaUid: v.buscaUid || null,
       detalle: String(v.detalle || ''),
       precio: Number(v.precio || 0),
       comision: Number(v.comision || 0),
@@ -208,7 +253,7 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [bucket, filtro, ventana, load]);
+  }, [bucket, filtro, ventana, soloCanceladas, load]);
 
   const loadMore = async () => {
     if (loadingMore || !hasMore || items.length === 0) return;
@@ -320,6 +365,19 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
             {f.label}
           </button>
         ))}
+        {/* No se ofrece en las pestañas que YA son un corte por resultado (las
+            tres etapas de oferta laboral): ahí no hay canceladas que mostrar y
+            un chip que no puede hacer nada se lee como que está roto. */}
+        {!bucket.includes(':') && (
+          <button
+            type="button"
+            className={`ledger-chip${soloCanceladas ? ' ledger-chip-activo' : ''}`}
+            aria-pressed={soloCanceladas}
+            onClick={() => setSoloCanceladas((v) => !v)}
+          >
+            Sólo canceladas
+          </button>
+        )}
       </div>
 
       {/* LOS TOTALES DE TODA LA SECCIÓN, NO DE LA PÁGINA.
@@ -348,14 +406,23 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
               <span className="ledger-total-lbl">adeudado · {totales.adeudadoOps} op.</span>
             </div>
             {(totales.canceladas + totales.cerradas) > 0 && (
-              <div className="ledger-total">
+              /* El número que avisa del problema es también el que lo abre:
+                 tocarlo deja la lista con las canceladas solas. */
+              <button
+                type="button"
+                className={`ledger-total ledger-total-boton${soloCanceladas ? ' ledger-total-activo' : ''}`}
+                aria-pressed={soloCanceladas}
+                title={soloCanceladas ? 'Ver todas de nuevo' : 'Ver sólo las canceladas'}
+                onClick={() => setSoloCanceladas((v) => !v)}
+                disabled={bucket.includes(':')}
+              >
                 <span className={`ledger-total-num${totales.tasaCancelacion >= 25 ? ' ledger-adeudado' : ''}`}>
                   {totales.tasaCancelacion}%
                 </span>
                 <span className="ledger-total-lbl">
                   se cancelan · {totales.canceladas} de {totales.canceladas + totales.cerradas}
                 </span>
-              </div>
+              </button>
             )}
           </div>
         ) : (
@@ -366,7 +433,11 @@ export default function LedgerPage({ permisos }: { permisos: PermisosDeAdmin }) 
       {loading ? (
         <div className="agenda-loading">Cargando...</div>
       ) : items.length === 0 ? (
-        <p className="ledger-empty">No hay registros en esta categoría todavía.</p>
+        <p className="ledger-empty">
+          {soloCanceladas ?
+            'No hay operaciones canceladas en esta categoría.' :
+            'No hay registros en esta categoría todavía.'}
+        </p>
       ) : (
         <div className="ledger-list">
           {items.map((it) => (

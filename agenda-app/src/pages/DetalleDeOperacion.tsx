@@ -43,13 +43,30 @@ type Persona = {
 
 const OCULTOS = new Set(['contacto', 'firstName', 'lastName', 'uid', 'id']);
 
-function Parte({ titulo, persona }: { titulo: string; persona: Persona | null }) {
+function Parte({ titulo, persona, uid, borrada }: {
+  titulo: string;
+  persona: Persona | null;
+  /** El uid que SÍ venía en el asiento, si venía. Ver el comentario de abajo. */
+  uid?: string | null;
+  /** El asiento apunta a una cuenta que ya no existe. */
+  borrada?: boolean;
+}) {
   if (!persona) {
     return (
       <div className="admin-caso">
         <strong>{titulo}</strong>
+        {/* TRES MOTIVOS DISTINTOS PARA LA MISMA CAJA VACÍA (24/11/2026).
+            Decía siempre "el asiento no lo anotaba", que era verdad sólo para
+            los asientos viejos. Cuando la cuenta se dio de baja, el dato existió
+            y se borró —y eso es exactamente lo que hay que saber al mirar dos
+            altas seguidas de la misma persona—; y cuando el asiento no tiene esa
+            parte (un alta no tiene "Ofrece"), no falta nada. */}
         <span className="admin-sub">
-          Este asiento no guarda quién fue esta parte. Los anteriores al 12/08/2026 no lo anotaban.
+          {borrada ?
+            'La cuenta ya no existe: se dio de baja después de este asiento. El registro guarda el movimiento, no los datos de la persona.' :
+            uid ?
+              'El asiento guarda el uid pero no se pudo leer el perfil.' :
+              'Este asiento no tiene esta parte. Los anteriores al 12/08/2026 tampoco la anotaban.'}
         </span>
       </div>
     );
@@ -111,8 +128,18 @@ export default function DetalleDeOperacion({ fila, alVolver }: { fila: Fila; alV
         <p className="admin-loading">Cargando...</p>
       ) : !error && (
         <>
-          <Parte titulo="Ofrece" persona={datos?.ofrece || null} />
-          <Parte titulo="Busca" persona={datos?.busca || null} />
+          <Parte
+            titulo="Ofrece"
+            persona={datos?.ofrece || null}
+            uid={fila.ofreceUid}
+            borrada={!!fila.ofreceUid && !datos?.ofrece}
+          />
+          <Parte
+            titulo="Busca"
+            persona={datos?.busca || null}
+            uid={fila.buscaUid}
+            borrada={!!fila.buscaUid && !datos?.busca}
+          />
           {!!datos?.operacion && (
             <div className="admin-caso">
               <strong>El documento de la operación</strong>
